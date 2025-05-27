@@ -1,0 +1,6 @@
+- [ ] Sette opp CYA i Obsidian ved å omstrukturere repoet
+- [ ] Ha DC sync med Celina om nåværende utfordringer
+- [ ] Snakke med Daniel om migrering av gammel data
+- [ ] Informere resten av teamet om bruk av timeslot (Daniel undersøker migrering)
+- [ ] Begynne på HedgeGroup migrering + fikse opp i self-key portfolio samtidig
+- [ ] 

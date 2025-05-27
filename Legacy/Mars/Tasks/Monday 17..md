@@ -1,0 +1,4 @@
+- [x] Setup Obsidian task tracker
+- [x] Calculate financial deficit
+- [x] Fix OS bugs
+- [x] Plan multiple issues & be confident in Sprint Planning to not yield until satisifed

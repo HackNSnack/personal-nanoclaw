@@ -1,0 +1,208 @@
+{
+  "main": {
+    "id": "f051c400d07d43fd",
+    "type": "split",
+    "children": [
+      {
+        "id": "5ede40f381344bbb",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5b9be7df34ee2ef6",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Daily Tracker/2025/05-May/2025-05-27-Tuesday.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "2025-05-27-Tuesday"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "25af980b17f258b7",
+    "type": "split",
+    "children": [
+      {
+        "id": "9d277b242682ac42",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a11e31b45eb19892",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "815a1711d8c7c565",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "0b56830bde30c32a",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 363.5
+  },
+  "right": {
+    "id": "ade4fa5c5b7239e0",
+    "type": "split",
+    "children": [
+      {
+        "id": "1defa30222da0716",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "50409ff03a75bb9a",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "b2a2362a9220010d",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "c38d3faadb0f96d8",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "fbf1ee1bc97c8637",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "templater-obsidian:Templater": false
+    }
+  },
+  "active": "5b9be7df34ee2ef6",
+  "lastOpenFiles": [
+    "README.md",
+    "Legacy/Mai/Mai 2025.md",
+    "Legacy/Mai/Tasks/Tirsdag 27..md",
+    "Daily Tracker/2025/05-May/2025-05-27-Tuesday.md",
+    "Daily Tracker/Untitled.md",
+    "Daily Tracker/2025/05-May",
+    "Daily Tracker/2025",
+    "Templates/Template.md",
+    "Personal Dev/Daily Tracker/2025/05-May/2025-05-28-Wednesday.md",
+    "Personal Dev/Daily Tracker/2025/05-May",
+    "Personal Dev/Daily Tracker/2025",
+    "Personal Dev/Daily Tracker",
+    "Personal Dev/Feedback/Marius Feedback.md",
+    "Personal Dev/Daily Tracker/2025/05-May/Untitled.md",
+    "Personal Dev/Daily Tracker/2025/05-May/2025-05-26-Monday.md",
+    "+Daily Notes.md",
+    "Personal Dev/Daily Tracker/2025/05-May/Untitled 1.md",
+    "Personal Dev/Daily Tracker/2025/05-May/s.md",
+    "Legacy/Template 1.md",
+    "Legacy",
+    "Personal Dev/Daily Tracker/Untitled.md",
+    "Timestamps/2025/05-May/2025-05-28-Wednesday.md",
+    "Timestamps/2025/05-May",
+    "Timestamps/2025",
+    "Timestamps",
+    "Timestamps/2025/05-May/2025-05-26-Monday.md",
+    "Timestamps/2025/05-May/Untitled.md",
+    "Personal Dev/Daily Tracker/2025/Untitled.md",
+    "Untitled.md",
+    "Personal Dev/Daily Tracker/2025/Mars/a.md",
+    "Timestamps/<% tp.date.now(\"YYYY\", 1) %>/<% tp.date.now(\"MM-MMMM\", 1) %>/<% tp.date.now(\"YYYY-MM-DD-dddd\", 1) %>.md",
+    "Timestamps/<% tp.date.now(\"YYYY\", 1) %>/<% tp.date.now(\"MM-MMMM\", 1) %>",
+    "Personal Dev/Daily Tracker/2025/May/Tasks/Wednesday 19..md",
+    "Personal Dev/Daily Tracker/2025/May/Tasks/Monday 17..md",
+    "Legacy/Mars/Tasks/Tuesday 18..md",
+    "Daily Tracker/2025/March/Untitled.canvas"
+  ]
+}
