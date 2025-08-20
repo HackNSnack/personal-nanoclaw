@@ -17,6 +17,7 @@ created: 2025-08-20 21:12
 - [x] Nå ut til Sophie / Team Impact for innsyn i report filtering
 - [x] Delta på buddy-opplæring kveld
 - [x] Notere daglige mål
+- [x] Følge opp brilleland og planlegge time
 
 
 ---
