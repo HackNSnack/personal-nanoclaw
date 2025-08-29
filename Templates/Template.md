@@ -14,6 +14,10 @@ created: <% tp.file.creation_date() %>
 
 
 ---
+## ⛔ Blockers
+
+
+---
 # 📝 Notes
 
 
