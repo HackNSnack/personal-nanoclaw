@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2025/08-August/2025-08-28-Thursday.md",
+                "file": "Clients/Veni/Prismøte Notes.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2025-08-28-Thursday"
+              "title": "Prismøte Notes"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 363.5
+    "width": 568.5
   },
   "right": {
     "id": "ade4fa5c5b7239e0",
@@ -167,7 +167,6 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "bases:Create new base": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
@@ -178,13 +177,15 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "5b9be7df34ee2ef6",
+  "active": "5c4640ee71da1801",
   "lastOpenFiles": [
+    "Clients/Veni/Elcert.md",
+    "Clients/Veni/Prismøte Notes.md",
+    "Daily Tracker/2025/08-August/2025-08-28-Thursday.md",
     "Daily Tracker/2025/08-August/2025-08-29-Friday.md",
     "Daily Tracker/2025/08-August/2025-08-25-Monday.md",
     "Daily Tracker/2025/08-August/2025-08-26-Tuesday.md",
     "Daily Tracker/2025/08-August/2025-08-27-Wednesday.md",
-    "Daily Tracker/2025/08-August/2025-08-28-Thursday.md",
     "Clients/Ardoq/Delivery Expectations.md",
     "Clients/Ardoq",
     "Templates/Template.md",
@@ -207,8 +208,6 @@
     "Daily Tracker/2025/06-June/2025-06-20-Friday.md",
     "Daily Tracker/2025/06-June/2025-06-16-Monday.md",
     "Daily Tracker/2025/06-June/2025-06-13-Friday.md",
-    "Daily Tracker/2025/06-June/2025-06-14-Saturday.md",
-    "Daily Tracker/2025/06-June/2025-06-11-Wednesday.md",
     "Personal Dev/GC/GC1",
     "Personal Dev/GC",
     "Daily Tracker/2025/06-June",
