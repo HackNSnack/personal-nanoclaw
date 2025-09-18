@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "5ede40f381344bbb",
+        "id": "d042f824dbeef7e9",
         "type": "tabs",
         "children": [
           {
-            "id": "5b9be7df34ee2ef6",
+            "id": "d2bafd6dc731cbb7",
             "type": "leaf",
             "state": {
-              "type": "split-diff-view",
+              "type": "markdown",
               "state": {
-                "aFile": ".obsidian/workspace.json",
-                "bFile": ".obsidian/workspace.json",
-                "aRef": ""
+                "file": "Daily Tracker/2025/09-September/2025-09-18-Thursday.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "diff",
-              "title": "Diff: workspace.json"
+              "icon": "lucide-file",
+              "title": "2025-09-18-Thursday"
             }
           }
         ]
@@ -178,10 +178,17 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "5c4640ee71da1801",
+  "active": "d2bafd6dc731cbb7",
   "lastOpenFiles": [
+    "Daily Tracker/2025/09-September/2025-09-19-Friday.md",
+    "Daily Tracker/2025/09-September/2025-09-18-Thursday.md",
+    "Daily Tracker/2025/09-September/2025-09-17-Wednesday.md",
+    "Daily Tracker/2025/09-September/2025-09-16-Tuesday.md",
+    "Daily Tracker/2025/09-September/2025-09-15-Monday.md",
+    "Daily Tracker/2025/09-September/2025-09-12-Friday.md",
     "Daily Tracker/2025/09-September/2025-09-11-Thursday.md",
     "Daily Tracker/2025/09-September/2025-09-10-Wednesday.md",
+    "Daily Tracker/2025/09-September/Untitled.md",
     "Daily Tracker/2025/09-September/2025-09-09-Tuesday.md",
     "Daily Tracker/2025/09-September/2025-09-08-Monday.md",
     "Daily Tracker/2025/09-September/2025-09-05-Friday.md",
@@ -201,14 +208,7 @@
     "Daily Tracker/2025/08-August/2025-08-25-Monday.md",
     "Daily Tracker/2025/08-August/2025-08-26-Tuesday.md",
     "Daily Tracker/2025/08-August/2025-08-27-Wednesday.md",
-    "Clients/Ardoq/Delivery Expectations.md",
     "Clients/Ardoq",
-    "Templates/Template.md",
-    "Daily Tracker/2025/08-August/2025-08-22-Friday.md",
-    "Daily Tracker/2025/08-August/2025-08-20-Wednesday.md",
-    "Daily Tracker/2025/08-August/2025-08-21-Thursday.md",
-    "Daily Tracker/2025/08-August/Untitled.md",
-    "Daily Tracker/2025/08-August/2025-08-23-Saturday.md",
     "Daily Tracker/2025/08-August",
     "Clients/GMG",
     "Personal Dev/GC/GC1",
