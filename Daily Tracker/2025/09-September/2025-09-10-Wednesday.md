@@ -10,14 +10,14 @@ created: 2025-09-10 16:02
 ### ❇️ Daily Tasks
 
 ##### 🚀 Things I plan to accomplish today is...
-- [ ] Chat interface scoping meeting
-- [ ] Fixing issues with integration tests
-- [ ] Investigate how to programmatically retrieve viewpoint-component IDs
-- [ ] Discuss how we should approach token-size limit
-	- [ ] Changed approach to env-variable + 16k limit
-- [ ] Picked up new glasses
-- [ ] Picked up ID card
-- [ ] Reviewed PRs
+- [x] Chat interface scoping meeting
+- [x] Fixing issues with integration tests
+- [x] Investigate how to programmatically retrieve viewpoint-component IDs
+- [x] Discuss how we should approach token-size limit
+	- [x] Changed approach to env-variable + 16k limit
+- [x] Picked up new glasses
+- [x] Picked up ID card
+- [x] Reviewed PRs
 
 
 ---
