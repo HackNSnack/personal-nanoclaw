@@ -10,15 +10,15 @@ created: 2025-09-24 15:06
 ### ❇️ Daily Tasks
 
 ##### 🚀 Things I plan to accomplish today is...
-- [ ] Fixed MCP middleware by removing prefix, avoided splitting files
-- [ ] Fixed auto-formatting rules using `yapf`
-- [ ] Formatted all files & merged these changes in PR
-- [ ] Started implementing fix for logging library & middleware handling
-- [ ] Approved/Merged PRs on follow-up notices
-- [ ] RAG standup
-- [ ] Had debug/info session w/infra to go through logging issues & clarifications
-- [ ] Updated mentor on lunch w/Thea
-- [ ] Followed One NL Forum
+- [x] Fixed MCP middleware by removing prefix, avoided splitting files
+- [x] Fixed auto-formatting rules using `yapf`
+- [x] Formatted all files & merged these changes in PR
+- [x] Started implementing fix for logging library & middleware handling
+- [x] Approved/Merged PRs on follow-up notices
+- [x] RAG standup
+- [x] Had debug/info session w/infra to go through logging issues & clarifications
+- [x] Updated mentor on lunch w/Thea
+- [x] Followed One NL Forum
 
 
 ---
