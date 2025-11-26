@@ -20,6 +20,7 @@ created: 2025-11-26 17:10
 - [x] Got car into workshop
 - [x] Helped Carl describe more info regarding our GenAI initiatives
 - [x] Short update w/Lise on current status
+- [x] Confident AI proposal meeting, agreeing on commercials
 
 
 ---
