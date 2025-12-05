@@ -48,9 +48,23 @@
               "icon": "lucide-file",
               "title": "2025-12-03-Wednesday"
             }
+          },
+          {
+            "id": "57c2cb1b9add8433",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Daily Tracker/2025/12-December/2025-12-05-Friday.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "2025-12-05-Friday"
+            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -207,10 +221,13 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "aa42cf766464b1bc",
+  "active": "57c2cb1b9add8433",
   "lastOpenFiles": [
-    "Daily Tracker/2025/12-December/2025-12-02-Tuesday.md",
+    "Daily Tracker/2025/12-December/2025-12-04-Thursday.md",
+    "Daily Tracker/2025/12-December/2025-12-05-Friday.md",
+    "Daily Tracker/2025/12-December/2025-12-06-Saturday.md",
     "Daily Tracker/2025/12-December/2025-12-03-Wednesday.md",
+    "Daily Tracker/2025/12-December/2025-12-02-Tuesday.md",
     "Daily Tracker/2025/12-December/Untitled.md",
     "Daily Tracker/2025/12-December/2025-12-01-Monday.md",
     "Daily Tracker/2025/11-November/2025-11-21-Friday.md",
@@ -237,9 +254,6 @@
     "Daily Tracker/2025/11-November/2025-11-11-Tuesday.md",
     "Daily Tracker/2025/11-November/2025-11-10-Monday.md",
     "Daily Tracker/2025/11-November",
-    "Daily Tracker/2025/10-October/2025-10-31-Friday.md",
-    "Daily Tracker/2025/10-October/2025-10-17-Friday.md",
-    "Daily Tracker/2025/10-October/2025-10-16-Thursday.md",
     "Daily Tracker/2025/10-October",
     "Daily Tracker/2025/09-September",
     "Daily Tracker/2025/Untitled",
