@@ -1,5 +1,7 @@
 [
   "templater-obsidian",
   "dataview",
-  "obsidian-git"
+  "obsidian-git",
+  "smart-connections",
+  "obsidian-local-rest-api"
 ]
