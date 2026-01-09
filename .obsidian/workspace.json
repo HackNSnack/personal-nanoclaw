@@ -51,12 +51,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Clients/Ardoq/AgentNotes/Reference/Integration Points.md",
+                "file": "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Implementation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Integration Points"
+              "title": "Implementation"
             }
           }
         ],
@@ -117,7 +117,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 405.5
+    "width": 407.5
   },
   "right": {
     "id": "ade4fa5c5b7239e0",
@@ -213,7 +213,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 293.5
+    "width": 212.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -233,42 +233,42 @@
   },
   "active": "be7d4b190205a614",
   "lastOpenFiles": [
-    "Clients/Ardoq/AgentNotes/Reference/Common Patterns.md",
-    "Clients/Ardoq/AgentNotes/Reference/Gotchas & Lessons.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis/README.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis/Rationale.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis/Implementation.md",
-    "Clients/Ardoq/AgentNotes/Architecture/README.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis/Related-Issues.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis/Decision.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis/Snippets/snippet_002_SOLID_Code_Examples.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis/Snippets/snippet_001_SOLID_Overview.md",
-    "Clients/Ardoq/AgentNotes/README.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis/Snippets",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Observability-SOLID-Analysis",
-    "Clients/Ardoq/Delivery Expectations.md",
-    "Clients/Ardoq/AgentNotes/Reference/Integration Points.md",
-    "Clients/Ardoq/AgentNotes/Reference",
-    "Clients/Ardoq/AgentNotes/Architecture",
-    "Clients/Ardoq/AgentNotes/Bug Fixes/README.md",
-    "Clients/Ardoq/AgentNotes/Bug Fixes",
-    "Clients/Ardoq/AgentNotes/Features/README.md",
-    "Clients/Ardoq/AgentNotes/Features",
-    "Clients/Ardoq/AgentNotes",
-    "Clients/Ardoq/Reference/Gotchas & Lessons.md",
-    "Clients/Ardoq/Reference/Integration Points.md",
-    "Clients/Ardoq/Reference/Common Patterns.md",
-    "Clients/Ardoq/Reference",
-    "Clients/Ardoq/Architecture/README.md",
-    "Clients/Ardoq/Architecture",
-    "Clients/Ardoq/Bug Fixes/README.md",
-    "Clients/Ardoq/Bug Fixes",
-    "Clients/Ardoq/Features/README.md",
-    "Daily Tracker/2025/12-December/2025-12-10-Wednesday.md",
-    "Daily Tracker/2025/12-December/2025-12-09-Tuesday.md",
-    "Daily Tracker/2025/11-November/2025-11-26-Wednesday.md",
-    "Daily Tracker/2025/12-December/2025-12-08-Monday.md",
-    "Daily Tracker/2025/12-December/2025-12-11-Thursday.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Overview.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_001.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_018_SESSION_SUMMARY.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Related Issues.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Implementation.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Rationale.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Decision.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets/snippet_008.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets/snippet_007.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets/snippet_006.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets/snippet_005.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets/snippet_004.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets/snippet_003.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets/snippet_002.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets/snippet_001.md",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets",
+    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_028_SESSION_SUMMARY.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_027_FIXES.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_026_ALLOW_VARIABLE_ACTIONS.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_025_FRONTEND_COMPLETE.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_024_BACKEND_VARIABLES_AND_DATA_PASSING.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_023_NEXT_STEPS.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_022_FRONTEND_IMPLEMENTATION.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_021_FRONTEND_PLAN.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_020_BACKEND_IMPLEMENTATION.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_019_WORKFLOW_ANALYSIS.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_016_WORKFLOW_PLAN.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets",
+    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon",
+    "Clients/Ardoq/AgentNotes/Architecture/Python-AI-Framework-Selection",
+    "Clients/Myself/AgentNotes/Features/EverythingMCP/Snippets",
+    "Clients/Myself/AgentNotes/Features/EverythingMCP",
+    "Clients/Myself/AgentNotes/Features/MCP-Obsidian-Smolagents/Snippets",
+    "Clients/Myself/AgentNotes/Features/MCP-Obsidian-Smolagents",
+    "Clients/Myself/AgentNotes/Reference",
     "Images/Pasted image 20251113154817.png",
     "Images/Pasted image 20251113154822.png",
     "Daily Tracker/2025/March/Untitled.canvas"
