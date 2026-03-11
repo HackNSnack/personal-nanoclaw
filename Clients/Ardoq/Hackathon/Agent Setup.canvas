@@ -1,0 +1,7 @@
+{
+	"nodes":[
+		{"id":"b9660d34a2af2063","x":-197,"y":-176,"width":250,"height":60,"type":"text","text":"Agent Orchestrator"},
+		{"id":"95f8c99d8c22e9e2","x":-197,"y":-300,"width":250,"height":60,"type":"text","text":"User"}
+	],
+	"edges":[]
+}

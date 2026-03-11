@@ -20,8 +20,48 @@
               "icon": "lucide-file",
               "title": "2026-01-22-Thursday"
             }
+          },
+          {
+            "id": "8071e4f12e43bcde",
+            "type": "leaf",
+            "state": {
+              "type": "smart-release-notes-view",
+              "state": {},
+              "icon": "file-text",
+              "title": "Release Notes"
+            }
+          },
+          {
+            "id": "23ee7a6b948d78d5",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Clients/Ardoq/Hackathon/Agent Setup.canvas",
+                "viewState": {
+                  "x": -72,
+                  "y": -208,
+                  "zoom": 0
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Agent Setup"
+            }
+          },
+          {
+            "id": "a7a53b6895671861",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.12.4"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.12.4"
+            }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -192,10 +232,14 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "ef0ebf440435d2f2",
+  "active": "a7a53b6895671861",
   "lastOpenFiles": [
-    "Daily Tracker/2026/01-January/2026-01-21-Wednesday.md",
+    "Clients/Ardoq/Hackathon/Untitled.md",
+    "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Daily Tracker/2026/01-January/2026-01-22-Thursday.md",
+    "Clients/Ardoq/Hackathon",
+    "Clients/Ardoq/Untitled.md",
+    "Daily Tracker/2026/01-January/2026-01-21-Wednesday.md",
     "Daily Tracker/2026/01-January/2026-01-23-Friday.md",
     "Daily Tracker/2026/01-January/2026-01-20-Tuesday.md",
     "Daily Tracker/2026/01-January/2026-01-19-Monday.md",
@@ -224,12 +268,8 @@
     "Clients/Ardoq/AgentNotes/Reference/AI-Observability-Repository.md",
     "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Implementation.md",
     "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Overview.md",
-    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_001.md",
-    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets/snippet_018_SESSION_SUMMARY.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Rationale.md",
     "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets",
     "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions",
-    "Clients/Ardoq/AgentNotes/Features/AI-Design-Sprint-Hackathon/Snippets",
     "Images/Pasted image 20251113154817.png",
     "Images/Pasted image 20251113154822.png",
     "Daily Tracker/2025/March/Untitled.canvas"
