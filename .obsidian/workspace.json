@@ -22,7 +22,19 @@
             }
           },
           {
-            "id": "8071e4f12e43bcde",
+            "id": "473b6b345f7c44e8",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.5"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.11.5"
+            }
+          },
+          {
+            "id": "358ede2d304ea449",
             "type": "leaf",
             "state": {
               "type": "smart-release-notes-view",
@@ -32,36 +44,35 @@
             }
           },
           {
-            "id": "23ee7a6b948d78d5",
+            "id": "84113c486649dbc5",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "Clients/Ardoq/Hackathon/Agent Setup.canvas",
-                "viewState": {
-                  "x": -72,
-                  "y": -208,
-                  "zoom": 0
-                }
+                "file": "Daily Tracker/2026/01-January/2026-01-23-Friday.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Agent Setup"
+              "icon": "lucide-file",
+              "title": "2026-01-23-Friday"
             }
           },
           {
-            "id": "a7a53b6895671861",
+            "id": "414e8aa70591e41d",
             "type": "leaf",
             "state": {
-              "type": "release-notes",
+              "type": "markdown",
               "state": {
-                "currentVersion": "1.12.4"
+                "file": "Daily Tracker/2026/01-January/2026-01-21-Wednesday.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-book-up",
-              "title": "Release Notes 1.12.4"
+              "icon": "lucide-file",
+              "title": "2026-01-21-Wednesday"
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -214,7 +225,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 212.5
+    "width": 418.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -232,15 +243,18 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "a7a53b6895671861",
+  "active": "414e8aa70591e41d",
   "lastOpenFiles": [
+    "Clients/Ardoq/Untitled.md",
     "Clients/Ardoq/Hackathon/Untitled.md",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
-    "Daily Tracker/2026/01-January/2026-01-22-Thursday.md",
     "Clients/Ardoq/Hackathon",
-    "Clients/Ardoq/Untitled.md",
-    "Daily Tracker/2026/01-January/2026-01-21-Wednesday.md",
+    "Daily Tracker/2026/01-January/2026-01-22-Thursday.md",
     "Daily Tracker/2026/01-January/2026-01-23-Friday.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-695-Proxy-Endpoint/Snippets/snippet_001.md",
+    "Clients/Ardoq/AgentNotes/Features/AI-695-Proxy-Endpoint/Snippets",
+    "Clients/Ardoq/AgentNotes/Features/AI-695-Proxy-Endpoint",
+    "Daily Tracker/2026/01-January/2026-01-21-Wednesday.md",
     "Daily Tracker/2026/01-January/2026-01-20-Tuesday.md",
     "Daily Tracker/2026/01-January/2026-01-19-Monday.md",
     "Clients/Ardoq/AgentNotes/Features/Token-Usage-Logging-Framework/Snippets/snippet_004.md",
@@ -268,8 +282,6 @@
     "Clients/Ardoq/AgentNotes/Reference/AI-Observability-Repository.md",
     "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Implementation.md",
     "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Overview.md",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions/Snippets",
-    "Clients/Ardoq/AgentNotes/Architecture/AI-Backend-Remove-Abstractions",
     "Images/Pasted image 20251113154817.png",
     "Images/Pasted image 20251113154822.png",
     "Daily Tracker/2025/March/Untitled.canvas"
