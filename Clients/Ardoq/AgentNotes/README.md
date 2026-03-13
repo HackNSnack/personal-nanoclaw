@@ -1,86 +1,64 @@
-# AgentNotes - Ardoq Development Documentation
+# AgentNotes - Client Documentation
 
-Dynamically generated notes from agent conversations organized by work type and feature/component.
+AI-assisted notes for development work, meetings, and reference knowledge.
+
+## Structure
+
+```
+Clients/[Client]/AgentNotes/
+├── Active/      # Current work
+├── Archive/     # Completed work  
+├── Reference/   # Evergreen patterns
+└── _Index.md    # Map of Content
+```
 
 ## LLM Instructions
 
-### 1. Classify Work Type
-Determine which category applies:
-- **Features/** - New features or enhancements
-- **Bug Fixes/** - Bug fixes and issue resolutions
-- **Architecture/** - System design and architectural decisions
-- **Reference/** - General patterns and lessons
+### When to write
 
-### 2. Create Subdirectory
-For Features/Bug Fixes/Architecture: Create a descriptive subdirectory (e.g., `Features/User-Auth`, `Bug Fixes/Performance-Issue-123`)
-For Reference: Update existing documents directly
+Write to Obsidian when user explicitly requests:
+"note this", "document this", "save to obsidian", "add to notes"
 
-### 3. Documentation Standards
+### When to prompt
 
-#### Features/[Name]
-- **Overview.md** - Requirements, scope, acceptance criteria
-- **Architecture.md** - Design decisions, patterns, approach
-- **Implementation.md** - Code snippets, modified files, edge cases
-- **Testing.md** - Test scenarios, edge cases
-- **Snippets/** - Incremental learnings as conversation progresses (snippet_001.md, snippet_002.md, ...)
+After these moments, ask ONCE: "Want me to note this?"
 
-#### Bug Fixes/[Name]
-- **Problem.md** - Issue description, symptoms, root cause
-- **Solution.md** - Fix applied, code changes, why chosen
-- **Lessons.md** - Patterns to watch, prevention, testing gaps
-- **Snippets/** - Investigation steps, findings, logs
+- Design/architecture decision made
+- Bug root-caused and fixed  
+- Meeting or discussion concluded
+- Significant feature/change implemented
 
-#### Architecture/[Name]
-- **Decision.md** - What was decided, problem solved, applicability
-- **Rationale.md** - Why chosen, alternatives considered, trade-offs
-- **Implementation.md** - How realized, components, patterns
-- **Related Issues.md** - Related features, bugs, architecture links
-- **Snippets/** - Discussion points, explorations, diagrams
+If user declines or ignores, move on. Do not re-ask for that topic.
+Do NOT prompt for routine changes or ongoing work.
 
-#### Reference/
-- **Common Patterns.md** - Recurring solutions, code patterns, best practices
-- **Integration Points.md** - Third-party integrations, APIs, data flows
-- **Gotchas & Lessons.md** - Mistakes to avoid, quirks, security/performance notes
+### File paths
 
-### 4. Snippet vs Structured Files
-- **Snippets/** - Create continuously during conversations (snippet_001.md, snippet_002.md, ...)
-- **Structured files** (Overview, Architecture, etc.) - Create only when user explicitly requests them, distilling content from existing snippets
+**Active/Archive:** `Active/YYYY-MM-DD [Brief title].md`
+**Reference:** `Reference/[Topic name].md` (no date)
 
-### 5. Workflow
-- **Proactively create snippets** as user describes work
-- **Create structured files** upon user request, synthesizing snippet content
-- **Cross-reference** related work
-- **Update Reference/** when discovering broadly applicable lessons
+### Frontmatter
 
-### 6. Conventions
-- Directory names: Descriptive with hyphens (e.g., `User-Authentication`)
-- Snippet files: Sequential numbering (snippet_001.md, snippet_002.md, ...)
-- Main documents: Capitalized (Overview.md, Architecture.md, ...)
-
-## Directory Structure
-
+```yaml
+---
+tags: [relevant, tags]
+type: work | meeting | reference
+status: todo | in-progress | done | blocked
+---
 ```
-Clients/Ardoq/AgentNotes/
-├── README.md
-├── Features/[Name]/
-│   ├── Overview.md
-│   ├── Architecture.md
-│   ├── Implementation.md
-│   ├── Testing.md
-│   └── Snippets/
-├── Bug Fixes/[Name]/
-│   ├── Problem.md
-│   ├── Solution.md
-│   ├── Lessons.md
-│   └── Snippets/
-├── Architecture/[Name]/
-│   ├── Decision.md
-│   ├── Rationale.md
-│   ├── Implementation.md
-│   ├── Related Issues.md
-│   └── Snippets/
-└── Reference/
-    ├── Common Patterns.md
-    ├── Integration Points.md
-    └── Gotchas & Lessons.md
-```
+
+### Content format
+
+Use headers, not separate files:
+- `## Problem`
+- `## Investigation`
+- `## Solution`
+- `## Related`
+
+Link with `[[wikilinks]]`.
+
+### Do NOT
+
+- Create files proactively without asking
+- Ask repeatedly about the same topic
+- Prompt for small/routine changes
+- Create multiple files per topic
