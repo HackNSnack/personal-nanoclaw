@@ -19,4 +19,4 @@ Adopted hybrid approach (PARA-lite + Zettelkasten):
 LLM writes only on explicit request OR asks once after significant moments (decisions, bug fixes, meetings). No proactive creation.
 
 ## Related
-- [[_Index]]
+- [[Clients/Ardoq/AgentNotes/_Index]]

@@ -4,12 +4,14 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
-- [[2026-03-13 Obsidian structure redesign]]
+- [[Clients/Ardoq/AgentNotes/Active/2026-03-19 LLM variance testing script]]
+- [[Clients/Ardoq/AgentNotes/Active/2026-03-23 SubAgentResult and completion schema complexity analysis]]
+- [[Clients/Ardoq/AgentNotes/Active/2026-03-23 Replace collector callback with dict accumulator]]
 
 ## Key Decisions
 
-- [[2026-03-13 Obsidian structure redesign]] - Adopted simplified note structure
+- [[Clients/Ardoq/AgentNotes/Archive/2026-03-13 Obsidian structure redesign]] - Adopted simplified note structure
 
 ## Reference
 
-<!-- Links to evergreen patterns and knowledge -->
+- [[Clients/Ardoq/AgentNotes/Reference/Model Context Protocol (MCP)]] - Protocol overview, pros/cons, adoption
