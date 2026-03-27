@@ -37,12 +37,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/03-March/2026-03-27-Friday.md",
+                "file": "Daily Tracker/2026/03-March/2026-03-13-Friday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-03-27-Friday"
+              "title": "2026-03-13-Friday"
             }
           }
         ],
@@ -199,8 +199,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 281.5,
-    "collapsed": true
+    "width": 281.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -220,32 +219,32 @@
   },
   "active": "0b3c667689eda553",
   "lastOpenFiles": [
+    "Daily Tracker/2026/03-March/2026-03-12-Thursday.md",
+    "Daily Tracker/2026/03-March/2026-03-13-Friday.md",
+    "Daily Tracker/2026/03-March/2026-03-16-Monday.md",
+    "Daily Tracker/2026/03-March/2026-03-17-Tuesday.md",
+    "Daily Tracker/2026/03-March/2026-03-18-Wednesday.md",
+    "Daily Tracker/2026/03-March/2026-03-19-Thursday.md",
+    "Daily Tracker/2026/03-March/2026-03-20-Friday.md",
+    "Daily Tracker/2026/03-March/2026-03-23-Monday.md",
+    "Daily Tracker/2026/03-March/2026-03-24-Tuesday.md",
+    "Daily Tracker/2026/03-March/2026-03-25-Wednesday.md",
+    "Daily Tracker/2026/03-March/2026-03-26-Thursday.md",
+    "Daily Tracker/2026/03-March/2026-03-27-Friday.md",
     "Clients/Ardoq/Weeklies/Week-13-2026.md",
     "Clients/Ardoq/AgentNotes/Reference/Python Service API Headers.md",
     "Clients/Ardoq/AgentNotes/Reference/API Request Headers.md",
     "Clients/Ardoq/AgentNotes/Active/2026-03-25 ai_observability refactor to functional architecture.md",
-    "Daily Tracker/2026/03-March/2026-03-27-Friday.md",
     "Clients/Ardoq/AgentNotes/Active/2026-03-24 Refactor ai_observability to functional patterns.md",
     "Clients/Ardoq/AgentNotes/Reference/AgentContext Lifecycle in run_completion.md",
-    "Daily Tracker/2026/03-March/2026-03-26-Thursday.md",
-    "Daily Tracker/2026/03-March/2026-03-25-Wednesday.md",
     "Clients/Ardoq/AgentNotes/Reference/Nested sub-agent result propagation.md",
     "Clients/Ardoq/AgentNotes/Reference/My Code Review Standards.md",
     "Clients/Ardoq/AgentNotes/Reference/Dynamic Agent Context Flow.md",
     "Clients/Ardoq/AgentNotes/_Index.md",
     "Daily Tracker/2026/03-March/Untitled.md",
-    "Daily Tracker/2026/03-March/2026-03-24-Tuesday.md",
-    "Daily Tracker/2026/03-March/2026-03-23-Monday.md",
     "Daily Tracker/2026/01-January/2026-01-22-Thursday.md",
     "Clients/Ardoq/AgentNotes/Active/2026-03-24 Nested sub-agent result propagation design.md",
     "Clients/Ardoq/AgentNotes/Active/2026-03-23 Replace collector callback with dict accumulator.md",
-    "Clients/Ardoq/AgentNotes/Active/2026-03-23 SubAgentResult and completion schema complexity analysis.md",
-    "Clients/Ardoq/AgentNotes/Active/2026-03-23 Simplify dynamic agent return.md",
-    "Daily Tracker/2026/03-March/2026-03-21-Saturday.md",
-    "Daily Tracker/2026/03-March/2026-03-20-Friday.md",
-    "Daily Tracker/2026/03-March/2026-03-19-Thursday.md",
-    "Clients/Ardoq/AgentNotes/Active/2026-03-19 LLM variance testing script.md",
-    "Clients/Ardoq/AgentNotes/Archive/2026-03-13 Obsidian structure redesign.md",
     "Clients/Ardoq/AgentNotes/Archive",
     "Personal/Research",
     "Personal",

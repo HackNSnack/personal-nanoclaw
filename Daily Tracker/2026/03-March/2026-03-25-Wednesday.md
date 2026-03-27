@@ -10,11 +10,11 @@ created: 2026-03-25 06:45
 ### ✷️ Daily Tasks
 
 ##### 🚀 Things I plan to accomplish today is...
-- [ ] Read further into details about LiteLLM attack & updated in Slack
-- [ ] Flattened SpanContext into AgentContext in span_context.py and non_streaming.py
-- [ ] Updated test_sub_agent* files to match new AgentContext API
-- [ ] Extracted personal code review standards from 109 PRs in devops-monorepo → [[Clients/Ardoq/AgentNotes/Reference/My Code Review Standards]]
-- [ ] Created `/review-pr` skill for Claude Code — posts line-level PR reviews based on personal review standards
+- [x] Read further into details about LiteLLM attack & updated in Slack
+- [x] Flattened SpanContext into AgentContext in span_context.py and non_streaming.py
+- [x] Updated test_sub_agent* files to match new AgentContext API
+- [x] Extracted personal code review standards from 109 PRs in devops-monorepo → [[Clients/Ardoq/AgentNotes/Reference/My Code Review Standards]]
+- [x] Created `/review-pr` skill for Claude Code — posts line-level PR reviews based on personal review standards
 
 
 ---
