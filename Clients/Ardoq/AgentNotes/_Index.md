@@ -20,3 +20,4 @@ Map of Content for Ardoq development notes.
 - [[Clients/Ardoq/AgentNotes/Reference/Model Context Protocol (MCP)]] - Protocol overview, pros/cons, adoption
 - [[Clients/Ardoq/AgentNotes/Reference/Dynamic Agent Context Flow]] - Mermaid diagrams of agent context variable flow
 - [[Clients/Ardoq/AgentNotes/Reference/My Code Review Standards]] - Personal review standards extracted from PR history
+- [[Clients/Ardoq/AgentNotes/Reference/API Request Headers]] - Complete HTTP header reference for ardoq-api
