@@ -159,13 +159,11 @@ graph LR
 graph TD
     subgraph "API Layer"
         R1[metrics/router]
-        R2[metrics/completion_router]
         R3[custom_eval/router]
     end
 
     subgraph "Orchestration Functions"
         E1["evaluate_metrics()"]
-        E2["eval_with_completion()"]
         E3["eval_gremlin_steps()"]
     end
 
@@ -188,11 +186,9 @@ graph TD
     end
 
     R1 --> E1
-    R2 --> E2
     R3 --> E3
 
     E1 -->|"asyncio.gather()"| AF & CF & TF
-    E2 -->|"run_completion → evaluate"| E1
     E3 -->|"gremlin queries → evaluate"| CUF
 
     AF & CF & TF --> DU
@@ -273,7 +269,7 @@ graph LR
         Y6["3 evaluator function modules"]
         Y7["(removed entirely)"]
         Y8["(removed entirely)"]
-        Y9["3 domain-scoped routers"]
+        Y9["2 domain-scoped routers"]
     end
 
     X1 -.-> Y1
