@@ -1,7 +1,7 @@
 ---
 tags: [refactor, completion, context-var, sub-agents]
 type: work
-status: in-progress
+status: done
 ---
 
 # Replace Collector Callback with Dict Accumulator

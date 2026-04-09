@@ -1,7 +1,7 @@
 # Simplify Dynamic Agent Return
 
 **Created**: 2026-03-23
-**Status**: in-progress
+**Status**: done
 **Branch**: `AI-dynamically-return-agents`
 
 ## Context

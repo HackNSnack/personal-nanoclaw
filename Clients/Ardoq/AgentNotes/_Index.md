@@ -4,12 +4,16 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
-- [[Clients/Ardoq/AgentNotes/Active/2026-03-19 LLM variance testing script]]
-- [[Clients/Ardoq/AgentNotes/Active/2026-03-23 SubAgentResult and completion schema complexity analysis]]
-- [[Clients/Ardoq/AgentNotes/Active/2026-03-23 Replace collector callback with dict accumulator]]
-- [[Clients/Ardoq/AgentNotes/Active/2026-03-24 Refactor ai_observability to functional patterns]]
 - [[Clients/Ardoq/AgentNotes/Active/2026-03-24 Nested sub-agent result propagation design]]
-- [[Clients/Ardoq/AgentNotes/Active/2026-03-25 ai_observability refactor to functional architecture]]
+
+## Recently Archived
+
+- [[Clients/Ardoq/AgentNotes/Archive/2026-03-25 ai_observability refactor to functional architecture]]
+- [[Clients/Ardoq/AgentNotes/Archive/2026-03-24 Refactor ai_observability to functional patterns]]
+- [[Clients/Ardoq/AgentNotes/Archive/2026-03-23 SubAgentResult and completion schema complexity analysis]]
+- [[Clients/Ardoq/AgentNotes/Archive/2026-03-23 Simplify dynamic agent return]]
+- [[Clients/Ardoq/AgentNotes/Archive/2026-03-23 Replace collector callback with dict accumulator]]
+- [[Clients/Ardoq/AgentNotes/Archive/2026-03-19 LLM variance testing script]]
 
 ## Key Decisions
 
