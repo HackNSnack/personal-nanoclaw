@@ -64,7 +64,7 @@ type: reference
 
 ---
 
-## Act 3 — The Skeptic (~10 min)
+## Act 3 — The Skeptic (~12 min)
 
 ### Slide 10: "Just Connect Directly"
 - **Purpose:** Steel-man the counterargument
@@ -74,11 +74,25 @@ type: reference
 - **Purpose:** Acknowledge legitimate criticism
 - **Content:** Context flooding, latency overhead, operational complexity, security surface.
 
-### Slide 12: When Direct Wins
+### Slide 12: The Context Flood ⭐ [Visualization]
+- **Purpose:** Deep dive into the #1 technical challenge
+- **Content:** Three mechanic cards (every tool = tokens, all loaded at once, zero-sum budget). Animated bar chart showing token budget breakdown at 5/20/50 tools. Punchline: "More tools, less room to think."
+- **Fragment order:** Heading → 5 tools → 20 tools → 50 tools → punchline → mechanic cards
+- **Layout notes:** Bar chart scaled 1.25x via CSS transform. Bars use clipPath for clean rounded borders. Narrow 5-tools bar has two-line "Tool defs" label.
+
+### Slide 13: When It Breaks
+- **Purpose:** Show what happens when context floods
+- **Content:** Concrete failure modes from context flooding.
+
+### Slide 14: Taming the Flood
+- **Purpose:** Mitigation strategies
+- **Content:** Approaches to manage context flooding in practice.
+
+### Slide 15: When Direct Wins
 - **Purpose:** Show intellectual honesty
 - **Content:** Single app, few stable tools, performance-critical, highly specialized, rapid prototyping.
 
-### Slide 13: The Honest Trade-off
+### Slide 16: The Honest Trade-off
 - **Purpose:** Transition to rebuttal
 - **Content:** Table comparing Direct vs MCP on: control, simplicity, speed, reusability, ecosystem, scalability, future-proofing.
 
@@ -86,23 +100,23 @@ type: reference
 
 ## Act 4 — Our Experience (~12 min)
 
-### Slide 14: Our Setup
+### Slide 17: Our Setup
 - **Purpose:** Ground it in reality
 - **Content:** We're an MCP *provider* — we expose an MCP server to customers. They connect their AI tools, pass API token, query our data. Currently read-only, write coming soon.
 
-### Slide 15: What MCP Gave Us
+### Slide 18: What MCP Gave Us
 - **Purpose:** Concrete wins
 - **Content:** One integration for all AI tools, no vendor lock-in, faster customer onboarding, accessible to less technical users, future-proof.
 
-### Slide 16: What Bit Us
+### Slide 19: What Bit Us
 - **Purpose:** Lessons learned
 - **Content:** Five challenges: context limits (~20k early on), context flooding, accuracy issues, no control over system prompt, can't test every LLM variant.
 
-### Slide 17: Side by Side
+### Slide 20: Side by Side
 - **Purpose:** Direct comparison
 - **Content:** Table comparing our MCP server vs our direct agent on: accuracy, tool selection, prompting control, reach, scalability, testing, onboarding.
 
-### Slide 18: The Verdict
+### Slide 21: The Verdict
 - **Purpose:** Our recommendation
 - **Content:** "Use MCP to be accessible. Use direct to be excellent." MCP = distribution strategy. Direct = product experience strategy. Run both.
 
@@ -110,19 +124,19 @@ type: reference
 
 ## Act 5 — Framework & Call to Action (~8 min)
 
-### Slide 19: Decision Framework
+### Slide 22: Decision Framework
 - **Purpose:** Give them a tool
 - **Content:** Two-column checklist: "Use MCP when..." vs "Use direct when..." Key question: "Who controls the LLM?"
 
-### Slide 20: Getting Started
+### Slide 23: Getting Started
 - **Purpose:** Lower the barrier
 - **Content:** Three steps: try an existing server, read the spec, build your own. Links to modelcontextprotocol.io and GitHub.
 
-### Slide 21: Build or Adopt?
+### Slide 24: Build or Adopt?
 - **Purpose:** Call to action
 - **Content:** Two paths: Adopt (use existing servers) vs Build (create server for your product). Both contribute to the ecosystem.
 
-### Slide 22: Thank You + Q&A
+### Slide 25: Thank You + Q&A
 - **Purpose:** Close
 - **Content:** Minimal. "Thank you. Questions?" Key takeaway reminder. Netlight logo.
 
