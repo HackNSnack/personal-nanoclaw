@@ -6,6 +6,7 @@ Map of Content for Netlight development notes.
 
 - [[2026-03-21 Reveal.js Project Setup]]
 - [[2026-03-21 Claude Code Presentation]]
+- [[2026-04-10 MCP Presentation Obsidian Update]] — Docs synced to 28-slide deck, prompt numbering offset noted
 
 ## Key Decisions
 
