@@ -1,9 +1,9 @@
 ---
-tags: [presentation, mcp, prompt, slide-22]
+tags: [presentation, mcp, prompt, slide-28]
 type: reference
 ---
 
-# Slide 22 — Thank You + Q&A
+# Slide 28 — Thank You + Q&A
 
 ## Prompt for Claude + PowerPoint
 
@@ -14,10 +14,10 @@ Create a closing slide following the design guidelines in [[Clients/Netlight/Age
 - Title: "Thank You"
 - Subtitle: "Questions?"
 
-**Optional: Key takeaway reminder (small, below title):**
+**Key takeaway reminder (appears as fragment):**
 "MCP to be accessible. Direct to be excellent."
 
-**Resources (small, footer area):**
+**Resources (appears as fragment, small, below):**
 - modelcontextprotocol.io
 - github.com/modelcontextprotocol
 
@@ -28,6 +28,7 @@ Create a closing slide following the design guidelines in [[Clients/Netlight/Age
 - Minimal and clean
 - Title large and centered
 - Plenty of whitespace — this slide will be on screen during Q&A
+- Takeaway and resources reveal progressively (fragments)
 - White background
 - Netlight Purple accent if desired
 - Proxima Nova font
@@ -43,3 +44,8 @@ Clean ending. Leave the key message lingering while Q&A happens.
 - "Thank you. I'm happy to take questions."
 - Keep the slide up during Q&A — the takeaway stays visible
 - If no questions, prompt: "Anyone considering building an MCP server? Happy to share more about our experience."
+- Common Q&A topics:
+  - "How do you handle auth?" → API tokens, OAuth coming
+  - "What about latency?" → Minimal for most use cases
+  - "Security concerns?" → Valid, use least-privilege
+  - "Is MCP production-ready?" → Yes, we run it in prod

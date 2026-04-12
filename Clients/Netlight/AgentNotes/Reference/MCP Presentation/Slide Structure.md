@@ -16,7 +16,8 @@ type: reference
 2. **Act 2 — The Solution** (10 min): Introduce MCP, how it works, ecosystem
 3. **Act 3 — The Skeptic** (10 min): Steel-man "just connect directly" argument
 4. **Act 4 — Our Experience** (12 min): Production lessons, both approaches
-5. **Act 5 — Framework & CTA** (8 min): When to use what, call to action
+5. **Act 5 — Framework & CTA** (5 min): When to use what, call to action
+6. **Act 6 — The Future** (3 min): Challenge assumptions, open-ended close
 
 ---
 
@@ -103,6 +104,7 @@ type: reference
 ### Slide 17: Our Setup
 - **Purpose:** Ground it in reality
 - **Content:** We're an MCP *provider* — we expose an MCP server to customers. They connect their AI tools, pass API token, query our data. Currently read-only, write coming soon.
+- **Animations:** Flow diagram reveals step-by-step (fragment-index 0-2), then "How it works" (3), "Tools exposed" (4), closing line (5).
 
 ### Slide 18: What MCP Gave Us
 - **Purpose:** Concrete wins
@@ -119,14 +121,16 @@ type: reference
 ### Slide 21: The Verdict
 - **Purpose:** Our recommendation
 - **Content:** "Use MCP to be accessible. Use direct to be excellent." MCP = distribution strategy. Direct = product experience strategy. Run both.
+- **Animations:** Statement (0), then MCP column (1), Direct column (2), closing line (3) — each fragment builds the argument progressively.
 
 ---
 
-## Act 5 — Framework & Call to Action (~8 min)
+## Act 5 — Framework & Call to Action (~5 min)
 
 ### Slide 22: Decision Framework
 - **Purpose:** Give them a tool
 - **Content:** Two-column checklist: "Use MCP when..." vs "Use direct when..." Key question: "Who controls the LLM?"
+- **Animations:** MCP column (0), Direct column (1), key question (2) — fragments reveal each side before the unifying question.
 
 ### Slide 23: Getting Started
 - **Purpose:** Lower the barrier
@@ -135,10 +139,31 @@ type: reference
 ### Slide 24: Build or Adopt?
 - **Purpose:** Call to action
 - **Content:** Two paths: Adopt (use existing servers) vs Build (create server for your product). Both contribute to the ecosystem.
+- **Animations:** Adopt column (0), Build column (1), closing line (2) — reveal each path before the unifying message.
 
-### Slide 25: Thank You + Q&A
+---
+
+## Act 6 — The Future (~3 min)
+
+### Slide 25: What If Building Is Free?
+- **Purpose:** Challenge the fundamental M×N assumption
+- **Content:** Cost collapse timeline: 10 days (2020, write from scratch) → 10 hours (2023, AI-assisted) → 10 minutes (2025, prompt the right LLM). Punchline: "If M×N costs nothing — does the problem still exist?"
+- **Animations:** Each timeline step reveals sequentially (0-2), then punchline (3).
+
+### Slide 26: The Ephemeral Tool Era
+- **Purpose:** Introduce the generate-execute-discard paradigm
+- **Content:** Lifecycle diagram: Generate → Execute → Discard, with dashed return arc ("next query"). Open questions: Trust (who verifies?), Reproducibility (same result tomorrow?), Governance (audit log?).
+- **Animations:** Generate box + "Triggered by prompt" label (0), Execute (1), Discard with dashed border (2), return arc (3), "open questions" label (4), then three question cards (5-7).
+
+### Slide 27: Two Plausible Futures
+- **Purpose:** Leave the audience with an open question — don't resolve it
+- **Content:** SVG fork diagram: timeline from MCP launch (Nov 2024) → Agents read APIs (2025) → NOW → fork into Future A (Standards win — MCP as lingua franca) vs Future B (Generation wins — every tool ephemeral & bespoke). Italic footer: "The answer probably depends on how good agents get at trust and verification — and we're not there yet."
+- **Speaker notes:** The question IS the point. Good Q&A anchor: "Which future are you building for right now?"
+
+### Slide 28: Thank You + Q&A
 - **Purpose:** Close
-- **Content:** Minimal. "Thank you. Questions?" Key takeaway reminder. Netlight logo.
+- **Content:** Minimal. "Thank you. Questions?" Key takeaway reminder: "MCP to be accessible. Direct to be excellent." Resources: modelcontextprotocol.io, github.com/modelcontextprotocol. Netlight branding.
+- **Animations:** Takeaway quote (0), resource links (1).
 
 ---
 
