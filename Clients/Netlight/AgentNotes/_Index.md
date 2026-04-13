@@ -17,5 +17,3 @@ Map of Content for Netlight development notes.
 <!-- Evergreen patterns and knowledge -->
 
 - [[Slide Deck Skills]] — Framework of skills for creating reveal.js presentations
-- [[Claude Code Presentation/Story]] — Narrative arc for Claude Code & AI Tooling talk
-- [[Claude Code Presentation/Outline]] — 22-slide outline for Claude Code & AI Tooling talk

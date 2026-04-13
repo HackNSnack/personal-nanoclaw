@@ -4,6 +4,8 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
+- [[Clients/Ardoq/AgentNotes/Active/2026-04-13 LLM Evaluation Pipeline - Architecture]] - System design for LLM-as-judge on customer sessions
+- [[Clients/Ardoq/AgentNotes/Active/2026-04-13 LLM Evaluation Pipeline - Visual]] - Mermaid diagrams of eval pipeline data flow
 - [[Clients/Ardoq/AgentNotes/Active/2026-03-24 Nested sub-agent result propagation design]]
 
 ## Recently Archived
@@ -21,7 +23,12 @@ Map of Content for Ardoq development notes.
 
 ## Reference
 
-- [[Clients/Ardoq/AgentNotes/Reference/Model Context Protocol (MCP)]] - Protocol overview, pros/cons, adoption
-- [[Clients/Ardoq/AgentNotes/Reference/Dynamic Agent Context Flow]] - Mermaid diagrams of agent context variable flow
-- [[Clients/Ardoq/AgentNotes/Reference/My Code Review Standards]] - Personal review standards extracted from PR history
-- [[Clients/Ardoq/AgentNotes/Reference/API Request Headers]] - Complete HTTP header reference for ardoq-api
+### Infrastructure
+- [[Clients/Ardoq/AgentNotes/Reference/Infrastructure/Architecture - Visual]] - Mermaid diagrams of multi-region infrastructure, tenant isolation, K8s architecture
+- [[Clients/Ardoq/AgentNotes/Reference/Infrastructure/Architecture - Explained]] - Textual deep-dive on regions, isolation model, backup/DR, traffic flow
+
+### Development
+- [[Clients/Ardoq/AgentNotes/Reference/Development/Model Context Protocol (MCP)]] - Protocol overview, pros/cons, adoption
+- [[Clients/Ardoq/AgentNotes/Reference/Development/Dynamic Agent Context Flow]] - Mermaid diagrams of agent context variable flow
+- [[Clients/Ardoq/AgentNotes/Reference/Development/My Code Review Standards]] - Personal review standards extracted from PR history
+- [[Clients/Ardoq/AgentNotes/Reference/Development/API Request Headers]] - Complete HTTP header reference for ardoq-api

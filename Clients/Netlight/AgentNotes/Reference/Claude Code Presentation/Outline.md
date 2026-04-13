@@ -3,172 +3,196 @@ tags: [presentations, claude-code, ai-tooling, outline]
 type: reference
 ---
 
-# Claude Code & AI Tooling — Slide Outline
+# AI Tooling — What Actually Works — Slide Outline
 
-**Slides:** 22
+**Slides:** 21
 **Estimated duration:** ~30 minutes
 
 ---
 
-### 01 — Title
+### 01 — Title Slide
 - **Type:** title
-- **Purpose:** Set the stage and establish the speaker
-- **Key message:** This is a talk about AI tooling — the honest version
-- **Content:** "Claude Code & AI Tooling — What Actually Works" / Speaker name, date, Netlight logo
-- **Speaker notes:** Brief intro of yourself and what you'll cover
-
-### 02 — The Headlines
-- **Type:** content
-- **Purpose:** Acknowledge the hype — it's loud and it's everywhere
-- **Key message:** The AI narrative is breathless, and it's hard to know what to take seriously
-- **Content:** 3-4 real headlines/quotes: "AI will replace developers," "10x productivity," "prompt engineering is the new coding" — styled like news clippings or social posts
-- **Speaker notes:** You've seen these. LinkedIn, Twitter, every keynote. The noise is constant and it's hard to separate signal from hype.
-
-### 03 — Things Have Changed
-- **Type:** transition
-- **Purpose:** Acknowledge the real shift — don't dismiss it
-- **Key message:** AI tooling has genuinely changed how we work, and pretending otherwise is just as wrong as the hype
-- **Content:** "Things *have* changed." — large, centered. Then a few grounding examples: code review with AI, automated test drafts, codebase exploration in minutes instead of days
-- **Speaker notes:** Here's the thing though — things have actually shifted. If you're writing code the same way you did two years ago, you're probably leaving value on the table. The tools are real, the capabilities are real, and they're changing how teams operate.
-
-### 04 — But It's Not What the Headlines Say
-- **Type:** content
-- **Purpose:** Thread the needle — powerful tool, not a silver bullet
-- **Key message:** AI is a genuine shift in how we work, but it doesn't solve everything — and that's fine
-- **Content:** Two sides. Left: "What's real" — faster iteration, less tedious work, new capabilities. Right: "What's not" — it won't replace thinking, it hallucinates, it doesn't know your business. Bottom: "The gap between these two is where this talk lives."
-- **Speaker notes:** Both things are true. AI tooling is genuinely powerful — and it's genuinely limited. The hype says it solves everything. The skeptics say it solves nothing. Reality is in between, and that's actually a more interesting place to be.
-
-### 05 — What This Talk Is About
-- **Type:** content
-- **Purpose:** Set expectations now that the framing is clear
-- **Key message:** Practical, honest — how to adapt without buying the hype
-- **Content:** Short list. This talk: honest assessment of where we are, practical workflows you can adopt, how to adapt incrementally — not a transformation manifesto
-- **Speaker notes:** So that's what we're doing for the next 25 minutes. No hype, no dismissal. Just: here's what works, here's what doesn't, and here's how to start adapting at your own pace.
-
-### 06 — The Spectrum
-- **Type:** transition
-- **Purpose:** Bridge from framing into the landscape overview
-- **Key message:** AI coding tools aren't one thing — they're a spectrum
-- **Content:** Simple visual: a spectrum line from "Autocomplete" on the left to "Autonomous Agent" on the right
-- **Speaker notes:** Let's talk about what's actually out there. Not all AI tools are the same — they sit on a spectrum.
-
-### 07 — Chat Assistants
-- **Type:** content
-- **Purpose:** Cover the first category of tools
-- **Key message:** Good for Q&A and exploration, limited by lack of codebase context
-- **Content:** ChatGPT, Claude.ai, etc. What they do well: explain concepts, draft snippets, rubber-duck debugging. Limitation: they don't see your code.
-- **Speaker notes:** This is where most people start. Paste some code into a chat, ask a question. It works, but it's like asking a colleague who's never seen your repo.
-
-### 08 — Inline Copilots
-- **Type:** content
-- **Purpose:** Cover the second category
-- **Key message:** Useful for line-level speed, less useful for larger reasoning
-- **Content:** GitHub Copilot, Codeium, etc. What they do: autocomplete on steroids, in-editor suggestions. Limitation: single-file context, can't reason about your system.
-- **Speaker notes:** The next step up. These live in your editor and predict what you're about to type. Great for boilerplate, less great for anything that requires understanding how things connect.
-
-### 09 — Agentic Tools
-- **Type:** content
-- **Purpose:** Cover the third category — where Claude Code lives
-- **Key message:** These tools can read, reason about, and modify your codebase
-- **Content:** Claude Code, Cursor, Windsurf, etc. What they do: read your full repo, propose multi-file changes, run commands. Key difference: they have context.
-- **Speaker notes:** This is the category we'll spend most of our time on. These tools can actually navigate your codebase, understand relationships between files, and make changes across multiple files at once.
-
-### 10 — No "Best Tool"
-- **Type:** transition
-- **Purpose:** Prevent the "which one should I use?" distraction
-- **Key message:** The categories matter more than the specific tools — pick what fits your workflow
-- **Content:** "There is no best tool. There's the one that fits how you work." — centered statement
-- **Speaker notes:** I'm not going to rank these. They all have tradeoffs. The point is understanding what each category can do so you can make an informed choice. I'll focus on Claude Code because that's what I use daily.
-
-### 11 — What Is Claude Code?
-- **Type:** content
-- **Purpose:** Introduce Claude Code specifically
-- **Key message:** A terminal-based AI agent that works with your actual codebase
-- **Content:** Brief description: runs in your terminal, reads your repo, proposes changes, can execute commands. Not an IDE plugin — it's an agent.
-- **Speaker notes:** Claude Code is a CLI tool. You point it at your project, describe what you want, and it reads your files, reasons about the structure, and proposes changes. It can also run tests, check git status, install packages — it operates in your environment.
-
-### 12 — A Real Workflow
-- **Type:** content
-- **Purpose:** Show — don't tell — what using it actually looks like
-- **Key message:** It's a conversation with your codebase, not a magic button
-- **Content:** Step-by-step walkthrough of a real task (e.g., "add input validation to an API endpoint"). 3-4 steps: describe task → it reads relevant files → proposes changes → you review and adjust
-- **Speaker notes:** Let me walk you through what a typical session looks like. This isn't a contrived demo — it's a Tuesday afternoon.
-
-### 13 — Where It Genuinely Helps
-- **Type:** list
-- **Purpose:** Concrete wins — build credibility with real examples
-- **Key message:** There are specific categories of work where AI tooling shines
-- **Content:** 4-5 items: multi-file refactors, boilerplate/scaffolding, exploring unfamiliar codebases, first drafts of tests, repetitive transformations
-- **Speaker notes:** These are the places where I've seen consistent value. Not "sometimes it works" — these reliably save time and effort.
-
-### 14 — Where It Falls Short
-- **Type:** list
-- **Purpose:** Build trust by being honest about limitations
-- **Key message:** It's confidently wrong in predictable ways — know the failure modes
-- **Content:** 4-5 items: hallucinated APIs, architecture decisions, business context, security edge cases, "it refactors 500 lines flawlessly, then invents a function that doesn't exist"
-- **Speaker notes:** And here's the other side. These aren't edge cases — these are things that happen regularly. You will get output that looks perfect and is subtly wrong. That's why review isn't optional.
-
-### 15 — The Trust Model
-- **Type:** content
-- **Purpose:** Reframe the relationship — it's a tool, not an oracle
-- **Key message:** The value isn't blind trust, it's faster iteration
-- **Content:** "Trust but verify" framing. You're not outsourcing thinking — you're getting a fast first draft. The skill is knowing when to accept, when to adjust, when to reject.
-- **Speaker notes:** Think of it like a very fast junior developer who's read a lot of code but doesn't know your system. You wouldn't merge their PR without reviewing it. Same principle.
-
-### 16 — Practical Workflows
-- **Type:** transition
-- **Purpose:** Shift from "what is it" to "how do I use it"
-- **Key message:** Let's get concrete
-- **Content:** Section title: "The Small Wins" — simple, large text
-- **Speaker notes:** Enough theory. Let's talk about specific things you can do with this.
-
-### 17 — Workflow: Test First Drafts
-- **Type:** content
-- **Purpose:** Show a specific, relatable workflow
-- **Key message:** Let AI write the boring test scaffolding, you focus on the edge cases
-- **Content:** Example: "Write tests for this service" → generates 80% of test cases → you add the tricky edge cases and business logic tests
-- **Speaker notes:** Writing tests is one of the highest-value use cases. Not because it writes perfect tests — but because it handles the scaffolding and obvious cases, freeing you to think about the hard ones.
-
-### 18 — Workflow: Codebase Exploration
-- **Type:** content
-- **Purpose:** Show another practical workflow
-- **Key message:** AI is excellent at navigating code you've never seen before
-- **Content:** Example: "How does authentication work in this repo?" → it reads the relevant files, traces the flow, and summarizes it for you
-- **Speaker notes:** Ever joined a project and spent days figuring out how things connect? This is where agentic tools save real time. They can read and cross-reference faster than you can grep.
-
-### 19 — Workflow: Repetitive Refactors
-- **Type:** content
-- **Purpose:** Show a third workflow
-- **Key message:** The tedious, mechanical work is exactly where AI fits
-- **Content:** Example: rename a pattern across 20 files, migrate an API, update imports. The stuff that's simple but time-consuming.
-- **Speaker notes:** This is the "I could do it, but it'd take an hour of find-and-replace" category. Let the tool handle the mechanical part.
-
-### 20 — The Real Shift
-- **Type:** transition
-- **Purpose:** Deliver the turning point of the talk
-- **Key message:** It's not about AI doing your job — it's about what you spend your attention on
-- **Content:** "The question isn't whether AI can code. It's what you do with the time it saves." — centered, prominent
-- **Speaker notes:** Here's what I think the real shift is. When the tedious parts get faster, you naturally spend more time on the hard problems — the architecture, the design, the edge cases that need a human. That's not hype. That's just a better workday.
-
-### 21 — One Thing This Week
-- **Type:** content
-- **Purpose:** Deliver the call-to-action
-- **Key message:** Don't transform your workflow — just try one thing
-- **Content:** "Pick one task from this week that felt repetitive. Try it with AI next week." No manifesto. No transformation roadmap. Just one thing.
-- **Speaker notes:** I'm not asking you to change how you work. I'm asking you to try one thing. One task. See if it helps. If it does, try another. If it doesn't, you've lost nothing. That's it.
-
-### 22 — Thank You
-- **Type:** closing
-- **Purpose:** Clean ending with contact info
-- **Key message:** The door is open for questions and conversation
-- **Content:** "Thank you" / speaker name / contact info / Q&A prompt
-- **Speaker notes:** Thanks for listening. Happy to take questions, or come find me afterward if you want to chat about specific workflows.
+- **Purpose:** Set the stage before saying a word
+- **Key message:** This talk is grounded and practical
+- **Content:** Title: "AI Tooling — What Actually Works". Subtitle: "A practical look at where AI reduces real friction"
+- **Speaker notes:** Let the title sit. Don't rush into it.
 
 ---
 
-**Pacing:**
-- Slides 01-05 (Opening + framing): ~5 min
-- Slides 06-10 (Landscape): ~5 min
-- Slides 11-15 (Claude Code deep dive): ~8 min
-- Slides 16-19 (Practical workflows): ~7 min
-- Slides 20-22 (Turning point + close): ~5 min
+### 02 — The Noise
+- **Type:** content
+- **Purpose:** Open with what the audience already experiences — the hype
+- **Key message:** There's a lot of noise out there
+- **Content:** Collage of overhyped headlines / quotes. "AI writes entire apps in seconds." "10x your productivity." "The end of software engineering."
+- **Speaker notes:** Point to these and let the audience feel the fatigue. They've seen this.
+
+---
+
+### 03 — The Real Question
+- **Type:** quote
+- **Purpose:** Redirect attention from hype to reality
+- **Key message:** How much of this has actually changed your Monday morning?
+- **Content:** Large text: *"How much of this has actually changed your Monday morning?"*
+- **Speaker notes:** Pause here. Let the question land. Most hands won't go up.
+
+---
+
+### 04 — This Talk Is Not About the Future
+- **Type:** transition
+- **Purpose:** Set expectations — this is a practical talk
+- **Key message:** We're talking about next week, not next year
+- **Content:** "This isn't about what AI will do. It's about what you can do differently next week."
+- **Speaker notes:** Explicitly differentiate this talk from the usual hype cycle content.
+
+---
+
+### 05 — The Honest Picture
+- **Type:** content
+- **Purpose:** Establish credibility by being direct about limitations
+- **Key message:** AI won't replace you or 10x your output overnight — and that's fine
+- **Content:** 3 honest statements: "It won't replace you." / "It won't 10x your output." / "It *will* reduce friction — in specific places."
+- **Speaker notes:** Say this plainly. The audience will relax. You're not selling anything.
+
+---
+
+### 06 — The Real Gap
+- **Type:** content
+- **Purpose:** Reframe the barrier — it's not about philosophy, it's about starting
+- **Key message:** The gap is between "I've heard of it" and "this is part of how I work"
+- **Content:** Two states: [Heard of it / Skeptical / Watching] → [Uses it deliberately / Knows where it helps]
+- **Speaker notes:** Most people in the room are on the left side. That's normal. The goal is moving right.
+
+---
+
+### 07 — Forget Tool Categories
+- **Type:** transition
+- **Purpose:** Bridge into the practical section — reframe around tasks, not tools
+- **Key message:** Stop asking "which tool?" — start asking "what am I trying to do?"
+- **Content:** "Forget Copilot vs. Claude vs. Cursor. Let's talk about what you're actually trying to do."
+- **Speaker notes:** This reframe is the core of the talk. Tasks > tools.
+
+---
+
+### 08 — Task: Exploring an Unfamiliar Codebase
+- **Type:** comparison
+- **Purpose:** Show concrete before/after for a relatable dev task
+- **Key message:** AI dramatically compresses the time to orient in new code
+- **Content:** Left: "Without AI — reading files, grepping, asking colleagues, 2-3 days." Right: "With AI — ask questions, get summaries, trace logic, hours."
+- **Speaker notes:** Use a real example if you have one. "First day on a new project."
+
+---
+
+### 09 — Task: Writing the First Draft of Tests
+- **Type:** comparison
+- **Purpose:** Demonstrate value in a tedious-but-necessary task
+- **Key message:** AI is great at generating the scaffolding you'd otherwise skip or delay
+- **Content:** Left: "Without AI — blank file, procrastination, minimal coverage." Right: "With AI — describe behavior, get test stubs, refine."
+- **Speaker notes:** Emphasize: AI writes the draft, you review and fix. That's the workflow.
+
+---
+
+### 10 — Task: Refactoring Repetitive Code
+- **Type:** comparison
+- **Purpose:** Show value in mechanical, high-volume work
+- **Key message:** Pattern-based refactoring is exactly what AI is fast at
+- **Content:** Left: "Without AI — find/replace, manual edits, easy to miss cases." Right: "With AI — describe the pattern, apply across the codebase."
+- **Speaker notes:** Good place for a quick code demo if time allows.
+
+---
+
+### 11 — Task: Generating Boilerplate
+- **Type:** comparison
+- **Purpose:** The lowest-friction entry point — even skeptics can start here
+- **Key message:** Stop copy-pasting — just describe what you want
+- **Content:** Left: "Without AI — copy an old file, delete the parts that don't apply, forget something." Right: "With AI — describe the structure, get the scaffold."
+- **Speaker notes:** This is the easiest win. Great "try this first" suggestion.
+
+---
+
+### 12 — The Pattern
+- **Type:** content
+- **Purpose:** Synthesize the task examples into a reusable insight
+- **Key message:** AI is best at the work that's tedious, repetitive, or just needs a first draft
+- **Content:** A simple framework: **Tedious → Repetitive → First drafts → Great fit for AI.** Complex reasoning / judgment calls → less so.
+- **Speaker notes:** Don't oversell. The nuance is important — AI isn't magic, it's just fast at a specific class of work.
+
+---
+
+### 13 — The Cost of Not Trying
+- **Type:** transition
+- **Purpose:** Shift from "what AI can do" to "what happens if you don't engage"
+- **Key message:** The gap is between deliberate users and those who haven't started
+- **Content:** "Most people are watching from the sidelines. The gap isn't between people who use AI and people who don't — it's between those who use it *deliberately* and those who haven't started."
+- **Speaker notes:** Acknowledge this is where most of the room is. Don't shame it — just name it.
+
+---
+
+### 14 — Intuition Compounds
+- **Type:** content
+- **Purpose:** Create urgency — inaction has a cost
+- **Key message:** Every week you skip is a week you're not building the intuition
+- **Content:** "Every week you skip is a week you're not building the intuition for where it helps. The tools keep improving. The gap keeps growing."
+- **Speaker notes:** Deliberate is the key word. Passive use doesn't build the intuition.
+
+---
+
+### 15 — The Turning Point
+- **Type:** transition
+- **Purpose:** Pivot to the emotional/philosophical close
+- **Key message:** The real shift is about what you spend your attention on
+- **Content:** Large text: *"It's not about AI doing your job. It's about what you choose to spend your attention on."*
+- **Speaker notes:** Let this breathe. It's the emotional core of the talk.
+
+---
+
+### 16 — A Better Workday
+- **Type:** content
+- **Purpose:** Make the benefit concrete and human — not productivity stats
+- **Key message:** When tedious work gets faster, you spend more time on hard, interesting problems
+- **Content:** "When the tedious parts get faster — you spend more time on the hard, interesting problems. The ones that actually need a human. That's not hype. That's just a better workday."
+- **Speaker notes:** This is the "so what" for the humans in the room, not just the technologists.
+
+---
+
+### 17 — What Claude Code Actually Is (Optional Deep Dive)
+- **Type:** content
+- **Purpose:** Ground the talk in a specific tool for those who want the concrete
+- **Key message:** Claude Code is a CLI agent that works in your terminal on your real codebase
+- **Content:** Brief description + key capabilities: reads/writes files, runs commands, understands project context, works in your existing workflow
+- **Speaker notes:** Keep this short — it's context, not the point. Can skip if time is tight.
+
+---
+
+### 18 — Live Demo (Optional)
+- **Type:** content
+- **Purpose:** Make it real
+- **Key message:** This isn't magic — it's a fast, context-aware collaborator
+- **Content:** Placeholder: "Live demo — [task TBD]"
+- **Speaker notes:** Pick something simple and relatable. Show the *process*, not just the result.
+
+---
+
+### 19 — The Whole Plan
+- **Type:** content
+- **Purpose:** Make the call to action feel achievable, not overwhelming
+- **Key message:** Don't change everything — pick one thing
+- **Content:** "Pick one task from this week. Something repetitive. Something you wished was already done. Try it with AI. See if it helps. If it does, try another."
+- **Speaker notes:** Say this slowly. It's deliberately simple. That's the point.
+
+---
+
+### 20 — Key Takeaways
+- **Type:** list
+- **Purpose:** Reinforce the 3 things worth remembering
+- **Key message:** Three concrete things to leave with
+- **Content:** 1. AI reduces real friction — but only if you know where to point it. 2. Deliberate, task-focused use beats passive skepticism. 3. Start with one thing this week and judge for yourself.
+- **Speaker notes:** Read these out loud slowly. Then ask: "Any questions?"
+
+---
+
+### 21 — Closing / Thank You
+- **Type:** closing
+- **Purpose:** End with presence, not a wall of links
+- **Key message:** Go try something this week
+- **Content:** Name, title, contact. Optionally: a QR code to a resource list.
+- **Speaker notes:** End on the challenge: "What's the one thing you're going to try this week?"

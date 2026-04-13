@@ -10,15 +10,18 @@ status: in-progress
 
 Creating a 30-minute presentation about Claude Code and AI tooling for a mixed technical audience. Grounded, practical tone — cut through the hype.
 
-## Current State (2026-03-21)
+## Current State (2026-04-13)
 
 ### Story — COMPLETE
-- [x] Narrative arc drafted and approved
-- [x] Saved to [[Claude Code Presentation/Story]]
+- [x] Narrative arc v1 drafted and approved — [[Claude Code Presentation/Story]]
+- [x] Narrative arc v2 drafted and approved — [[Claude Code Presentation/Story v2]]
+  - Dropped spectrum/landscape framing
+  - Replaced with task/workflow lens
+  - Added "cost of not trying" section
 
 ### Outline — COMPLETE
 - [x] 22-slide outline drafted and approved
-- [x] Saved to [[Claude Code Presentation/Outline]]
+- [x] Saved to [[Outline]]
 
 ### Deck — NOT STARTED
 - [ ] Scaffold Vite + React + Reveal.js project
@@ -28,8 +31,9 @@ Creating a 30-minute presentation about Claude Code and AI tooling for a mixed t
 
 ## Related
 
-- Story: [[Claude Code Presentation/Story]]
-- Outline: [[Claude Code Presentation/Outline]]
+- Story v1: [[Claude Code Presentation/Story]]
+- Story v2: [[Claude Code Presentation/Story v2]]
+- Outline: [[Outline]]
 - Project path: `/home/mathipe/Prosjekter/Netlight/Presentations/revealjs-presentations`
 - Design: [[netlight-design-guidelines]]
 - Skills: [[Slide Deck Skills]]
