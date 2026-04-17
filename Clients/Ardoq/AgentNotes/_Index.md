@@ -4,9 +4,7 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
-- [[Clients/Ardoq/AgentNotes/Active/2026-04-13 LLM Evaluation Pipeline - Architecture]] - System design for LLM-as-judge on customer sessions
-- [[Clients/Ardoq/AgentNotes/Active/2026-04-13 LLM Evaluation Pipeline - Visual]] - Mermaid diagrams of eval pipeline data flow
-- [[Clients/Ardoq/AgentNotes/Active/2026-03-24 Nested sub-agent result propagation design]]
+
 
 ## Recently Archived
 
@@ -16,6 +14,12 @@ Map of Content for Ardoq development notes.
 - [[Clients/Ardoq/AgentNotes/Archive/2026-03-23 Simplify dynamic agent return]]
 - [[Clients/Ardoq/AgentNotes/Archive/2026-03-23 Replace collector callback with dict accumulator]]
 - [[Clients/Ardoq/AgentNotes/Archive/2026-03-19 LLM variance testing script]]
+
+- [[2026-04-13 LLM Evaluation Pipeline - Architecture]] - System design for LLM-as-judge on customer sessions
+
+- [[2026-04-13 LLM Evaluation Pipeline - Visual]] - Mermaid diagrams of eval pipeline data flow
+
+- [[2026-03-24 Nested sub-agent result propagation design]]
 
 ## Key Decisions
 
