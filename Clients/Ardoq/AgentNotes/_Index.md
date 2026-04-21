@@ -4,7 +4,7 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
-
+- [[Clients/Ardoq/AgentNotes/Active/2026-04-21 Pi.dev Claude Code API Key 429 Error Investigation]] - Root cause analysis and extension workaround for pi.dev Sonnet/Opus 429 errors
 
 ## Recently Archived
 
