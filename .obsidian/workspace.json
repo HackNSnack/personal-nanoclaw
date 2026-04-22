@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Clients/Netlight/AgentNotes/Active/PiDev/Configuration.md",
+                "file": "Clients/Netlight/AgentNotes/Active/PiDev/Documentation/Pi Documentation Index - LLM Reference.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Configuration"
+              "title": "Pi Documentation Index - LLM Reference"
             }
           }
         ]
@@ -194,10 +194,14 @@
   },
   "active": "e4f0715e103962be",
   "lastOpenFiles": [
+    "Daily Tracker/2026/04-April/2026-04-22-Wednesday.md",
+    "Clients/Netlight/AgentNotes/Active/PiDev/Documentation/Pi Coding Agent - Full Documentation.md",
+    "Clients/Netlight/AgentNotes/Active/PiDev/Configuration.md",
+    "Clients/Netlight/AgentNotes/Active/PiDev/Documentation/Pi Documentation Index - LLM Reference.md",
+    "Clients/Netlight/AgentNotes/Active/PiDev/Documentation",
     "Clients/Netlight/AgentNotes/Active/PiDev/Permission System.md",
     "Clients/Netlight/AgentNotes/Active/PiDev/Markdown Rendering Investigation.md",
     "Clients/Netlight/AgentNotes/Active/PiDev/Overview.md",
-    "Clients/Netlight/AgentNotes/Active/PiDev/Configuration.md",
     "Clients/Ardoq/AgentNotes/Active/2026-04-21 Pi.dev Claude Code API Key 429 Error Investigation.md",
     "Clients/Netlight/AgentNotes/Active/PiDev",
     "Daily Tracker/2026/04-April/2026-04-21-Tuesday.md",
@@ -220,16 +224,12 @@
     "Clients/Netlight/AgentNotes/Active/2026-04-15 AI Tooling Presentation.md",
     "Daily Tracker/2026/04-April/2026-04-13-Monday.md",
     "Clients/Netlight/AgentNotes/Reference/Claude Code Presentation/Outline-v2.md",
-    "Clients/Netlight/AgentNotes/Reference/Claude Code Presentation/Story v2.md",
-    "Clients/Ardoq/Weeklies/Week-15-2026.md",
-    "Clients/Ardoq/AgentNotes/Reference/Infrastructure/Architecture - Visual.md",
     "Clients/Ardoq/AgentNotes/Reference/Infrastructure",
     "Clients/Ardoq/AgentNotes/Reference/Development",
     "Daily Tracker/2026/04-April",
     "Clients/Ardoq/AgentNotes/Archive",
     "Personal/Research",
     "Personal",
-    "Clients/Netlight/AgentNotes/Reference/Claude Code Presentation",
     "Legacy/Old AgentNotes Structure/Ardoq/Hackathon/Agent Setup.canvas",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Images/Pasted image 20251113154817.png",
