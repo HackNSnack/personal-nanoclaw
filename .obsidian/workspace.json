@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Clients/Netlight/AgentNotes/Reference/PiDev/Subagent Extension.md",
+                "file": "Daily Tracker/2026/04-April/2026-04-24-Friday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Subagent Extension"
+              "title": "2026-04-24-Friday"
             }
           }
         ]
@@ -192,10 +192,10 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "e4f0715e103962be",
+  "active": "5c4640ee71da1801",
   "lastOpenFiles": [
-    "Daily Tracker/2026/04-April/2026-04-24-Friday.md",
     "Clients/Netlight/AgentNotes/Reference/PiDev/Subagent Extension.md",
+    "Daily Tracker/2026/04-April/2026-04-24-Friday.md",
     "Daily Tracker/2026/04-April/2026-04-23-Thursday.md",
     "Clients/Netlight/AgentNotes/_Index.md",
     "Clients/Netlight/AgentNotes/Reference/Claw Code Architecture/13 - Error Recovery & Remediation.md",
