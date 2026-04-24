@@ -37,7 +37,7 @@ _Document configuration changes as we make them_
 
 ## Related Notes
 
-- [[PiDev/Overview]]
+- [[Clients/Netlight/AgentNotes/Reference/PiDev/Overview]]
 - [[PiDev/Extensions]]
 
 

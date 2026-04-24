@@ -172,8 +172,8 @@ Command classification logic (~1400 test cases) extracted from [pi-permission](h
 
 ## Related
 
-- [[PiDev/Overview]]
-- [[PiDev/Configuration]]
+- [[Clients/Netlight/AgentNotes/Reference/PiDev/Overview]]
+- [[Configuration]]
 
 
 ## UI Enhancements (2026-04-21)
@@ -211,3 +211,25 @@ Shows current permission state in footer:
 - `🔒 Minimal` - No grants
 - `🔒 Medium (3p)` - 3 project grants  
 - `🔒 High (2p) (5g)` - 2 project + 5 global
+
+## Known Issue: Hang When Used with Subagent Extension
+
+> **Fixed**: 2026-07-10
+
+### Problem
+
+When the subagent extension spawns a child `pi` process and that child tries an operation requiring a permission prompt, the **parent session hangs indefinitely**.
+
+### Cause
+
+The child runs in `--mode json` (non-interactive). `ctx.hasUI` is `false`. `ctx.ui.select()` is a no-op that returns `undefined` immediately. The permission handlers interpret this as the user pressing "Cancel" and call **`ctx.abort()`**, which signals the child's agent AbortController mid-`beforeToolCall`. The child's next LLM HTTP request may not cancel immediately (the Anthropic provider only checks the abort signal at the end of its streaming loop), causing a full LLM round-trip delay or longer hang.
+
+### Fix
+
+Added `if (!ctx.hasUI) { return undefined; }` in all four handlers (`handleBashToolCall`, `handleReadToolCall`, `handleWriteToolCall`, `handleEditToolCall`) **before** the `promptForPermission()` call.
+
+In non-interactive mode the extension now auto-allows any operation that would normally trigger a prompt. Hard `"deny"` decisions (sensitive files, commands above configured level) still block unconditionally.
+
+**File**: `src/index.ts` — rebuild with `pnpm run build`
+
+Full investigation: [[Subagent Extension]]

@@ -101,5 +101,5 @@ npm install -g @mariozechner/pi-coding-agent
 
 ## Related Notes
 
-- [[PiDev/Configuration]]
+- [[Configuration]]
 - [[PiDev/Extensions]]
