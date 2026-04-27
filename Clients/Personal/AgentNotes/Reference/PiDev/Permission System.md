@@ -173,7 +173,7 @@ Command classification logic (~1400 test cases) extracted from [pi-permission](h
 ## Related
 
 - [[Clients/Netlight/AgentNotes/Reference/PiDev/Overview]]
-- [[Clients/Netlight/AgentNotes/Reference/PiDev/Configuration]]
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Configuration]]
 
 
 ## UI Enhancements (2026-04-21)
@@ -232,4 +232,4 @@ In non-interactive mode the extension now auto-allows any operation that would n
 
 **File**: `src/index.ts` — rebuild with `pnpm run build`
 
-Full investigation: [[Clients/Netlight/AgentNotes/Reference/PiDev/Subagent Extension]]
+Full investigation: [[Clients/Personal/AgentNotes/Reference/PiDev/Subagent Extension]]

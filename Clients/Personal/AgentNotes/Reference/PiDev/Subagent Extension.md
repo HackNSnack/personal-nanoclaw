@@ -252,9 +252,9 @@ Parent session showed ✓ (success) while the subagent was still running, then g
 
 ## Related
 
-- [[Clients/Netlight/AgentNotes/Reference/PiDev/Permission System]] — the extension that interacts with subagents
-- [[Clients/Netlight/AgentNotes/Reference/PiDev/Overview]] — pi.dev architecture overview
-- [[Clients/Netlight/AgentNotes/Reference/PiDev/Configuration]] — where agent definitions live
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Permission System]] — the extension that interacts with subagents
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Overview]] — pi.dev architecture overview
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Configuration]] — where agent definitions live
 
 ---
 

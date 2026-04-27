@@ -5,6 +5,8 @@ Map of Content for Ardoq development notes.
 ## Active Work
 
 - [[Clients/Ardoq/AgentNotes/Active/2026-04-21 Pi.dev Claude Code API Key 429 Error Investigation]] - Root cause analysis and extension workaround for pi.dev Sonnet/Opus 429 errors
+- [[Clients/Ardoq/AgentNotes/Active/2026-04-27 Streaming nested sub-agent events to end user]] - Design analysis: why inner agent events are blocked at the tool boundary, and a queue-based solution
+- [[Clients/Ardoq/AgentNotes/Active/2026-04-27 Sub-agent visibility - non-technical overview]] - Non-technical explainer: what is visible in real time today, the silent window, and effort levels to improve it
 
 ## Recently Archived
 

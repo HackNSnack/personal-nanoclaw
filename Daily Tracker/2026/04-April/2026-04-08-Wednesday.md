@@ -10,16 +10,16 @@ created: 2026-04-08 13:00
 ### ✷️ Daily Tasks
 
 ##### 🚀 Things I plan to accomplish today is...
-- [ ] Updated ai_observability architecture doc — removed completion_router from functional architecture diagram
-- [ ] Had ai_observability meeting and showed new functional architecture
-- [ ] Set up E2E working local system w/local DB, local running Ardoq API, FE, and Python BE
-	- [ ] Debugged certificate SSL errors when running python BE
-- [ ] Set up & fixed ollama versioning issues & researched best locally running LLMs
-- [ ] Merged dynamic agent variable PR
-- [ ] Merged & fixed agent type parameter PR
-- [ ] Did small research into Pydantic AI - Capabilities & brainstormed w/Nifemi around future possibilities
-- [ ] Reached out to devops regarding observability (TPM, Cost, latency)
-- [ ] 
+- [x] Updated ai_observability architecture doc — removed completion_router from functional architecture diagram
+- [x] Had ai_observability meeting and showed new functional architecture
+- [x] Set up E2E working local system w/local DB, local running Ardoq API, FE, and Python BE
+	- [x] Debugged certificate SSL errors when running python BE
+- [x] Set up & fixed ollama versioning issues & researched best locally running LLMs
+- [x] Merged dynamic agent variable PR
+- [x] Merged & fixed agent type parameter PR
+- [x] Did small research into Pydantic AI - Capabilities & brainstormed w/Nifemi around future possibilities
+- [x] Reached out to devops regarding observability (TPM, Cost, latency)
+
 
 
 

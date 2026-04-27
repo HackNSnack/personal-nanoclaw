@@ -51,4 +51,4 @@ Reviews the entire deck holistically. Evaluates: narrative flow, information den
 ## Related
 
 - Repo: `/home/mathipe/Prosjekter/Netlight/Presentations/revealjs-presentations/`
-- [[netlight-design-guidelines]]
+- [[Clients/Netlight/AgentNotes/Reference/netlight-design-guidelines]]

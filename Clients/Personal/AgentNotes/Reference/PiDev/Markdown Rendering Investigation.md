@@ -102,4 +102,4 @@ For terminal-centric workflow, raw markdown is the pragmatic choice.
 ## Related Notes
 
 - [[Clients/Netlight/AgentNotes/Reference/PiDev/Overview]]
-- [[Clients/Netlight/AgentNotes/Reference/PiDev/Configuration]]
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Configuration]]

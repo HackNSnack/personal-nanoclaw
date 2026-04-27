@@ -68,7 +68,7 @@ All slides animated with fragment reveals. Highlights:
 
 ## Related
 
-- [[Slide Deck Skills]]
-- [[netlight-design-guidelines]]
+- [[Personal/AgentNotes/Reference/Slide Deck Skills]]
+- [[Personal/AgentNotes/Reference/netlight-design-guidelines]]
 - Story: `Clients/Netlight/AgentNotes/Reference/AI Tooling Presentation/Story.md`
 - Outline: `Clients/Netlight/AgentNotes/Reference/AI Tooling Presentation/Outline.md`

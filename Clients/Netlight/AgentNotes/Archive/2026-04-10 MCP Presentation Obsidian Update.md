@@ -23,4 +23,4 @@ Created new prompt files: 25, 26, 27, 28. Deleted old prompt 22 (now 28).
 
 ## Related
 
-- [[MCP Presentation/Slide Structure]]
+- [[Personal/AgentNotes/Reference/MCP Presentation/Slide Structure]]
