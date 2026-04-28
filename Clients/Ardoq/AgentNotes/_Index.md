@@ -38,3 +38,8 @@ Map of Content for Ardoq development notes.
 - [[Clients/Ardoq/AgentNotes/Reference/Development/Dynamic Agent Context Flow]] - Mermaid diagrams of agent context variable flow
 - [[Clients/Ardoq/AgentNotes/Reference/Development/My Code Review Standards]] - Personal review standards extracted from PR history
 - [[Clients/Ardoq/AgentNotes/Reference/Development/API Request Headers]] - Complete HTTP header reference for ardoq-api
+
+#### Sub-Agent Streaming
+- [[Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Demo Agent]] — `nested_demo_agent` + `word_count_agent` reference implementation
+- [[Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Test Suite]] — Unit test harness: `conftest.py`, `test_sub_agent.py`, `test_sub_agent_nesting.py`, `test_streaming_sub_agent.py`
+- [[Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Stream Visualizer]] — NDJSON CLI visualizer + FastAPI smoke tests
