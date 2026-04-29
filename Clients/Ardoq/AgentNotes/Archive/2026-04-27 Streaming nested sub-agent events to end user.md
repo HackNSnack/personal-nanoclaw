@@ -1,7 +1,11 @@
 ---
-tags: [streaming, agents, architecture, pydantic-ai]
+tags:
+  - streaming
+  - agents
+  - architecture
+  - pydantic-ai
 type: work
-status: in-progress
+status: done
 ---
 
 # Streaming nested sub-agent events to the end user

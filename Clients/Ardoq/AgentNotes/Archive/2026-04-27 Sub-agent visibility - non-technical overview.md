@@ -1,5 +1,9 @@
 ---
-tags: [streaming, agents, explainer, non-technical]
+tags:
+  - streaming
+  - agents
+  - explainer
+  - non-technical
 type: work
 status: done
 ---
