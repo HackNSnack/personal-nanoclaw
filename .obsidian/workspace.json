@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "cc4c82937cfe3093",
+        "id": "e5b5afe4ec25e633",
         "type": "tabs",
         "children": [
           {
-            "id": "4583760098c75a6b",
+            "id": "e4f0715e103962be",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/04-April/2026-04-30-Thursday.md",
+                "file": "Clients/Ardoq/Weeklies/Week-18-2026.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-04-30-Thursday"
+              "title": "Week-18-2026"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 339.5
+    "width": 373.5
   },
   "right": {
     "id": "ade4fa5c5b7239e0",
@@ -192,44 +192,44 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "4583760098c75a6b",
+  "active": "e4f0715e103962be",
   "lastOpenFiles": [
-    "Daily Tracker/2026/04-April/2026-04-29-Wednesday.md",
+    "Clients/Ardoq/Weeklies/Week-18-2026.md",
+    "Clients/Ardoq/AgentNotes/Active/2026-04-27 Streaming nested sub-agent events to end user.md",
+    "Clients/Ardoq/AgentNotes/Active",
     "Daily Tracker/2026/04-April/2026-04-30-Thursday.md",
-    "Daily Tracker/2026/04-April/2026-04-27-Monday.md",
+    "Daily Tracker/2026/04-April/2026-04-29-Wednesday.md",
     "Daily Tracker/2026/04-April/2026-04-28-Tuesday.md",
+    "Clients/Personal/AgentNotes/Reference/Obsidian/Obsidian Skills Synergy Analysis.md",
+    "Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Test Suite.md",
+    "Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Stream Visualizer.md",
+    "Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Demo Agent.md",
     "Clients/Ardoq/AgentNotes/Archive/2026-04-27 Sub-agent visibility - non-technical overview.md",
     "Clients/Ardoq/AgentNotes/Archive/2026-04-27 Streaming nested sub-agent events to end user.md",
     "Clients/Ardoq/AgentNotes/Archive/2026-04-21 Pi.dev Claude Code API Key 429 Error Investigation.md",
-    "Clients/Personal/AgentNotes/Reference/Obsidian/Obsidian Skills Synergy Analysis.md",
+    "Clients/Ardoq/AgentNotes/Active/2026-04-27 Sub-agent visibility - non-technical overview.md",
+    "Clients/Ardoq/AgentNotes/Active/2026-04-21 Pi.dev Claude Code API Key 429 Error Investigation.md",
+    "Daily Tracker/2026/04-April/2026-04-24-Friday.md",
+    "Daily Tracker/2026/04-April/2026-04-27-Monday.md",
+    "Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Documentation Index - LLM Reference.md",
+    "Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Coding Agent - Full Documentation.md",
     "Clients/Personal/AgentNotes/Reference/Obsidian/MCP Migration Plan.md",
     "Clients/Personal/AgentNotes/Reference/Obsidian/Agent MCP Comparison.md",
-    "Clients/Ardoq/AgentNotes/Active/2026-04-27 Sub-agent visibility - non-technical overview.md",
-    "Clients/Ardoq/AgentNotes/Reference/Development/Model Context Protocol (MCP).md",
-    "Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Test Suite.md",
-    "Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Demo Agent.md",
-    "Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Stream Visualizer.md",
-    "Daily Tracker/2026/03-March/2026-03-24-Tuesday.md",
-    "Daily Tracker/2026/03-March/2026-03-25-Wednesday.md",
-    "Daily Tracker/2026/03-March/2026-03-26-Thursday.md",
-    "Daily Tracker/2026/03-March/2026-03-27-Friday.md",
-    "Daily Tracker/2026/04-April/2026-04-08-Wednesday.md",
-    "Daily Tracker/2026/04-April/2026-04-07-Tuesday.md",
-    "Daily Tracker/2026/04-April/2026-04-09-Thursday.md",
-    "Daily Tracker/2026/04-April/2026-04-10-Friday.md",
-    "Daily Tracker/2026/04-April/2026-04-13-Monday.md",
-    "Daily Tracker/2026/04-April/2026-04-14-Tuesday.md",
-    "Daily Tracker/2026/04-April/2026-04-16-Thursday.md",
-    "Clients/Personal/AgentNotes/Reference/Obsidian",
+    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/13 - Error Recovery & Remediation.md",
+    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/12 - UI & Rendering.md",
+    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/10 - Slash Commands.md",
+    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/09 - Sub-agents & Task System.md",
+    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/08 - MCP.md",
+    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/07 - Plugin & Hook System.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Documentation",
-    "Personal/AgentNotes/Reference/MCP Presentation/Prompts",
+    "Clients/Personal/AgentNotes/Reference/Obsidian",
     "Clients/Personal/AgentNotes/Reference/PiDev",
-    "Personal/AgentNotes/Reference/MCP Presentation",
     "Clients/Personal/AgentNotes/Reference/Claw Code Architecture",
-    "Personal/AgentNotes/Reference/AI Tooling Presentation",
     "Clients/Personal/AgentNotes/Reference",
     "Clients/Personal/AgentNotes/Archive",
     "Clients/Personal/AgentNotes/Active",
+    "Clients/Personal/Research",
+    "Clients/Personal/AgentNotes",
     "Legacy/Old AgentNotes Structure/Ardoq/Hackathon/Agent Setup.canvas",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Images/Pasted image 20251113154817.png",
