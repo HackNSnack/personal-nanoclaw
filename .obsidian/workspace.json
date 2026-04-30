@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/04-April/2026-04-29-Wednesday.md",
+                "file": "Daily Tracker/2026/04-April/2026-04-30-Thursday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-04-29-Wednesday"
+              "title": "2026-04-30-Thursday"
             }
           }
         ]
@@ -194,9 +194,10 @@
   },
   "active": "4583760098c75a6b",
   "lastOpenFiles": [
+    "Daily Tracker/2026/04-April/2026-04-29-Wednesday.md",
+    "Daily Tracker/2026/04-April/2026-04-30-Thursday.md",
     "Daily Tracker/2026/04-April/2026-04-27-Monday.md",
     "Daily Tracker/2026/04-April/2026-04-28-Tuesday.md",
-    "Daily Tracker/2026/04-April/2026-04-29-Wednesday.md",
     "Clients/Ardoq/AgentNotes/Archive/2026-04-27 Sub-agent visibility - non-technical overview.md",
     "Clients/Ardoq/AgentNotes/Archive/2026-04-27 Streaming nested sub-agent events to end user.md",
     "Clients/Ardoq/AgentNotes/Archive/2026-04-21 Pi.dev Claude Code API Key 429 Error Investigation.md",
@@ -219,7 +220,6 @@
     "Daily Tracker/2026/04-April/2026-04-13-Monday.md",
     "Daily Tracker/2026/04-April/2026-04-14-Tuesday.md",
     "Daily Tracker/2026/04-April/2026-04-16-Thursday.md",
-    "Daily Tracker/2026/04-April/2026-04-17-Friday.md",
     "Clients/Personal/AgentNotes/Reference/Obsidian",
     "Clients/Personal/AgentNotes/Reference/PiDev/Documentation",
     "Personal/AgentNotes/Reference/MCP Presentation/Prompts",
