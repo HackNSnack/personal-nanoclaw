@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/04-April/2026-04-30-Thursday.md",
+                "file": "Daily Tracker/2026/05-May/2026-05-12-Tuesday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-04-30-Thursday"
+              "title": "2026-05-12-Tuesday"
             }
           }
         ]
@@ -194,10 +194,14 @@
   },
   "active": "e4f0715e103962be",
   "lastOpenFiles": [
+    "Daily Tracker/2026/05-May/2026-05-11-Monday.md",
+    "Daily Tracker/2026/05-May/2026-05-12-Tuesday.md",
+    "Daily Tracker/2026/04-April/2026-04-30-Thursday.md",
+    "Daily Tracker/2026/04-April/Untitled.md",
+    "Daily Tracker/2026/05-May",
     "Clients/Ardoq/Weeklies/Week-18-2026.md",
     "Clients/Ardoq/AgentNotes/Active/2026-04-27 Streaming nested sub-agent events to end user.md",
     "Clients/Ardoq/AgentNotes/Active",
-    "Daily Tracker/2026/04-April/2026-04-30-Thursday.md",
     "Daily Tracker/2026/04-April/2026-04-29-Wednesday.md",
     "Daily Tracker/2026/04-April/2026-04-28-Tuesday.md",
     "Clients/Personal/AgentNotes/Reference/Obsidian/Obsidian Skills Synergy Analysis.md",
@@ -218,9 +222,6 @@
     "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/13 - Error Recovery & Remediation.md",
     "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/12 - UI & Rendering.md",
     "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/10 - Slash Commands.md",
-    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/09 - Sub-agents & Task System.md",
-    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/08 - MCP.md",
-    "Clients/Personal/AgentNotes/Reference/Claw Code Architecture/07 - Plugin & Hook System.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Documentation",
     "Clients/Personal/AgentNotes/Reference/Obsidian",
     "Clients/Personal/AgentNotes/Reference/PiDev",
@@ -229,7 +230,6 @@
     "Clients/Personal/AgentNotes/Archive",
     "Clients/Personal/AgentNotes/Active",
     "Clients/Personal/Research",
-    "Clients/Personal/AgentNotes",
     "Legacy/Old AgentNotes Structure/Ardoq/Hackathon/Agent Setup.canvas",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Images/Pasted image 20251113154817.png",
