@@ -4,7 +4,7 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
-- [[Clients/Ardoq/AgentNotes/Active/2026-04-27 Streaming nested sub-agent events to end user]] - Design analysis: why inner agent events are blocked at the tool boundary, and a queue-based solution
+- [[Clients/Ardoq/AgentNotes/Archive/2026-04-27 Streaming nested sub-agent events to end user]] - Design analysis: why inner agent events are blocked at the tool boundary, and a queue-based solution
 
 ## Recently Archived
 
