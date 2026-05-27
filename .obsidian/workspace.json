@@ -174,8 +174,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 281.5,
-    "collapsed": true
+    "width": 281.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -193,7 +192,7 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "c8b3e91b42adb079",
+  "active": "5c4640ee71da1801",
   "lastOpenFiles": [
     "Daily Tracker/2026/05-May/2026-05-11-Monday.md",
     "Daily Tracker/2026/05-May/2026-05-27-Wednesday.md",
