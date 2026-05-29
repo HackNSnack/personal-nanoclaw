@@ -102,4 +102,6 @@ npm install -g @mariozechner/pi-coding-agent
 ## Related Notes
 
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Configuration]]
-- [[PiDev/Extensions]]
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Architecture/00 - Categories Overview]] — Full source code architecture docs (12 category docs)
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Documentation Index - LLM Reference]] — Doc file quick lookup
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Coding Agent - Full Documentation]] — Complete feature docs
