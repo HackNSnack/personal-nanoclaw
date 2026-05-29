@@ -1,7 +1,11 @@
 ---
-tags: [security, starlette, fastapi, cve]
+tags:
+  - security
+  - starlette
+  - fastapi
+  - cve
 type: work
-status: in-progress
+status: done
 ---
 
 # Starlette BadHost (CVE-2026-48710) — Monorepo Upgrade Map

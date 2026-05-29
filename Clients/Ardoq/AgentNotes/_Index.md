@@ -4,10 +4,11 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
-- [[Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/_Index|Starlette BadHost (CVE-2026-48710) — Monorepo Upgrade Map]] — Dependency graph + per-project starlette audit across the monorepo
+_No active items._
 
 ## Recently Archived
 
+- [[Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/_Index|Starlette BadHost (CVE-2026-48710) — Monorepo Upgrade Map]] — Dependency graph + per-project starlette audit across the monorepo
 - [[Clients/Ardoq/AgentNotes/Archive/2026-04-27 Sub-agent visibility - non-technical overview]] - Non-technical explainer: what is visible in real time today, the silent window, and effort levels to improve it
 - [[Clients/Ardoq/AgentNotes/Archive/2026-04-21 Pi.dev Claude Code API Key 429 Error Investigation]] - Root cause analysis and extension workaround for pi.dev Sonnet/Opus 429 errors
 - [[Clients/Ardoq/AgentNotes/Archive/2026-03-25 ai_observability refactor to functional architecture]]

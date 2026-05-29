@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/05-May/2026-05-28-Thursday.md",
+                "file": "Daily Tracker/2026/05-May/2026-05-29-Friday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-05-28-Thursday"
+              "title": "2026-05-29-Friday"
             }
           }
         ]
@@ -174,8 +174,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 281.5,
-    "collapsed": true
+    "width": 281.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -195,34 +194,35 @@
   },
   "active": "4583760098c75a6b",
   "lastOpenFiles": [
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/waf-autoupdate.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/swarm.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/starboard-to-jira.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/py-jfr.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/pac-lite.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/multitenant-mail.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/backup.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ardoq_ai.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ardoq_tracing.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ardoqLogging.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ardoqAWS.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ardoq-mcp.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ai_observability.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ai_agents.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ai-web-agent-sandbox-runtime.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ai-agents-sandbox-runtime.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/_Index.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade",
+    "Daily Tracker/2026/05-May/2026-05-28-Thursday.md",
+    "Daily Tracker/2026/05-May/2026-05-29-Friday.md",
     "Clients/Ardoq/AgentNotes/Archive/2026-04-13 LLM Evaluation Pipeline - Visual.md",
     "Clients/Ardoq/AgentNotes/Archive/2026-04-13 LLM Evaluation Pipeline - Architecture.md",
-    "Daily Tracker/2026/05-May/2026-05-28-Thursday.md",
     "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/waf-autoupdate.md",
     "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/starboard-to-jira.md",
     "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/backup.md",
     "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/pac-lite.md",
     "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/swarm.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/multitenant-mail.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/py-jfr.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ai-agents-sandbox-runtime.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ardoq-mcp.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ai_observability.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ai-web-agent-sandbox-runtime.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ai_agents.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ardoq_tracing.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ardoqAWS.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ardoq_ai.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/ardoqLogging.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/_Index.md",
     "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade",
     "Clients/Ardoq/AgentNotes/Active",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Clean Reinstall Guide.md",
-    "Daily Tracker/2026/05-May/2026-05-27-Wednesday.md",
-    "Daily Tracker/2026/05-May/2026-05-26-Tuesday.md",
-    "Daily Tracker/2026/05-May/2026-05-22-Friday.md",
-    "Daily Tracker/2026/05-May/2026-05-21-Thursday.md",
-    "Daily Tracker/2026/05-May/2026-05-25-Monday.md",
     "Daily Tracker/2026/05-May",
     "Clients/Personal/AgentNotes/Reference/Obsidian",
     "Clients/Personal/AgentNotes/Reference/PiDev/Documentation",
@@ -230,7 +230,6 @@
     "Clients/Personal/AgentNotes/Reference/PiDev",
     "Personal/AgentNotes/Reference/MCP Presentation",
     "Clients/Personal/AgentNotes/Reference/Claw Code Architecture",
-    "Personal/AgentNotes/Reference/AI Tooling Presentation",
     "Legacy/Old AgentNotes Structure/Ardoq/Hackathon/Agent Setup.canvas",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Images/Pasted image 20251113154817.png",
