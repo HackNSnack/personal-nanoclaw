@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "cc4c82937cfe3093",
+        "id": "4e44f75fd268227b",
         "type": "tabs",
         "children": [
           {
-            "id": "4583760098c75a6b",
+            "id": "e957b2dc8c2c09f6",
             "type": "leaf",
             "state": {
-              "type": "split-diff-view",
+              "type": "markdown",
               "state": {
-                "aFile": "Clients/Personal/AgentNotes/Reference/OpenRouter/00 - Overview",
-                "bFile": "Clients/Personal/AgentNotes/Reference/OpenRouter/00 - Overview",
-                "aRef": ""
+                "file": "Clients/Personal/AgentNotes/Reference/Obsidian/Agent MCP Comparison.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "diff",
-              "title": "Diff: 00 - Overview  (Working Tree)"
+              "icon": "lucide-file",
+              "title": "Agent MCP Comparison"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "vault",
+                "query": "pi delete",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -192,8 +192,18 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "4583760098c75a6b",
+  "active": "e957b2dc8c2c09f6",
   "lastOpenFiles": [
+    "Untitled.base",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/01 - Routing Mechanism.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/00 - Overview.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/_Index.md",
+    "Clients/Personal/AgentNotes/Reference/PiDev/Markdown Rendering Investigation.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/05 - Work vs Personal Setup.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/04 - Pi Integration.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/03 - Models & Pricing.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers.nd",
     "Clients/Personal/AgentNotes/_Index.md",
     "Clients/Personal/AgentNotes/README.md",
     "Daily Tracker/2026/05-May/2026-05-29-Friday.md",
@@ -205,7 +215,6 @@
     "Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers",
     "Clients/Personal/AgentNotes/Reference/OpenRouter/01 - Routing Mechanism",
     "Clients/Personal/AgentNotes/Reference/OpenRouter/00 - Overview",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter",
     "Daily Tracker/2026/05-May/Untitled.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/12 - Model Registry & Resolution.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/10 - Modes & UI Layer.md",
@@ -220,15 +229,6 @@
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/02 - AI Provider Layer.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/01 - Monorepo Structure & Bootstrap.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/00 - Categories Overview.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture",
-    "Clients/Personal/AgentNotes/Active/2026-04-22 Pi.dev Extension Optimization.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Permission System.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Configuration.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Overview.md",
-    "Clients/Personal/AgentNotes/Active/2026-05-19 Pi.dev Permission System Analysis.md",
-    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/waf-autoupdate.md",
-    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/swarm.md",
-    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/starboard-to-jira.md",
     "Legacy/Old AgentNotes Structure/Ardoq/Hackathon/Agent Setup.canvas",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Images/Pasted image 20251113154817.png",
