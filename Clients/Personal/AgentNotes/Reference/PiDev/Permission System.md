@@ -161,10 +161,20 @@ Should prompt with sensitive file warning.
 
 ## Next Steps
 
-- [ ] Test with real Pi session
-- [ ] Adjust default sensitive file patterns if needed
-- [ ] Consider adding operation-based grants for common workflows
-- [ ] Maybe add path-based permissions later (deferred for now)
+- [x] Test with real Pi session
+- [x] Adjust default sensitive file patterns if needed
+- [x] Consider adding operation-based grants for common workflows
+- [x] Path-based permissions (R1: uniform grant shape)
+- [x] deny/ask rules (R2)
+- [x] Rich /permissions UI (R8)
+- [x] Audit log (R9)
+- [x] Turn-scoped once-grants (R10)
+- [x] Policy hook override slot (R11)
+- [x] AST-based bash parsing via unbash (R12)
+- [ ] Trust-on-first-use for cwd (R13)
+- [ ] Per-arg MCP rules (R14)
+
+Full implementation details: [[Clients/Personal/AgentNotes/Active/2026-05-19 Pi.dev Permission System Analysis]]
 
 ## Attribution
 

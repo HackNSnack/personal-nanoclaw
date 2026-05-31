@@ -4,6 +4,8 @@ Map of Content for Personal development notes.
 
 ## Active Work
 
+- [[Clients/Personal/AgentNotes/Active/2026-05-29 Pi OpenRouter Config & Model Skill]] — Tasks 1.1 (pi config) + 1.2 (model skill)
+
 
 ## Key Decisions
 
@@ -12,6 +14,16 @@ Map of Content for Personal development notes.
 ## Reference
 
 <!-- Evergreen patterns and knowledge -->
+
+### OpenRouter + Pi
+
+- [[Clients/Personal/AgentNotes/Reference/OpenRouter/_Index]] — Full reference index
+- [[Clients/Personal/AgentNotes/Reference/OpenRouter/00 - Overview]] — What it is, why, pricing, privacy
+- [[Clients/Personal/AgentNotes/Reference/OpenRouter/01 - Routing Mechanism]] — Provider & model routing controls
+- [[Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers]] — Whitelist/blacklist, geography, retention policies
+- [[Clients/Personal/AgentNotes/Reference/OpenRouter/03 - Models & Pricing]] — Recommended models, cost comparison
+- [[Clients/Personal/AgentNotes/Reference/OpenRouter/04 - Pi Integration]] — Full `models.json` config reference
+- [[Clients/Personal/AgentNotes/Reference/OpenRouter/05 - Work vs Personal Setup]] — Two-level settings, switching
 
 ## PiDev Reference Links
 

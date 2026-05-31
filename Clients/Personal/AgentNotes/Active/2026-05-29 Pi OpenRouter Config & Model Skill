@@ -1,0 +1,220 @@
+# Plan: Pi OpenRouter Config & Model Skill
+
+**Created:** 2026-05-29  
+**Status:** 🟡 Planned — not yet executed  
+**Reference:** [[Clients/Personal/AgentNotes/Reference/OpenRouter/_Index]]
+
+---
+
+## Overview
+
+Two tasks to implement cheap OpenRouter inference in pi, with a self-updating skill for future model management.
+
+| Task | Description | Effort |
+|---|---|---|
+| **1.1** | Update `.pi` config files on disk to add OpenRouter + Mistral providers | Low — file edits |
+| **1.2** | Create a pi skill for interactively updating model config via LLM | Medium — skill authoring |
+
+---
+
+## Task 1.1 — Update Pi Config Files
+
+### Goal
+Write the actual config files to disk so OpenRouter models are available in pi and the work/personal defaults are set correctly.
+
+### Files to Create / Edit
+
+#### 1. `~/.pi/agent/models.json` (create or extend)
+
+Add the `openrouter` and `mistral-eu` provider blocks as defined in [[Clients/Personal/AgentNotes/Reference/OpenRouter/04 - Pi Integration]].
+
+**If the file already exists:** merge the new provider blocks into the existing `providers` object — do not overwrite other providers.
+
+Models to add:
+- `deepseek/deepseek-v4-flash` — price-sorted, US whitelist (name: "DeepSeek V4 Flash (OpenRouter)")
+- `deepseek/deepseek-v4-flash` — throughput-sorted, US whitelist (name: "DeepSeek V4 Flash — Fast (OpenRouter)")
+- `deepseek/deepseek-v4-pro` — price-sorted, US whitelist
+- `google/gemini-3-flash` — Google-only whitelist
+- `mistral-small-latest` — direct to `api.mistral.ai`
+- `mistral-large-latest` — direct to `api.mistral.ai`
+
+Provider whitelist for all DeepSeek/Google models:
+```
+"only": ["deepinfra", "parasail", "digital-ocean", "akashml", "fireworks", "together"]
+```
+
+All models should include `"data_collection": "deny"` in their `openRouterRouting`.
+
+#### 2. `~/.pi/agent/settings.json` (create or extend)
+
+Set global defaults — do not overwrite any existing settings not listed here:
+
+```json
+{
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-sonnet-4-20250514",
+  "defaultThinkingLevel": "medium",
+  "enabledModels": [
+    "claude-*",
+    "DeepSeek V4 Flash*",
+    "DeepSeek V4 Pro*",
+    "Gemini 3 Flash*",
+    "Mistral*"
+  ]
+}
+```
+
+#### 3. Environment Variables
+
+Add to `~/.zshrc` (or `~/.bashrc` if not using zsh):
+
+```bash
+export OPENROUTER_API_KEY="sk-or-v1-..."   # From openrouter.ai/settings/keys
+export MISTRAL_API_KEY="..."               # From console.mistral.ai (optional for EU path)
+```
+
+#### 4. Personal Project Directories — `.pi/settings.json`
+
+For each personal project directory, create `.pi/settings.json`:
+
+```json
+{
+  "defaultProvider": "openrouter",
+  "defaultModel": "deepseek/deepseek-v4-flash"
+}
+```
+
+Start with the most-used personal project directories. This file only needs these two fields.
+
+### Verification Steps (after execution)
+
+1. Run `pi --list-models` — confirm DeepSeek, Gemini, Mistral entries appear
+2. Open pi in a work directory → confirm it starts with Claude
+3. Open pi in a personal directory → confirm it starts with DeepSeek
+4. Run `/model` → confirm all new models are visible and selectable
+5. Send a test message with a DeepSeek model → confirm it responds and shows a cost
+6. Check `openrouter.ai/activity` → confirm the request was routed through a whitelisted US provider
+
+---
+
+## Task 1.2 — Create Pi Skill: Update Model Config
+
+### Goal
+
+Create a pi skill that lets the LLM interactively help the user update their pi model config. The LLM should ask what the user wants to change, consult live OpenRouter docs/reference to understand available options, and then make the edits to `models.json`.
+
+### Skill Location
+
+```
+~/.pi/agent/skills/update-model-config/SKILL.md
+```
+
+Using the user-scoped skills directory (`~/.pi/agent/`) ensures the skill is available globally across all projects.
+
+### Skill Frontmatter
+
+```yaml
+---
+name: update-model-config
+description: Interactively update the pi model config. Asks what models to add, change, or remove. For OpenRouter models, fetches live provider and pricing data to inform choices.
+---
+```
+
+### Skill Behaviour (what the LLM should do when invoked)
+
+The skill prompt should instruct the LLM to follow this flow:
+
+#### Step 1 — Read current config
+Read `~/.pi/agent/models.json` to understand the current state.
+
+#### Step 2 — Ask the user what they want to change
+Present a clear summary of current models and ask:
+- Add a new model?
+- Change routing/provider settings on an existing model?
+- Remove a model?
+- Update pricing/cost metadata?
+- Change which models appear in Ctrl+P cycling?
+
+#### Step 3 — Gather information (if OpenRouter model involved)
+
+If the change involves an OpenRouter model:
+1. Consult the Obsidian reference docs:
+   - [[Clients/Personal/AgentNotes/Reference/OpenRouter/_Index]]
+   - [[Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers]] for provider whitelist
+   - [[Clients/Personal/AgentNotes/Reference/OpenRouter/03 - Models & Pricing]] for pricing
+2. Fetch live data from OpenRouter if needed:
+   - Model providers page: `https://openrouter.ai/<author>/<model-id>/providers`
+   - Full model list: `https://openrouter.ai/docs/api-reference/models/get-models` (or `https://openrouter.ai/models`)
+   - Pricing reference: `https://openrouter.ai/deepseek/deepseek-v4-flash/providers` (substitute model)
+3. Confirm the following with the user before writing:
+   - Which providers to whitelist (`only` array)
+   - Price cap if desired (`max_price`)
+   - Sort preference (`price` vs `throughput`)
+   - Whether the model supports reasoning (affects `thinkingFormat`)
+
+#### Step 4 — Confirm before writing
+
+Show the user exactly what the new/changed JSON block will look like. Ask for explicit confirmation before writing to disk.
+
+#### Step 5 — Write and verify
+
+Write the updated `~/.pi/agent/models.json`. Then run `pi --list-models` to confirm the change is visible.
+
+### Skill Prompt Template
+
+The actual `SKILL.md` content should look roughly like this:
+
+```markdown
+---
+name: update-model-config
+description: Interactively update the pi model config (~/.pi/agent/models.json). Asks what to change, fetches live OpenRouter data for new models, and confirms before writing.
+---
+
+## Instructions
+
+You are helping the user update their pi model configuration.
+
+### Reference Documentation
+The Obsidian reference docs for OpenRouter + Pi are at:
+- `Clients/Personal/AgentNotes/Reference/OpenRouter/_Index` (use Obsidian MCP to read)
+- Specifically `02 - Providers` for the provider whitelist
+- Specifically `03 - Models & Pricing` for current pricing
+- Specifically `04 - Pi Integration` for the full config structure
+
+### Steps to Follow
+
+1. Read `~/.pi/agent/models.json` using the `read` tool.
+2. Summarise the current model list to the user.
+3. Ask what they want to change:
+   - Add / remove / modify a model
+   - Update provider routing (whitelist, sort, price cap)
+   - Update pricing metadata
+   - Change `enabledModels` in settings
+4. If an OpenRouter model is involved:
+   a. Read the Obsidian provider reference (via Obsidian MCP tool)
+   b. Fetch the live providers page: `https://openrouter.ai/<author>/<model>/providers`
+   c. Present available US/EU providers with their data retention and pricing
+   d. Ask the user which to whitelist
+5. Show the user the exact JSON block you intend to write.
+6. Ask for confirmation.
+7. Write the file using the `edit` or `write` tool.
+8. Run `pi --list-models` via `bash` tool and confirm the new model appears.
+```
+
+### Notes for Implementation
+
+- The skill uses the Obsidian MCP tool to read reference docs — ensure the MCP server is running when pi is active (it is, since this conversation uses it)
+- The skill should use the `read` built-in tool to read `models.json` and `write`/`edit` to update it
+- The skill should use the `bash` tool to verify changes with `pi --list-models`
+- Pricing in `cost` fields is for pi's internal display only — it doesn't affect what OpenRouter actually charges. The skill should note this and remind the user to update it periodically from `openrouter.ai/models`
+- The skill should always use the `only` (whitelist) pattern, never `ignore` — as established in the reference docs
+
+---
+
+## Dependencies / Prerequisites
+
+- [ ] OpenRouter account created and funded
+- [ ] `OPENROUTER_API_KEY` in shell environment
+- [ ] `MISTRAL_API_KEY` in shell environment (optional, for EU Mistral path)
+- [ ] Task 1.1 completed before Task 1.2 (skill references existing config)
+- [ ] Obsidian MCP server running (for skill to read reference docs)

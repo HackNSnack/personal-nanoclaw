@@ -72,26 +72,66 @@ name: my-agent
 description: Does X given Y
 tools: bash,read,write
 model: claude-sonnet-4-5
+thinking: high
+systemPromptMode: replace
+inheritProjectContext: true
+inheritSkills: false
+output: plan.md
+defaultReads: context.md
+defaultProgress: true
 ---
 
 You are a specialist in...
 (rest of file is the system prompt)
 ```
 
+**Frontmatter fields:**
+
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `name` | ✅ | — | Agent identifier |
+| `description` | ✅ | — | One-line description |
+| `tools` | | all tools | Comma-separated tool allowlist (subagent always stripped) |
+| `extensions` | | all extensions | Comma-separated extension paths; when set, child uses `--no-extensions --extension <path>` |
+| `model` | | parent's model | Model ID |
+| `thinking` | | off | Thinking level: `off`, `minimal`, `low`, `medium`, `high`, `xhigh` |
+| `systemPromptMode` | | `append` | `append` adds to base prompt; `replace` replaces it entirely |
+| `inheritProjectContext` | | `true` | Whether child loads AGENTS.md/CLAUDE.md (`--no-context-files` when false) |
+| `inheritSkills` | | `true` | Whether child loads skills (`--no-skills` when false) |
+| `output` | | — | File the agent is expected to write results to (informational) |
+| `defaultReads` | | — | Comma-separated files to read before starting (prepended to task) |
+| `defaultProgress` | | `false` | Whether agent reports progress updates (parsed, reserved for future use) |
+| `defaultContext` | | `fresh` | `fresh` starts clean; `fork` inherits parent session via `--fork` |
+
 `tools` is optional. If omitted the agent inherits the default tool set but is **prevented from using `subagent`** itself (anti-recursion, enforced by prepending `NO_SUBAGENT_INSTRUCTION` to the system prompt).
 
 ## Child Process Invocation
 
-The child is always launched with:
+The child is launched with flags determined by the agent's frontmatter:
 
 ```
-pi --mode json -p --no-session [--model <model>] [--tools <list>] [--append-system-prompt <tmpfile>] "Task: <task text>"
+pi --mode json -p --no-session \
+  [--model <model>[:<thinking>]] \
+  [--thinking <level>] \
+  [--tools <list>] \
+  [--system-prompt <tmpfile> | --append-system-prompt <tmpfile>] \
+  [--no-context-files] \
+  [--no-skills] \
+  [--no-extensions [--extension <path>]...] \
+  "Task: <task text>"
 ```
 
 Key flags:
 - `--mode json` — child emits newline-delimited JSON events on stdout
 - `-p` — print/non-interactive mode
 - `--no-session` — no session persistence
+- `--model model:thinking` — thinking level appended as suffix when agent defines both `model` and `thinking`
+- `--thinking level` — standalone thinking flag when agent defines `thinking` but no `model`
+- `--system-prompt` — used when `systemPromptMode: replace` (replaces default coding assistant prompt)
+- `--append-system-prompt` — used when `systemPromptMode: append` (default, adds to base prompt)
+- `--no-context-files` — when `inheritProjectContext: false`
+- `--no-skills` — when `inheritSkills: false`
+- `defaultReads` — prepended to the task text as `[Read these files first if they exist: ...]`
 - `stdio: ["ignore", "pipe", "pipe"]` — **stdin is /dev/null**, stdout/stderr are captured
 
 ## Event Handling & Settlement
@@ -130,6 +170,28 @@ To prevent subagents from calling `subagent` recursively:
 ### Concurrency
 
 Parallel mode uses `mapWithConcurrencyLimit(tasks, 4, ...)` — at most 4 child processes run simultaneously regardless of how many tasks are requested (max 8 tasks total).
+
+### Available Agents
+
+User agents in `~/.pi/agent/agents/`:
+
+| Agent | Thinking | Key Features | Use Case |
+|-------|----------|--------------|----------|
+| `scout` | low | Fast recon, writes `context.md` | First step in chains — map the codebase |
+| `context-builder` | medium | Deep analysis + meta-prompt, writes `context.md` | When scout isn't thorough enough |
+| `planner` | high | Reads `context.md`, writes `plan.md` | Turn requirements into actionable steps |
+| `worker` | high | Reads `context.md` + `plan.md`, full edit tools, `fork` context | Execute implementation plans |
+| `reviewer` | high | Reads `plan.md`, code review specialist | Validate diffs, plans, codebase health |
+| `oracle` | high | Read-only, decision consistency, `fork` context | Catch drift, validate direction |
+| `researcher` | medium | Web search, writes `research.md` | External API docs, best practices |
+| `delegate` | (parent) | Lightweight, `systemPromptMode: append` | Quick one-off tasks |
+| `ext-builder` | (none) | Pi extension specialist | Building/modifying pi extensions |
+
+Typical chain patterns:
+- `scout → planner → worker` — standard implementation flow
+- `context-builder → planner → worker → reviewer` — thorough implementation with review
+- `researcher → worker` — research-driven implementation
+- `oracle` (single) — decision validation checkpoint
 
 ### Project Agent Confirmation
 
