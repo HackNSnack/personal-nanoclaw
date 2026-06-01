@@ -96,7 +96,7 @@ npm install -g @mariozechner/pi-coding-agent
 ## Resources
 
 - [Official Site](https://pi.dev/)
-- [GitHub - badlogic/pi-mono](https://github.com/badlogic/pi-mono)
+- [GitHub - earendil-works/pi](https://github.com/earendil-works/pi)
 - [npm Package](https://www.npmjs.com/package/@mariozechner/pi-coding-agent)
 
 ## Related Notes

@@ -96,7 +96,7 @@ npm install -g @mariozechner/pi-coding-agent
 ## Resources
 
 - [Official Site](https://pi.dev/)
-- [GitHub - badlogic/pi-mono](https://github.com/badlogic/pi-mono)
+- [GitHub - earendil-works/pi](https://github.com/earendil-works/pi)
 - [npm Package](https://www.npmjs.com/package/@mariozechner/pi-coding-agent)
 
 ## Related Notes
@@ -105,3 +105,5 @@ npm install -g @mariozechner/pi-coding-agent
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Architecture/00 - Categories Overview]] — Full source code architecture docs (12 category docs)
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Documentation Index - LLM Reference]] — Doc file quick lookup
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Coding Agent - Full Documentation]] — Complete feature docs
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Web Search Extension]] — `web_search`, `fetch_content`, curator, `/websearch`, `/curator`
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Subagent Extension]] — delegate tasks to isolated sub-agents

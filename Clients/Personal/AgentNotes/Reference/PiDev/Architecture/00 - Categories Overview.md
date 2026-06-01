@@ -1,7 +1,7 @@
 # Pi.dev Architecture — Documentation Plan
 
-> Documenting the architecture and internals of **pi-mono**, the TypeScript monorepo behind the `pi` coding agent CLI.
-> Repository: `~/.pi/pi-mono` (GitHub: `badlogic/pi-mono`)
+> Documenting the architecture and internals of **pi**, the TypeScript monorepo behind the `pi` coding agent CLI.
+> Repository: [https://github.com/earendil-works/pi](https://github.com/earendil-works/pi)
 > Version: v0.68.1
 
 ## Document Structure (per category)
