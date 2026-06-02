@@ -1,8 +1,12 @@
 ---
-tags: [pidev, subagent, extensions, debugging]
+tags:
+  - pidev
+  - subagent
+  - extensions
+  - debugging
 type: reference
-status: in-progress
-created: 2026-07-10
+status: active
+created: 2026-07-10T00:00:00.000Z
 ---
 
 # Subagent Extension
@@ -37,11 +41,12 @@ Because the child is a brand-new `pi` process it gets:
 
 ```
 ~/.pi/agent/extensions/subagent/
-├── index.ts        # Tool registration, spawn logic, rendering
-├── agents.ts       # Agent discovery and config loading
+├── index.ts             # Tool registration, spawn logic, rendering
+├── agents.ts            # Agent discovery and config loading
+├── permission-bridge.ts # Shared types & constants for escalation channel (Phase 5)
 ├── tsconfig.json
-├── DEBUGGING.md    # Historical bug investigation notes
-└── *.test.ts       # Tests
+├── DEBUGGING.md         # Historical bug investigation notes
+└── *.test.ts            # Tests
 ```
 
 ## Modes
@@ -134,6 +139,15 @@ Key flags:
 - `defaultReads` — prepended to the task text as `[Read these files first if they exist: ...]`
 - `stdio: ["ignore", "pipe", "pipe"]` — **stdin is /dev/null**, stdout/stderr are captured
 
+**Environment variables passed to every child:**
+
+| Variable | Value | Purpose |
+|----------|-------|--------|
+| `PI_SUBAGENT` | `"1"` | Signals to extensions they're in a subagent subprocess |
+| `PI_SUBAGENT_CHILD` | `"1"` | Same (legacy name kept for compat) |
+| `PI_SUBAGENT_CHILD_AGENT` | agent name | Agent identity (used in escalation prompts and per-agent policies) |
+| `PI_SUBAGENT_PERMS_DIR` | temp dir path | **Phase 5:** response drop directory for permission escalation channel |
+
 ## Event Handling & Settlement
 
 The parent reads the child's stdout line-by-line. Important events:
@@ -143,6 +157,9 @@ The parent reads the child's stdout line-by-line. Important events:
 | `agent_end` | **Settle immediately** — call `resolve(0)`. The process may keep running (extensions keeping event loop alive) but we no longer wait for it. |
 | `message_end` | Accumulate messages, update usage stats, call `onUpdate` for streaming UI |
 | `tool_result_end` | Accumulate tool result messages |
+| `tool_execution_start` | Record active tool for live progress display |
+| `tool_execution_end` | Clear active tool; track file mutations (write/edit) |
+| `permission_request` | **Phase 5:** child is paused waiting for permission. Trigger escalation prompt in parent TUI. |
 
 After settling, the parent sends SIGTERM to the child, then SIGKILL after 3 s (timer is `.unref()`-ed so it doesn't block the parent's own exit).
 
@@ -170,6 +187,8 @@ To prevent subagents from calling `subagent` recursively:
 ### Concurrency
 
 Parallel mode uses `mapWithConcurrencyLimit(tasks, 4, ...)` — at most 4 child processes run simultaneously regardless of how many tasks are requested (max 8 tasks total).
+
+Permission escalation prompts across concurrent parallel agents are serialised through a module-level `_permPromptQueue` so only one dialog is shown at a time. Children waiting for permission display `🔒 Waiting for permission…` in the TUI.
 
 ### Available Agents
 
@@ -199,9 +218,95 @@ When `agentScope` includes project agents and `confirmProjectAgents: true` (defa
 
 ---
 
+## Phase 5: Interactive Permission Escalation (Implemented 2026-07-10)
+
+Sub-agents running with `subagentPolicy: "deny"` or `{ level }` can now pause on ungranted operations and escalate a permission request to the parent session's interactive TUI — exactly as if the main agent had triggered it.
+
+### UX
+
+```
+Parent TUI shows:
+
+  [worker] Run command: npm install express
+  Classification: Medium
+  No matching permission grant
+
+  1. Allow once
+  2. Allow for this project
+  3. Allow globally
+  4. Cancel
+```
+
+While waiting, the subagent progress view shows: `🔒 Waiting for permission…`
+
+If the user selects **Allow for this project** or **Allow globally**, a subject-scope dialog follows (same as the main session). The grant is saved to `permissions.json` immediately — the next time the same child (or any other child) hits the same operation, it is auto-allowed without re-prompting.
+
+### Protocol (Hybrid stdout + filesystem)
+
+```
+Child hits ungranted operation (PI_SUBAGENT=1, policy != "allow")
+  └─ PI_SUBAGENT_PERMS_DIR is set → requestParentPermission()
+       └─ writes to process.stdout:
+          {"type":"permission_request","requestId":"abc","agent":"worker",
+           "operation":{"type":"bash","details":"npm install express"},
+           "reason":"No matching permission grant"}
+       └─ polls /tmp/pi-perms-XYZ/res_abc.json every 150ms, up to 60s
+
+Parent's processLine reads NDJSON line
+  └─ event.type === "permission_request"
+       └─ currentResult.waitingForPermission = true
+       └─ _permPromptQueue serialises (only one dialog at a time)
+            └─ pi.events.emit("permissions:escalate-subagent", {..., markHandled})
+                 └─ permissions extension handler:
+                      markHandled() synchronously ← subagent detects registration
+                      promptForPermission(op, ctx, reason, "[worker] ")
+                      saves grant if project/global scope
+                      writes {decision:"allow"} → /tmp/pi-perms-XYZ/res_abc.json
+
+Child poll succeeds → returns undefined (allow) or { block: true, reason }
+Grant is on disk → next call auto-allows
+```
+
+### Fallback Chain
+
+| Condition | Behaviour |
+|-----------|----------|
+| `subagentPolicy: "allow"` | Auto-allow (escalation never triggered) |
+| `PI_SUBAGENT_PERMS_DIR` set, permissions ext registered | Full interactive escalation |
+| `PI_SUBAGENT_PERMS_DIR` set, permissions ext NOT loaded | Parent falls back to `ctx.ui.confirm()` basic yes/no |
+| Parent has no UI (`!ctx.hasUI`) | Write deny immediately — child doesn't hang |
+| 60s timeout without response | Fall through to static `subagentPolicy` (deny/level) |
+
+### Files Changed
+
+| File | What changed |
+|------|--------------|
+| `subagent/permission-bridge.ts` | **New.** Shared protocol types (`PermissionRequestEvent`, `PermissionResponseFile`), constants (`PERM_REQUEST_EVENT_TYPE`, `PERMS_DIR_ENV_VAR`, `PERMS_ESCALATE_EVENT`, `PERMS_TIMEOUT_MS=60_000`, `PERMS_POLL_INTERVAL_MS=150`), `getResponsePath()` |
+| `subagent/index.ts` | `writePermResponse()` helper; `_permPromptQueue` module-level serialiser; `let permsDir` + `mkdtemp("pi-perms-")` creation; `PI_SUBAGENT_PERMS_DIR` in spawn env; `permission_request` handler in `processLine`; `permsDir` cleanup in `finally` (5s grace); `waitingForPermission` field + TUI indicator; `pi` + `ctx` params on `runSingleAgent` |
+| `permissions/src/prompts.ts` | Optional `agentLabel?: string` on `promptForPermission` — prepended to message (e.g. `"[worker] Run command: …"`) |
+| `permissions/src/index.ts` | `import * as fs/path`; `requestParentPermission()` (child side: writes NDJSON, polls); escalation path in `handleToolCallGeneric` subagent block; `permissions:escalate-subagent` event handler (parent side: `markHandled`, full prompt, grant save, response write) |
+| `permissions/dist/` | Rebuilt 2026-07-10 |
+
+### Design Notes
+
+**Why stdout for the request, filesystem for the response?**  
+The parent already parses all child stdout as NDJSON. Adding a `permission_request` event type is zero extra IPC. The child can't receive responses via stdin (it's `/dev/null`), so a temp file is the simplest reliable channel.
+
+**Why `markHandled()`?**  
+`pi.events.emit()` calls handlers synchronously. By having the permissions extension call `payload.markHandled?.()` at the start of its async handler, the subagent extension can distinguish "permissions ext is registered and handling this" from "no handler registered" — in the latter case it falls back to a basic `ctx.ui.confirm()` immediately instead of waiting the full 60s.
+
+**Why a module-level serialiser?**  
+In parallel mode, multiple children can hit permission walls simultaneously. Two concurrent `ctx.ui.select()` calls have undefined behaviour in pi's TUI. The `_permPromptQueue` ensures at most one permission dialog is open at a time. Children keep polling (they don't know about the queue) and will get their response as soon as the previous prompt resolves.
+
+**Grant persistence loop:**  
+When the user picks "Allow for this project" and the grant is written to `.pi/permissions.json`, the permissions extension's file watcher invalidates its cache. The next call from any agent (child or main) picks up the grant via the normal `evaluatePermission` path and auto-allows without escalation.
+
+---
+
 ## Known Bug & Fix: Hang with Permission System
 
-> **Date fixed**: 2026-07-10
+> **Date fixed**: 2026-07-10  
+> **Superseded by**: Phase 5 + `subagentPolicy` (2026-05-31)
 
 ### Symptom
 
@@ -320,7 +425,6 @@ Parent session showed ✓ (success) while the subagent was still running, then g
 
 ---
 
-<!-- duplicate heading removed -->
 # Current State: `subagentPolicy` Config Field (Implemented 2026-05-31)
 
 The `!ctx.hasUI` auto-allow bypass is now replaced with a configurable 3-branch `subagentPolicy`.
@@ -330,8 +434,9 @@ The `!ctx.hasUI` auto-allow bypass is now replaced with a configurable 3-branch 
 When a sub-agent child needs a permission that would normally prompt (`evaluatePermission` returns `"prompt"`):
 
 1. Detection: `!ctx.hasUI || process.env.PI_SUBAGENT === "1"`
-2. Read `subagentPolicy` from `~/.pi/agent/permissions.json` (default: `"allow"` for backward compat)
-3. Apply policy:
+2. If `PI_SUBAGENT_PERMS_DIR` is set → **escalate to parent TUI** (Phase 5 — see above)
+3. Otherwise, read `subagentPolicy` from `~/.pi/agent/permissions.json` (default: `"allow"` for backward compat)
+4. Apply policy:
 
 | Policy | Behaviour |
 |--------|-----------|
@@ -341,7 +446,7 @@ When a sub-agent child needs a permission that would normally prompt (`evaluateP
 
 Detection uses both `!ctx.hasUI` and `process.env.PI_SUBAGENT === "1"` — the env var is deliberate from the caller, not a framework side-effect.
 
-## Files Changed
+## Files Changed (2026-05-31)
 
 | File | Change |
 |------|--------|
@@ -358,7 +463,7 @@ Detection uses both `!ctx.hasUI` and `process.env.PI_SUBAGENT === "1"` — the e
   "bashDefaultLevel": "minimal",
   "subagentPolicy": { "level": "medium" },
   "globalGrants": [],
-  "sensitiveFilePatterns": ["**/.env*", ...]
+  "sensitiveFilePatterns": ["**/.env*", "..."]
 }
 ```
 
@@ -388,10 +493,6 @@ Env var already set — needs config field + lookup logic.
 
 Slash commands (`/parallel-review`, `/review-loop`) adopting prompts from official `pi-subagents`. Medium effort.
 
-## Phase 5: Interactive Permission Escalation
-
-Filesystem-based child→parent permission request channel. See `extensions/vendored/pi-subagents/PLAN.md`. Large effort.
-
 ## Parent Grant Propagation
 
 Serialise parent's `onceGrants` to temp file for child inheritance. Wait for per-agent policies first.
@@ -408,9 +509,18 @@ Serialise parent's `onceGrants` to temp file for child inheritance. Wait for per
 | `subagentOverrideLevel` on `PermissionContext` | ✅ Done |
 | 3-branch handler logic (allow/deny/level) | ✅ Done |
 | `/permissions show` display | ✅ Done |
-| Storage parse/save | ✅ Done |
-| Dist rebuild | ✅ Done 2026-05-31 |
+| Storage parse/save | ✅ Done 2026-05-31 |
+| Phase 5: `permission-bridge.ts` | ✅ Done 2026-07-10 |
+| Phase 5: child `requestParentPermission()` | ✅ Done 2026-07-10 |
+| Phase 5: escalation path in `handleToolCallGeneric` | ✅ Done 2026-07-10 |
+| Phase 5: parent `permissions:escalate-subagent` handler | ✅ Done 2026-07-10 |
+| Phase 5: `agentLabel` param on `promptForPermission` | ✅ Done 2026-07-10 |
+| Phase 5: `PI_SUBAGENT_PERMS_DIR` in spawn env | ✅ Done 2026-07-10 |
+| Phase 5: `permission_request` handler in `processLine` | ✅ Done 2026-07-10 |
+| Phase 5: `_permPromptQueue` serialiser | ✅ Done 2026-07-10 |
+| Phase 5: `🔒 Waiting for permission…` TUI indicator | ✅ Done 2026-07-10 |
+| Phase 5: `permsDir` cleanup in `finally` | ✅ Done 2026-07-10 |
+| Phase 5: `dist/` rebuild | ✅ Done 2026-07-10 |
 | Per-agent policies (`agentPolicies`) | 🔲 Not started |
 | Phase 4: Prompt templates | 🔲 Not started |
-| Phase 5: Escalation channel | 🔲 Not started |
 | Parent grant propagation | 🔲 Not started |

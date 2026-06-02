@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "cc4c82937cfe3093",
+        "id": "4e44f75fd268227b",
         "type": "tabs",
         "children": [
           {
-            "id": "4583760098c75a6b",
+            "id": "e957b2dc8c2c09f6",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/05-May/2026-05-29-Friday.md",
+                "file": "Clients/Personal/AgentNotes/Reference/Tailscale/2026-06-02 Slack Bot with Ollama.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-05-29-Friday"
+              "title": "2026-06-02 Slack Bot with Ollama"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "vault",
+                "query": "pi delete",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 272.51103591918945
+    "width": 300.5
   },
   "right": {
     "id": "ade4fa5c5b7239e0",
@@ -192,44 +192,44 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "4583760098c75a6b",
+  "active": "e957b2dc8c2c09f6",
   "lastOpenFiles": [
-    "Daily Tracker/2026/05-May/2026-05-28-Thursday.md",
-    "Daily Tracker/2026/05-May/2026-05-29-Friday.md",
-    "Daily Tracker/2026/05-May/2026-05-26-Tuesday.md",
-    "Clients/Ardoq/Weeklies/Week-22-2026.md",
+    "Clients/Personal/AgentNotes/Reference/Tailscale/Tailscale Setup Guide.md",
+    "Clients/Personal/AgentNotes/Reference/Tailscale/2026-06-02 Slack Bot over Tailscale.md",
+    "Clients/Personal/AgentNotes/Reference/Tailscale/2026-06-02 Slack Bot with Ollama.md",
+    "Clients/Personal/AgentNotes/Reference/Obsidian/Agent MCP Comparison.md",
+    "Clients/Personal/AgentNotes/Reference/Tailscale",
     "Daily Tracker/2026/06-June/2026-06-01-Monday.md",
-    "Clients/Ardoq/Weeklies/Week-22-2025.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Web Search Extension.md",
-    "Daily Tracker/2026/05-May/2026-05-30-Saturday.md",
-    "Daily Tracker/2026/06-June/2026-06-02-Tuesday.md",
     "Daily Tracker/2026/06-June",
+    "Clients/Personal/AgentNotes/Reference/PiDev/Web Search Extension.md",
+    "Clients/Ardoq/Weeklies/Week-22-2026.md",
     "Untitled.base",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/01 - Routing Mechanism.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/00 - Overview.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/_Index.md",
+    "Clients/Personal/AgentNotes/Reference/PiDev/Markdown Rendering Investigation.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/05 - Work vs Personal Setup.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/04 - Pi Integration.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/03 - Models & Pricing.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers.md",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers.nd",
+    "Clients/Personal/AgentNotes/_Index.md",
+    "Clients/Personal/AgentNotes/README.md",
+    "Daily Tracker/2026/05-May/2026-05-29-Friday.md",
+    "Clients/Personal/AgentNotes/Active/2026-05-29 Pi OpenRouter Config & Model Skill",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/_Index",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/05 - Work vs Personal Setup",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/04 - Pi Integration",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/03 - Models & Pricing",
+    "Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers",
+    "Daily Tracker/2026/05-May/Untitled.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/12 - Model Registry & Resolution.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/11 - Skills, Prompts & Resources.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/10 - Modes & UI Layer.md",
+    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/11 - Skills, Prompts & Resources.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/09 - System Prompt & Context Files.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/08 - Compaction & Context Management.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/07 - Session Management & Branching.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/06 - Extension System.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/05 - Tool System.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/04 - Agent Session & Conversation Loop.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/03 - Agent Core.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/02 - AI Provider Layer.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/01 - Monorepo Structure & Bootstrap.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture/00 - Categories Overview.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Architecture",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/_Index.md",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/05 - Work vs Personal Setup.md",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/04 - Pi Integration.md",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/03 - Models & Pricing.md",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter",
-    "Clients/Personal/AgentNotes/Active/2026-05-29 Pi OpenRouter Config & Model Skill",
-    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade",
-    "Clients/Ardoq/AgentNotes/Active",
-    "Daily Tracker/2026/05-May",
-    "Clients/Personal/AgentNotes/Reference/Obsidian",
     "Legacy/Old AgentNotes Structure/Ardoq/Hackathon/Agent Setup.canvas",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Images/Pasted image 20251113154817.png",
