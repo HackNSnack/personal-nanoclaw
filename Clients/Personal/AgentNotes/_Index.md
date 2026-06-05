@@ -15,6 +15,12 @@ Map of Content for Personal development notes.
 
 <!-- Evergreen patterns and knowledge -->
 
+### Slackbot
+
+- [[Clients/Personal/AgentNotes/Reference/Slackbot/_Index]] — Full reference index
+- [[Clients/Personal/AgentNotes/Reference/Slackbot/Architecture]] — Code structure, layers, design decisions
+- [[Clients/Personal/AgentNotes/Reference/Slackbot/Extending]] — Adding tools, agents, thread history
+
 ### OpenRouter + Pi
 
 - [[Clients/Personal/AgentNotes/Reference/OpenRouter/_Index]] — Full reference index
@@ -48,6 +54,7 @@ Map of Content for Personal development notes.
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Overview]] — Pi.dev architecture and philosophy
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Permission System]] — Custom permission extension (3-tier prompting, sensitive files)
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Subagent Extension]] — Subagent delegation tool, known bugs & fixes
+- [[Clients/Personal/AgentNotes/Reference/PiDev/Status Bar Extension]] — custom footer (branch, model, context bar, cwd, thinking level)
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Configuration]] — Config file structure and git tracking setup
 
 ### Documentation
