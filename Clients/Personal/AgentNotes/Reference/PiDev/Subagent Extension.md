@@ -524,3 +524,142 @@ Serialise parent's `onceGrants` to temp file for child inheritance. Wait for per
 | Per-agent policies (`agentPolicies`) | 🔲 Not started |
 | Phase 4: Prompt templates | 🔲 Not started |
 | Parent grant propagation | 🔲 Not started |
+| MCP tool propagation to children | ✅ Done 2026-07-14 |
+
+---
+
+## Bug & Fix: MCP Tools Inaccessible in Subagent Children (Fixed 2026-07-14)
+
+### Symptom
+
+Subagents had no access to MCP tools — the LLM in the child process could not see or call `mcp`, `obsidian_read_note`, `atlassian_*`, or any other MCP-registered tool, even though the MCP adapter extension loads correctly in the child.
+
+### Root Causes
+
+Two causes act together:
+
+**Cause 1 — `--tools` is an exclusive allowlist that filters extension tools too**
+
+When an agent definition has a `tools:` frontmatter field, the subagent extension passes `--tools <list>` to the child `pi` process. Per `pi --help`:
+
+```
+--tools, -t <tools>   Comma-separated allowlist of tool names to enable
+                      Applies to built-in, extension, and custom tools
+```
+
+This is a hard filter that covers *all* tool categories. The MCP adapter extension still loads and registers its tools in the child — they are just invisible to the LLM unless the tool name appears in `--tools`. Since every agent except `ext-builder` omitted `mcp` from its `tools:` list, no child LLM could call any MCP tool.
+
+**Cause 2 — Direct MCP tool names are dynamic and cannot be listed in agent frontmatter**
+
+The MCP adapter registers two kinds of tools in the parent session:
+- `mcp` — the proxy gateway (fixed name, always the same)
+- Direct tools: `obsidian_read_note`, `atlassian_create_issue`, etc. — names computed at load time from `~/.config/mcp/mcp.json` + the on-disk metadata cache
+
+Even for `ext-builder` (which *did* have `mcp` in its tools list), passing `--tools ...,mcp` only exposed the proxy. The direct tools were still blocked because their names aren't statically knowable when writing agent frontmatter — they depend on which MCP servers are configured.
+
+**Combined effect:**
+
+```
+agent frontmatter: tools: bash,read,write   ← no 'mcp'
+      ↓
+runSingleAgent() builds: --tools bash,read,write
+      ↓
+child pi spawns → MCP adapter loads → registers 'mcp' + 'obsidian_read_note' + 'atlassian_*'
+      ↓
+--tools filter: only bash, read, write visible to LLM
+      ↓
+LLM has no knowledge of any MCP tool
+```
+
+Even with `mcp` in the tools list:
+
+```
+--tools ...,mcp
+  → 'mcp' proxy  ✅ visible
+  → 'obsidian_read_note'  ✗ still blocked (name not in --tools)
+  → 'atlassian_*'         ✗ still blocked
+```
+
+### Fix
+
+**Code change — `subagent/index.ts`**
+
+Two module-level constants were added:
+
+```typescript
+// Pi's seven built-in tool names (from `pi --help`)
+const BUILTIN_TOOL_NAMES = new Set([
+    'bash', 'read', 'write', 'edit', 'grep', 'find', 'ls',
+]);
+
+// Well-known extension tools that are NOT MCP direct tools.
+// Everything in getAllTools() that is not a builtin and not in this set
+// is treated as a MCP direct tool and propagated to the child.
+const NON_MCP_EXTENSION_TOOL_NAMES = new Set([
+    'subagent',
+    'mcp',                                              // the proxy itself
+    'web_search', 'code_search',                        // pi-web-access
+    'fetch_content', 'get_search_content',
+    'ast_grep_search', 'ast_grep_replace', 'ast_dump',  // pi-lens
+    'lens_diagnostics', 'lsp_diagnostics', 'lsp_navigation',
+]);
+```
+
+The `--tools` argument construction was changed: when an agent's `tools:` list contains `'mcp'`, the spawn logic calls `pi.getAllTools()` on the parent session, subtracts `BUILTIN_TOOL_NAMES` and `NON_MCP_EXTENSION_TOOL_NAMES`, and appends whatever remains (the direct MCP tool names) to the child's `--tools` argument automatically — no manual enumeration needed.
+
+This is **opt-in**: the propagation only fires when `'mcp'` is explicitly in the agent's `tools:` list. Agents without `mcp` are completely unaffected.
+
+**Agent definitions updated**
+
+| Agent | Change |
+|-------|--------|
+| `worker.md` | Added `mcp` to `tools:` |
+| `delegate.md` | Added `mcp` to `tools:` |
+| `ext-builder.md` | Already had `mcp` ✅ |
+
+Other agents (`scout`, `planner`, `reviewer`, `oracle`, `researcher`, etc.) were intentionally left without `mcp` — add it only if those agents need Obsidian / Atlassian access.
+
+---
+
+### ⚠️ Maintenance: What Must Change If the MCP Proxy Is Replaced
+
+The fix has **two hardcoded coupling points** to the string `'mcp'`. Both must be updated together if the proxy tool is renamed or replaced.
+
+#### Coupling point 1 — The opt-in sentinel (`index.ts`, in `runSingleAgent`)
+
+```typescript
+if (effectiveTools.includes('mcp')) {   // ← hardcoded proxy tool name
+```
+
+This is the trigger: an agent signals MCP intent by listing this exact name in its `tools:` frontmatter. If the new proxy is called something else (e.g. `tools`, `gateway`, `mcp2`), this string literal must change to match.
+
+> **If you remove the proxy entirely** and all MCP access is via direct tools only: delete this `if` block and instead always run the propagation logic unconditionally. You still need `NON_MCP_EXTENSION_TOOL_NAMES` to be current so direct tools are correctly identified.
+
+#### Coupling point 2 — `NON_MCP_EXTENSION_TOOL_NAMES` set (`index.ts`, module level)
+
+This set is the exclusion list: "anything that is NOT a builtin AND NOT in this set = a direct MCP tool". The proxy's own name lives here to prevent it from being misidentified as a direct tool and double-added to `--tools`.
+
+Required changes when replacing the proxy:
+
+| Scenario | Change to `NON_MCP_EXTENSION_TOOL_NAMES` |
+|----------|------------------------------------------|
+| Proxy renamed `mcp` → `X` | Remove `'mcp'`, add `'X'` |
+| Proxy removed entirely | Remove `'mcp'` |
+| New proxy added alongside existing `mcp` | Add the new name; keep `'mcp'` |
+| New non-MCP extension registers tools `Y`, `Z` | Add `'Y'`, `'Z'` — otherwise they'll be misidentified as direct MCP tools and incorrectly propagated to children |
+
+#### Coupling point 3 — Agent `tools:` frontmatter
+
+Every agent definition with `mcp` in its `tools:` field relies on the sentinel check above. If the proxy name changes, update each agent file:
+
+- **Files to audit:** `~/.pi/agent/agents/*.md` and any `.pi/agents/*.md` in project repos
+- **Currently affected:** `worker`, `delegate`, `ext-builder`
+
+#### What does NOT need to change
+
+- The child process side is untouched: direct tools are registered from the MCP metadata cache identically in both parent and child. The fix only controls what names get appended to `--tools` in the parent before spawning.
+- Adding or removing MCP servers in `~/.config/mcp/mcp.json` is **self-updating**: the changed direct tool names appear automatically in `pi.getAllTools()` next session — no code edits needed.
+
+#### If `pi.getAllTools()` is removed in a future pi API change
+
+The fix calls `pi.getAllTools()` inside the `execute` callback via the parent's `pi: ExtensionAPI` closure. If that API is ever removed, the fallback is to read the MCP adapter's on-disk metadata cache directly. Check `metadata-cache.ts` in the MCP adapter source for the exact file path. This is fragile — `getAllTools()` is the right API, avoid the fallback if possible.
