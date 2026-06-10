@@ -36,6 +36,20 @@ export interface ProviderContainerContribution {
   mounts?: VolumeMount[];
   /** Extra env vars to pass to the container (`-e KEY=VALUE`). */
   env?: Record<string, string>;
+  /**
+   * Hostnames to block inside the container by resolving them to 0.0.0.0.
+   * Applied as `--add-host HOSTNAME:0.0.0.0` Docker flags.
+   * Use this to prevent a container from accidentally reaching an external
+   * API when running on a local provider (e.g. block api.anthropic.com
+   * when routing to Ollama so a model-name drift can't silently bill).
+   */
+  blockedHosts?: string[];
+  /**
+   * When true, skip OneCLI gateway credential injection entirely.
+   * Set this for providers that handle auth locally (e.g. Ollama) where
+   * the OneCLI HTTPS proxy is not needed and would add unnecessary overhead.
+   */
+  bypassOnecli?: boolean;
 }
 
 export type ProviderContainerConfigFn = (ctx: ProviderContainerContext) => ProviderContainerContribution;

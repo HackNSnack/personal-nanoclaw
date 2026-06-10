@@ -53,15 +53,17 @@ Model selection considerations for Apple Silicon:
 
 The agent uses tool calls extensively (read/write files, shell commands). Models that support tool use reliably work best. Gemma 4 and Qwen 3 Coder both handle structured tool calls well.
 
-## What Changes at the Code Level
+## What Was Changed at the Code Level
 
-Three files need to support this feature. See `/add-ollama-provider` for the exact changes.
+The Ollama provider is implemented. Changes made:
 
-**`src/container-config.ts`** — `ContainerConfig` interface needs `env` and `blockedHosts` fields so the per-group JSON can carry them.
+**`src/providers/provider-container-registry.ts`** — added `blockedHosts?: string[]` and `bypassOnecli?: boolean` to `ProviderContainerContribution`.
 
-**`src/container-runner.ts`** — At container spawn time, `env` entries become `-e KEY=VAL` Docker flags (applied after OneCLI's injected vars so they win), and `blockedHosts` entries become `--add-host HOST:0.0.0.0` flags.
+**`src/providers/ollama.ts`** — new file; registers the `ollama` provider with `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `NO_PROXY`/`no_proxy`, `blockedHosts`, and `bypassOnecli: true`.
 
-**`container/Dockerfile`** — The container runs as the host user's uid (e.g. 501 on macOS), not as the `node` user (uid 1000). The home directory must be `chmod 777` so any uid can write `~/.claude.json` and `~/.claude/settings.json`.
+**`src/providers/index.ts`** — added `import './ollama.js'`.
+
+**`src/container-runner.ts`** — `buildContainerArgs` now applies `providerContribution.blockedHosts` as `--add-host HOST:0.0.0.0` flags, and gates the OneCLI block behind `!providerContribution.bypassOnecli`.
 
 ## Tradeoffs
 
