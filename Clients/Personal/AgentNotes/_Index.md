@@ -4,6 +4,7 @@ Map of Content for Personal development notes.
 
 ## Active Work
 
+- [[Clients/Personal/AgentNotes/Active/2026-06-11 NanoClaw OpenCode Provider Setup]] — Full OpenCode+OpenRouter debug session: model ID format, bundled registry bypass, OneCLI bearer sentinel, wirings→destinations bug fix (status: **done** ✅)
 - [[Clients/Personal/AgentNotes/Active/2026-05-29 Pi OpenRouter Config & Model Skill]] — Tasks 1.1 (pi config) + 1.2 (model skill)
 
 
@@ -15,7 +16,15 @@ Map of Content for Personal development notes.
 
 <!-- Evergreen patterns and knowledge -->
 
-### Slackbot
+### NanoClaw (current Slack bot)
+
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw NixOS Setup]] — Full NixOS deployment reference (current status, bootstrap checklist, secrets layout)
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw Operations]] — Quick-reference runbook: start/stop, logs, common fixes
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Channel Setup & Debugging]] — Socket mode setup, four-layer failure diagnosis, `agent_destinations` wiring bug fix, portability notes
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode + OpenRouter Configuration]] — Full architecture: OneCLI bearer sentinel, model ID format, bundled model list workaround, new-machine checklist
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — `Error: Model not found` runbook: three root causes (bundled list, missing prefix, stale session) + diagnostic playbook + code changes applied
+
+### Slackbot (superseded — old Python/Ollama bot)
 
 - [[Clients/Personal/AgentNotes/Reference/Slackbot/_Index]] — Full reference index
 - [[Clients/Personal/AgentNotes/Reference/Slackbot/Architecture]] — Code structure, layers, design decisions

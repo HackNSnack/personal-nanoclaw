@@ -4,7 +4,7 @@
     "type": "split",
     "children": [
       {
-        "id": "4e44f75fd268227b",
+        "id": "499d5b000c8b4293",
         "type": "tabs",
         "children": [
           {
@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/06-June/2026-06-08-Monday.md",
+                "file": "Daily Tracker/2026/06-June/2026-06-11-Thursday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-06-08-Monday"
+              "title": "2026-06-11-Thursday"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "footer.",
+                "query": "ardoq_ai",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -112,11 +112,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "Daily Tracker/2026/06-June/2026-06-09-Tuesday.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links"
+              "title": "Outgoing links from 2026-06-09-Tuesday"
             }
           },
           {
@@ -140,13 +141,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Daily Tracker/2026/05-May/2026-05-26-Tuesday.md",
+                "file": "Daily Tracker/2026/06-June/2026-06-10-Wednesday.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 2026-05-26-Tuesday"
+              "title": "Outline of 2026-06-10-Wednesday"
             }
           },
           {
@@ -165,8 +166,8 @@
             "state": {
               "type": "smart-connections-view",
               "state": {},
-              "icon": "lucide-ghost",
-              "title": "smart-connections-view"
+              "icon": "smart-connections",
+              "title": "Connections"
             }
           }
         ],
@@ -174,7 +175,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 281.5
+    "width": 371.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -194,10 +195,27 @@
   },
   "active": "e957b2dc8c2c09f6",
   "lastOpenFiles": [
+    "Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode + OpenRouter Configuration.md",
+    "Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Channel Setup & Debugging.md",
+    "Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop.md",
+    "Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 1 - Domain Errors.md",
+    "Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 2 - Raise at Source.md",
+    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/Untitled.md",
+    "Daily Tracker/2026/06-June/2026-06-11-Thursday.md",
+    "Clients/Personal/AgentNotes/Active/2026-06-11 NanoClaw OpenCode Provider Setup.md",
+    "Daily Tracker/2026/06-June/2026-06-10-Wednesday.md",
+    "Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw Operations.md",
+    "Daily Tracker/2026/06-June/2026-06-09-Tuesday.md",
+    "Daily Tracker/2026/06-June/2026-06-08-Monday.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/_Index.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ardoq_ai.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ai-web-agent-sandbox-runtime.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ai_agents.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/ardoqAWS.md",
+    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/Untitled.canvas",
     "Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw NixOS Setup.md",
     "Clients/Personal/AgentNotes/Reference/NanoClaw",
     "Daily Tracker/2026/06-June/2026-06-06-Saturday.md",
-    "Daily Tracker/2026/06-June/2026-06-08-Monday.md",
     "Daily Tracker/2026/06-June/2026-06-05-Friday.md",
     "Clients/Personal/AgentNotes/README.md",
     "Daily Tracker/2026/06-June/2026-06-04-Thursday.md",
@@ -206,26 +224,10 @@
     "Untitled 1.base",
     "Clients/Netlight/AgentNotes/Reference/MCP Presentation/Prompts/01 - Title Slide.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/Status Bar Extension.md",
-    "Clients/Personal/AgentNotes/Reference/Tailscale/2026-06-02 Slack Bot with Ollama.md",
-    "Clients/Personal/AgentNotes/Reference/Slackbot/Extending.md",
-    "Clients/Personal/AgentNotes/Reference/Slackbot/Architecture.md",
-    "Clients/Personal/AgentNotes/Reference/Slackbot/_Index.md",
     "Clients/Personal/AgentNotes/Reference/Slackbot",
-    "Clients/Personal/AgentNotes/Reference/Tailscale/Tailscale Setup Guide.md",
-    "Clients/Personal/AgentNotes/Reference/Tailscale/2026-06-02 Slack Bot over Tailscale.md",
-    "Clients/Personal/AgentNotes/Reference/Obsidian/Agent MCP Comparison.md",
     "Clients/Personal/AgentNotes/Reference/Tailscale",
-    "Daily Tracker/2026/06-June/2026-06-01-Monday.md",
     "Daily Tracker/2026/06-June",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Web Search Extension.md",
-    "Clients/Ardoq/Weeklies/Week-22-2026.md",
     "Untitled.base",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/01 - Routing Mechanism.md",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/00 - Overview.md",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/_Index.md",
-    "Clients/Personal/AgentNotes/Reference/PiDev/Markdown Rendering Investigation.md",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/05 - Work vs Personal Setup.md",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/04 - Pi Integration.md",
     "Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers.nd",
     "Clients/Personal/AgentNotes/Active/2026-05-29 Pi OpenRouter Config & Model Skill",
     "Clients/Personal/AgentNotes/Reference/OpenRouter/_Index",
