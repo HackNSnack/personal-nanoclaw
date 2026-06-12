@@ -192,6 +192,39 @@ export function createChatSdkBridge(config: ChatSdkBridgeConfig): ChannelAdapter
     };
   }
 
+  /**
+   * Fetch prior messages in a Slack thread and attach them as threadHistory
+   * on the inbound message content, so the agent sees the full thread context.
+   * Only fetches when the adapter supports fetchMessages (Slack, Discord, etc.)
+   * and there are prior messages beyond the current one.
+   */
+  async function enrichWithThreadContext(
+    adapter: Adapter,
+    threadId: string,
+    message: ChatMessage,
+    inbound: InboundMessage,
+  ): Promise<void> {
+    if (typeof adapter.fetchMessages !== 'function') return;
+    try {
+      const result = await adapter.fetchMessages(threadId, { limit: 21, direction: 'backward' });
+      const prior = result.messages.filter((m) => m.id !== message.id);
+      if (prior.length === 0) return;
+      const content = inbound.content as Record<string, unknown>;
+      content.threadHistory = prior.map((m) => ({
+        id: m.id,
+        sender:
+          (m.author as { fullName?: string; userName?: string })?.fullName ??
+          (m.author as { userName?: string })?.userName ??
+          (m.author as { userId?: string })?.userId ??
+          'Unknown',
+        text: typeof m.text === 'string' ? m.text : '',
+        timestamp: m.metadata?.dateSent instanceof Date ? m.metadata.dateSent.toISOString() : undefined,
+      }));
+    } catch (err) {
+      log.warn('Failed to fetch thread context', { adapter: adapter.name, threadId, err });
+    }
+  }
+
   const bridge: ChannelAdapter = {
     name: adapter.name,
     channelType: adapter.name,
@@ -222,17 +255,17 @@ export function createChatSdkBridge(config: ChatSdkBridgeConfig): ChannelAdapter
       // wirings still fire on in-thread mentions.
       chat.onSubscribedMessage(async (thread, message) => {
         const channelId = adapter.channelIdFromThreadId(thread.id);
-        await setupConfig.onInbound(
-          channelId,
-          thread.id,
-          await messageToInbound(message, message.isMention === true, true),
-        );
+        const inbound = await messageToInbound(message, message.isMention === true, true);
+        await enrichWithThreadContext(adapter, thread.id, message, inbound);
+        await setupConfig.onInbound(channelId, thread.id, inbound);
       });
 
       // @mention in an unsubscribed thread — SDK-confirmed bot mention.
       chat.onNewMention(async (thread, message) => {
         const channelId = adapter.channelIdFromThreadId(thread.id);
-        await setupConfig.onInbound(channelId, thread.id, await messageToInbound(message, true, true));
+        const inbound = await messageToInbound(message, true, true);
+        await enrichWithThreadContext(adapter, thread.id, message, inbound);
+        await setupConfig.onInbound(channelId, thread.id, inbound);
       });
 
       // DMs — by definition addressed to the bot. Thread id flows through
@@ -247,7 +280,9 @@ export function createChatSdkBridge(config: ChatSdkBridgeConfig): ChannelAdapter
           sender: (message.author as any)?.fullName ?? (message.author as any)?.userId ?? 'unknown',
           threadId: thread.id,
         });
-        await setupConfig.onInbound(channelId, thread.id, await messageToInbound(message, true, false));
+        const inbound = await messageToInbound(message, true, false);
+        await enrichWithThreadContext(adapter, thread.id, message, inbound);
+        await setupConfig.onInbound(channelId, thread.id, inbound);
       });
 
       // Plain messages in unsubscribed threads.
@@ -262,7 +297,9 @@ export function createChatSdkBridge(config: ChatSdkBridgeConfig): ChannelAdapter
       // flood gate.
       chat.onNewMessage(/[\s\S]*/, async (thread, message) => {
         const channelId = adapter.channelIdFromThreadId(thread.id);
-        await setupConfig.onInbound(channelId, thread.id, await messageToInbound(message, false, true));
+        const inbound = await messageToInbound(message, false, true);
+        await enrichWithThreadContext(adapter, thread.id, message, inbound);
+        await setupConfig.onInbound(channelId, thread.id, inbound);
       });
 
       // Handle button clicks (ask_user_question)
