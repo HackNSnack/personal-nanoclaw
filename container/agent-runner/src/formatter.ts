@@ -175,10 +175,10 @@ function formatSingleChat(msg: MessageInRow): string {
   const replyAttr = content.replyTo?.id ? ` reply_to="${escapeXml(String(content.replyTo.id))}"` : '';
   const replyPrefix = formatReplyContext(content.replyTo);
   const attachmentsSuffix = formatAttachments(content.attachments);
-
+  const threadHistoryPrefix = formatThreadHistory(content.threadHistory);
   const fromAttr = originAttr(msg);
 
-  return `<message${idAttr}${fromAttr} sender="${escapeXml(sender)}" time="${escapeXml(time)}"${replyAttr}>${replyPrefix}${escapeXml(text)}${attachmentsSuffix}</message>`;
+  return `${threadHistoryPrefix}<message${idAttr}${fromAttr} sender="${escapeXml(sender)}" time="${escapeXml(time)}"${replyAttr}>${replyPrefix}${escapeXml(text)}${attachmentsSuffix}</message>`;
 }
 
 /**
@@ -237,6 +237,22 @@ function formatReplyContext(replyTo: any): string {
   const text = replyTo.text;
   if (!sender || !text) return '';
   return `\n  <quoted_message from="${escapeXml(sender)}">${escapeXml(text)}</quoted_message>\n`;
+}
+
+/**
+ * Render thread history context fetched from the platform API.
+ * Shows prior messages in the thread as a <thread_history> block
+ * preceding the current message, in chronological order.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatThreadHistory(history: any[] | undefined): string {
+  if (!Array.isArray(history) || history.length === 0) return '';
+  const lines = history.map((m: Record<string, unknown>) => {
+    const sender = (m.sender as string) || 'Unknown';
+    const text = (m.text as string) || '';
+    return `  <thread_message sender="${escapeXml(sender)}">${escapeXml(text)}</thread_message>`;
+  });
+  return `<thread_history>\n${lines.join('\n')}\n</thread_history>\n`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
