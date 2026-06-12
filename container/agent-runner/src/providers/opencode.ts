@@ -125,11 +125,25 @@ function buildOpenCodeConfig(options: ProviderOptions): Record<string, unknown> 
   // ProviderModelNotFoundError at startup even if OpenRouter supports them.
   // Explicitly declaring models in provider.<id>.models bypasses the
   // bundled-list check entirely.
+  // Parse optional OpenRouter provider routing config (from OPENCODE_OPENROUTER_ROUTING JSON).
+  // Values are embedded as model.options.provider — the @openrouter/ai-sdk-provider spreads
+  // everything in providerOptions.openrouter directly into the request body, so
+  // { provider: { only, data_collection, ... } } becomes body.provider = OpenRouter routing.
+  let routingOpts: Record<string, unknown> | undefined;
+  if (provider === 'openrouter' && process.env.OPENCODE_OPENROUTER_ROUTING) {
+    try {
+      routingOpts = JSON.parse(process.env.OPENCODE_OPENROUTER_ROUTING) as Record<string, unknown>;
+    } catch {
+      log('Warning: OPENCODE_OPENROUTER_ROUTING is not valid JSON, ignoring');
+    }
+  }
+  const modelEntry = routingOpts ? { options: { provider: routingOpts } } : {};
+
   const providerModels: Record<string, unknown> = {};
   const mainSlug = modelSlug(provider, model);
   const smallSlug = modelSlug(provider, smallModel);
-  if (mainSlug) providerModels[mainSlug] = {};
-  if (smallSlug) providerModels[smallSlug] = {};
+  if (mainSlug) providerModels[mainSlug] = modelEntry;
+  if (smallSlug) providerModels[smallSlug] = modelEntry;
 
   const providerOptions: Record<string, unknown> =
     provider === 'anthropic'

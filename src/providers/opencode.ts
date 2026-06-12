@@ -37,9 +37,8 @@ registerProviderContainerConfig('opencode', (ctx) => {
     NO_PROXY: mergeNoProxy(ctx.hostEnv.NO_PROXY, '127.0.0.1,localhost'),
     no_proxy: mergeNoProxy(ctx.hostEnv.no_proxy, '127.0.0.1,localhost'),
   };
-  for (const key of ['OPENCODE_PROVIDER', 'OPENCODE_MODEL', 'OPENCODE_SMALL_MODEL'] as const) {
-    const value = ctx.hostEnv[key];
-    if (value) env[key] = value;
+  for (const [key, value] of Object.entries(ctx.hostEnv)) {
+    if (key.startsWith('OPENCODE_') && value) env[key] = value;
   }
 
   // OpenCode requires a non-empty API key to send an Authorization: Bearer
