@@ -22,6 +22,20 @@ registerChannelAdapter('slack', {
     const slackAdapter = appToken
       ? createSlackAdapter({ botToken: env.SLACK_BOT_TOKEN, mode: 'socket', appToken })
       : createSlackAdapter({ botToken: env.SLACK_BOT_TOKEN, signingSecret: env.SLACK_SIGNING_SECRET });
+
+    try {
+      const cpt = Number(process.env.SLACK_CLIENT_PING_TIMEOUT_MS) || 15_000;
+      const spt = Number(process.env.SLACK_SERVER_PING_TIMEOUT_MS) || 30_000;
+      const client = (slackAdapter as { app?: { receiver?: { client?: Record<string, unknown> } } }).app?.receiver
+        ?.client;
+      if (client && typeof client === 'object') {
+        if ('clientPingTimeout' in client) client.clientPingTimeout = cpt;
+        if ('serverPingTimeout' in client) client.serverPingTimeout = spt;
+      }
+    } catch {
+      // Non-fatal: if internals change, fall back to SDK defaults
+    }
+
     const bridge = createChatSdkBridge({ adapter: slackAdapter, concurrency: 'concurrent', supportsThreads: true });
     bridge.resolveChannelName = async (platformId: string) => {
       try {
