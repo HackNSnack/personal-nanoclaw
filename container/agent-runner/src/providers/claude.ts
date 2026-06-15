@@ -9,7 +9,7 @@ import { registerProvider } from './provider-registry.js';
 import type { AgentProvider, AgentQuery, McpServerConfig, ProviderEvent, ProviderOptions, QueryInput } from './types.js';
 
 function log(msg: string): void {
-  console.error(`[claude-provider] ${msg}`);
+  console.error(`[${new Date().toISOString()}]${`[claude-provider] ${msg}`}`);
 }
 
 // Deferred SDK builtins that either sidestep nanoclaw's own scheduling or

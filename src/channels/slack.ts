@@ -23,17 +23,33 @@ registerChannelAdapter('slack', {
       ? createSlackAdapter({ botToken: env.SLACK_BOT_TOKEN, mode: 'socket', appToken })
       : createSlackAdapter({ botToken: env.SLACK_BOT_TOKEN, signingSecret: env.SLACK_SIGNING_SECRET });
 
-    try {
-      const cpt = Number(process.env.SLACK_CLIENT_PING_TIMEOUT_MS) || 15_000;
-      const spt = Number(process.env.SLACK_SERVER_PING_TIMEOUT_MS) || 30_000;
-      const client = (slackAdapter as { app?: { receiver?: { client?: Record<string, unknown> } } }).app?.receiver
-        ?.client;
-      if (client && typeof client === 'object') {
-        if ('clientPingTimeout' in client) client.clientPingTimeout = cpt;
-        if ('serverPingTimeout' in client) client.serverPingTimeout = spt;
-      }
-    } catch {
-      // Non-fatal: if internals change, fall back to SDK defaults
+    // Intercept socketClient assignment to inject ping timeout values into
+    // SocketModeClient before start() reads them. The adapter's startSocketMode()
+    // creates new SocketModeClient({appToken}) with defaults only (5s/30s), then
+    // immediately calls .start() — which reads this.clientPingTimeoutMS to create
+    // SlackWebSocket. By trapping the setter we set our values between the two calls.
+    //
+    // SocketModeClient stores clientPingTimeout (constructor option) as
+    // this.clientPingTimeoutMS, which SlackWebSocket constructor reads as
+    // clientPingTimeoutMS. Property names must match at the instance level.
+    const cpt = Number(process.env.SLACK_CLIENT_PING_TIMEOUT_MS) || 15_000;
+    const spt = Number(process.env.SLACK_SERVER_PING_TIMEOUT_MS) || 30_000;
+    if (cpt !== 5000 || spt !== 30000) {
+      let _socketClient: unknown = null;
+      Object.defineProperty(slackAdapter, 'socketClient', {
+        get() {
+          return _socketClient;
+        },
+        set(v: unknown) {
+          if (v && typeof v === 'object') {
+            (v as Record<string, unknown>).clientPingTimeoutMS = cpt;
+            (v as Record<string, unknown>).serverPingTimeoutMS = spt;
+          }
+          _socketClient = v;
+        },
+        configurable: true,
+        enumerable: false,
+      });
     }
 
     const bridge = createChatSdkBridge({ adapter: slackAdapter, concurrency: 'concurrent', supportsThreads: true });

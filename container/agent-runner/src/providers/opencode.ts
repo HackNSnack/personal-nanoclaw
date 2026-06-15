@@ -7,7 +7,16 @@ import type { AgentProvider, AgentQuery, ProviderEvent, ProviderOptions, QueryIn
 import { mcpServersToOpenCodeConfig } from './mcp-to-opencode.js';
 
 function log(msg: string): void {
-  console.error(`[opencode-provider] ${msg}`);
+  console.error(`[${new Date().toISOString()}][opencode-provider] ${msg}`);
+}
+
+function logDebug(msg: string): void {
+  // Enabled by DEBUG=opencode-provider or DEBUG=* in container env
+  const d = process.env.DEBUG || '';
+  const parts = d.split(',').map((s) => s.trim());
+  if (d === '*' || parts.includes('opencode-provider') || parts.includes('opencode')) {
+    console.error(`[${new Date().toISOString()}][opencode-provider][debug] ${msg}`);
+  }
 }
 
 const SESSION_STATUS_RETRY_ERROR_AFTER = 3;
@@ -345,10 +354,12 @@ export class OpenCodeProvider implements AgentProvider {
         let eventTimedOut = false;
         const timeoutCheck = setInterval(() => {
           if (Date.now() - lastEventAt > IDLE_TIMEOUT_MS) {
-            log(`OpenCode event timeout (${IDLE_TIMEOUT_MS}ms) — clearing session ${sessionId}`);
+            log(`OpenCode event timeout (${IDLE_TIMEOUT_MS}ms) — aborting session ${sessionId}`);
             eventTimedOut = true;
             self.activeSessionId = undefined;
-            destroySharedRuntime();
+            // Do NOT destroy shared runtime — OpenCode server + SSE stream may be healthy
+            // for other sessions. Only this session's query stalled. destroySharedRuntime()
+            // kills the server process for everyone, breaking concurrent agents.
             kick();
           }
         }, 5000);
@@ -365,9 +376,18 @@ export class OpenCodeProvider implements AgentProvider {
               throw new Error('OpenCode SSE stream ended unexpectedly');
             }
 
-            if (!ev?.type || ev.type === 'server.connected' || ev.type === 'server.heartbeat') continue;
-
+            // Update idle timer BEFORE filtering — heartbeats and connection events
+            // prove the SSE stream is alive even if no message events arrived yet
+            // (e.g. during extended model computation). Without this, long-running
+            // turns always timeout at IDLE_TIMEOUT_MS regardless of health.
             lastEventAt = Date.now();
+
+            if (!ev?.type || ev.type === 'server.connected' || ev.type === 'server.heartbeat') {
+              logDebug(`heartbeat`);
+              continue;
+            }
+
+            logDebug(`event: ${ev.type}`);
             yield { type: 'activity' };
 
             switch (ev.type) {

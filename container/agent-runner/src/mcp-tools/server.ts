@@ -15,7 +15,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import type { McpToolDefinition } from './types.js';
 
 function log(msg: string): void {
-  console.error(`[mcp-tools] ${msg}`);
+  console.error(`[${new Date().toISOString()}]${`[mcp-tools] ${msg}`}`);
 }
 
 const allTools: McpToolDefinition[] = [];

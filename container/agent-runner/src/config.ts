@@ -35,7 +35,7 @@ export function loadConfig(): RunnerConfig {
   try {
     raw = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
   } catch {
-    console.error(`[config] Failed to read ${CONFIG_PATH}, using defaults`);
+    console.error(`[${new Date().toISOString()}][config] Failed to read ${CONFIG_PATH}, using defaults`);
   }
 
   _config = {

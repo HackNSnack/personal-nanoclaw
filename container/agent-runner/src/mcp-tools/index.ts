@@ -13,7 +13,7 @@ import './self-mod.js';
 import { startMcpServer } from './server.js';
 
 function log(msg: string): void {
-  console.error(`[mcp-tools] ${msg}`);
+  console.error(`[${new Date().toISOString()}]${`[mcp-tools] ${msg}`}`);
 }
 
 startMcpServer().catch((err) => {

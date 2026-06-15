@@ -13,7 +13,7 @@ import { registerTools } from './server.js';
 import type { McpToolDefinition } from './types.js';
 
 function log(msg: string): void {
-  console.error(`[mcp-tools] ${msg}`);
+  console.error(`[${new Date().toISOString()}]${`[mcp-tools] ${msg}`}`);
 }
 
 function generateId(): string {

@@ -13,7 +13,7 @@ export interface ScriptResult {
 }
 
 function log(msg: string): void {
-  console.error(`[task-script] ${msg}`);
+  console.error(`[${new Date().toISOString()}]${`[task-script] ${msg}`}`);
 }
 
 export async function runScript(script: string, taskId: string): Promise<ScriptResult | null> {

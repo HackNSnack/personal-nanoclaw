@@ -34,7 +34,7 @@ import { createProvider, type ProviderName } from './providers/factory.js';
 import { runPollLoop } from './poll-loop.js';
 
 function log(msg: string): void {
-  console.error(`[agent-runner] ${msg}`);
+  console.error(`[${new Date().toISOString()}]${`[agent-runner] ${msg}`}`);
 }
 
 const CWD = '/workspace/agent';

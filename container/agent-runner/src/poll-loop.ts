@@ -44,7 +44,7 @@ export function isCorruptionError(msg: string): boolean {
 }
 
 function log(msg: string): void {
-  console.error(`[poll-loop] ${msg}`);
+  console.error(`[${new Date().toISOString()}]${`[poll-loop] ${msg}`}`);
 }
 
 function generateId(): string {
