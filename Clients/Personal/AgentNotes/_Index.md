@@ -70,3 +70,7 @@ Map of Content for Personal development notes.
 
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Documentation Index - LLM Reference]] — Doc file quick lookup
 - [[Clients/Personal/AgentNotes/Reference/PiDev/Documentation/Pi Coding Agent - Full Documentation]] — Complete feature docs
+
+### Travel
+
+- [[Clients/Personal/AgentNotes/Reference/SAS Travels/SAS EuroBonus & SkyTeam Analysis]] — SkyTeam routes to Asia/Japan/NZ, EuroBonus award chart, point costs, feasibility for fully points-funded trip.
