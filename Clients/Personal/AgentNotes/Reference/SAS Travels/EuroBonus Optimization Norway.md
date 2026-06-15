@@ -69,6 +69,23 @@ Based on typical award pricing:
 - 2% at Kiwi/Meny → 2 kr Trumf per 100 kr spent → **27 EuroBonus points per 100 kr** (with auto-transfer)
 - This rivals SAS Amex Elite (20 EB/100 kr) but **completely free** (no annual fee)
 
+### Key Insight: Trumf Membership + SAS Amex Premium (No Trumf Card Needed)
+
+**You do NOT need the Trumf credit card to earn Trumf.** You can register your Trumf membership number at checkout and pay with any card. This means you can **stack** Trumf with your SAS Amex:
+
+| Scenario (100 kr at Kiwi) | Trumf | Card EB | **Total EB** |
+|---------------------------|-------|---------|-------------|
+| Trumf Kredittkort alone | 27 EB | — | **27 EB** |
+| SAS Amex Premium alone | — | 15 EB | **15 EB** |
+| **Trumf medlem + Amex Premium** | 13.5 EB | 15 EB | **28.5 EB** ✅ |
+| **Trumf medlem + Amex Elite** | 13.5 EB | 20 EB | **33.5 EB** 🔥 |
+| **Trumf medlem + Amex Premium (Trippel-Trumf Torsdag)** | 40.5 EB | 15 EB | **55.5 EB** 🚀 |
+| **Trumf medlem + Amex Elite (Trippel-Trumf Torsdag)** | 40.5 EB | 20 EB | **60.5 EB** 💎 |
+
+**Conclusion:** Registering Trumf membership (free) + SAS Amex Premium gives **28.5 EB/100 kr** on groceries — which actually beats the Trumf Kredittkort alone (27 EB/100 kr). And you keep all Amex benefits (insurance, Companion Ticket, lounge).
+
+The only upside of Trumf Kredittkort over this combo: it gives 0.5% Trumf on *non-grocery* purchases (≈ 6.75 EB/100 kr), and it has **no annual fee** if you don't want or can't get the Amex Premium.
+
 ### New: Scandic Friends Transfer
 - Trumf can also transfer to **Scandic Friends** points
 - One-time: 1 kr = 20 Scandic points
@@ -237,12 +254,14 @@ Kiwi, Meny, Spar, Joker, Nærbutikken, Jacob's, CC Mat, Lerøy Mat, Gigaboks, Me
 | SAS Amex Elite (all purchases) | 20 EB |
 | SAS MC Premium (SAS flights) | 25 EB |
 | Trumf Visa at Kiwi/Meny (2% + auto-transfer) | 27 EB |
+| **Trumf medlem + Amex Premium (Kiwi)** | **28.5 EB** 🔥 |
+| **Trumf medlem + Amex Elite (Kiwi)** | **33.5 EB** 💎 |
 | Trumf Netthandel 5% bonus + auto-transfer | ~6.75 EB |
 | SAS Shopping portal (varies) | 2–20+ EB |
 | Amex Platinum (Points Plus) → EB | 20 EB |
 
 ### Best Overall Strategy
-1. **Trumf Visa** for daily groceries (27 EB/100 kr effectively)
+1. **Trumf medlemskap (gratis) + SAS Amex Premium** for dagligvarer (28.5 EB/100 kr — slår Trumf-kortet!)
 2. **SAS Amex Elite** for all other card purchases (20 EB/100 kr + 2 Companion Tickets)
 3. **SAS MC Premium** as backup where Amex isn't accepted (15 EB/100 kr + Fly Premium)
 4. **Auto-transfer** Trumf → EuroBonus (13.5x rate)
