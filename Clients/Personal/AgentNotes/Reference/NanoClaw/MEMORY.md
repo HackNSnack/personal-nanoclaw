@@ -71,7 +71,7 @@ This ends the turn. The user sees your complete work.
 
 ## Memory sync — Obsidian repo mirror
 
-This memory file has a mirrored copy at `Clients/Personal/AgentNotes/Reference/Nanoclaw/MEMORY.md` in the Obsidian repo. Whenever this file is updated, the mirrored copy must be updated too — pull the latest from the Obsidian repo, update the file, and create a PR.
+This memory file has a mirrored copy at `Clients/Personal/AgentNotes/Reference/NanoClaw/MEMORY.md` in the Obsidian repo. Whenever this file is updated, the mirrored copy must be updated too — pull the latest from the Obsidian repo, update the file, and create a PR.
 
 The Obsidian repo is at: `/workspace/agent/Obsidian-Netlight` (remote: `git@github.com:HackNSnack/Obsidian-Netlight.git`)  
 
