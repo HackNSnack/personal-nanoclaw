@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/06-June/2026-06-12-Friday.md",
+                "file": "Clients/Personal/AgentNotes/Reference/Nanoclaw/MEMORY.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-06-12-Friday"
+              "title": "MEMORY"
             }
           }
         ]
@@ -195,8 +195,11 @@
   },
   "active": "e957b2dc8c2c09f6",
   "lastOpenFiles": [
-    "Clients/Ardoq/Weeklies/Week-24-2026.md",
     "Daily Tracker/2026/06-June/2026-06-12-Friday.md",
+    "Clients/Personal/AgentNotes/Reference/Nanoclaw/MEMORY.md",
+    "Clients/Personal/AgentNotes/Reference/Nanoclaw",
+    "Clients/Personal/AgentNotes/Reference/SAS Travels",
+    "Clients/Ardoq/Weeklies/Week-24-2026.md",
     "Daily Tracker/2026/06-June/2026-06-11-Thursday.md",
     "Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode + OpenRouter Configuration.md",
     "Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Channel Setup & Debugging.md",
@@ -222,7 +225,6 @@
     "Clients/Personal/AgentNotes/README.md",
     "Daily Tracker/2026/06-June/2026-06-04-Thursday.md",
     "Daily Tracker/2026/06-June/2026-06-03-Wednesday.md",
-    "Daily Tracker/2026/06-June/2026-06-02-Tuesday.md",
     "Untitled 1.base",
     "Clients/Personal/AgentNotes/Reference/Slackbot",
     "Clients/Personal/AgentNotes/Reference/Tailscale",
@@ -230,8 +232,6 @@
     "Untitled.base",
     "Clients/Personal/AgentNotes/Reference/OpenRouter/02 - Providers.nd",
     "Clients/Personal/AgentNotes/Active/2026-05-29 Pi OpenRouter Config & Model Skill",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/_Index",
-    "Clients/Personal/AgentNotes/Reference/OpenRouter/05 - Work vs Personal Setup",
     "Legacy/Old AgentNotes Structure/Ardoq/Hackathon/Agent Setup.canvas",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Images/Pasted image 20251113154817.png",
