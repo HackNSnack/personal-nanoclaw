@@ -52,9 +52,25 @@ export interface ProviderOptions {
   effort?: string;
 }
 
+export interface MediaBlock {
+  type: 'image';
+  source: {
+    type: 'base64';
+    media_type: string;
+    data: string;
+  };
+}
+
 export interface QueryInput {
   /** Initial prompt (already formatted by agent-runner). */
   prompt: string;
+
+  /**
+   * Media blocks (images, documents) extracted from message attachments.
+   * Passed alongside the text prompt so providers can inject them as native
+   * content blocks (e.g. ImageBlockParam for the Claude Messages API).
+   */
+  media?: MediaBlock[];
 
   /**
    * Opaque continuation token from a previous query. The provider decides
@@ -83,6 +99,14 @@ export interface McpServerConfig {
 export interface AgentQuery {
   /** Push a follow-up message into the active query. */
   push(message: string): void;
+
+  /**
+   * Push a follow-up message with media content blocks (images, etc.).
+   * Default implementation calls push(text). Providers that support native
+   * content blocks (e.g. Claude Messages API) override this to inject
+   * ImageBlockParam alongside the text.
+   */
+  pushMedia?(message: string, media?: MediaBlock[]): void;
 
   /** Signal that no more input will be sent. */
   end(): void;

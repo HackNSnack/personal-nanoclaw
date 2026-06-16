@@ -6,7 +6,7 @@ import { query as sdkQuery, type HookCallback, type PreCompactHookInput } from '
 
 import { clearContainerToolInFlight, setContainerToolInFlight } from '../db/connection.js';
 import { registerProvider } from './provider-registry.js';
-import type { AgentProvider, AgentQuery, McpServerConfig, ProviderEvent, ProviderOptions, QueryInput } from './types.js';
+import type { AgentProvider, AgentQuery, McpServerConfig, MediaBlock, ProviderEvent, ProviderOptions, QueryInput } from './types.js';
 
 function log(msg: string): void {
   console.error(`[${new Date().toISOString()}]${`[claude-provider] ${msg}`}`);
@@ -68,9 +68,9 @@ function mcpAllowPattern(serverName: string): string {
   return `mcp__${serverName.replace(/[^a-zA-Z0-9_-]/g, '_')}__*`;
 }
 
-interface SDKUserMessage {
+interface StreamQueued {
   type: 'user';
-  message: { role: 'user'; content: string };
+  message: { role: 'user'; content: string | unknown[] };
   parent_tool_use_id: null;
   session_id: string;
 }
@@ -79,7 +79,7 @@ interface SDKUserMessage {
  * Push-based async iterable for streaming user messages to the Claude SDK.
  */
 class MessageStream {
-  private queue: SDKUserMessage[] = [];
+  private queue: StreamQueued[] = [];
   private waiting: (() => void) | null = null;
   private done = false;
 
@@ -93,12 +93,34 @@ class MessageStream {
     this.waiting?.();
   }
 
+  /**
+   * Push a multi-part user message with content blocks (text + images, etc.).
+   * The `text` argument becomes a TextBlockParam prepended to the blocks array.
+   */
+  pushWithMedia(text: string, media: MediaBlock[]): void {
+    if (media.length === 0) {
+      this.push(text);
+      return;
+    }
+    const blocks: unknown[] = [{ type: 'text', text }];
+    for (const m of media) {
+      blocks.push({ type: 'image', source: m.source });
+    }
+    this.queue.push({
+      type: 'user',
+      message: { role: 'user', content: blocks },
+      parent_tool_use_id: null,
+      session_id: '',
+    });
+    this.waiting?.();
+  }
+
   end(): void {
     this.done = true;
     this.waiting?.();
   }
 
-  async *[Symbol.asyncIterator](): AsyncGenerator<SDKUserMessage> {
+  async *[Symbol.asyncIterator](): AsyncGenerator<StreamQueued> {
     while (true) {
       while (this.queue.length > 0) {
         yield this.queue.shift()!;
@@ -392,12 +414,17 @@ export class ClaudeProvider implements AgentProvider {
 
   query(input: QueryInput): AgentQuery {
     const stream = new MessageStream();
-    stream.push(input.prompt);
+    if (input.media && input.media.length > 0) {
+      stream.pushWithMedia(input.prompt, input.media);
+    } else {
+      stream.push(input.prompt);
+    }
 
     const instructions = input.systemContext?.instructions;
 
     const sdkResult = sdkQuery({
-      prompt: stream,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      prompt: stream as any,
       options: {
         cwd: input.cwd,
         additionalDirectories: this.additionalDirectories,
@@ -460,6 +487,7 @@ export class ClaudeProvider implements AgentProvider {
 
     return {
       push: (msg) => stream.push(msg),
+      pushMedia: (msg: string, media?: MediaBlock[]) => stream.pushWithMedia(msg, media ?? []),
       end: () => stream.end(),
       events: translateEvents(),
       abort: () => {
