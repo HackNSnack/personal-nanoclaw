@@ -95,6 +95,24 @@ function wrapPromptWithContext(text: string, systemInstructions?: string): strin
   return out;
 }
 
+type MessagePart =
+  | { type: 'text'; text: string }
+  | { type: 'file'; mime: string; url: string; filename?: string };
+
+function textParts(text: string): MessagePart[] {
+  return [{ type: 'text', text }];
+}
+
+function mediaToFileParts(media: import('./types.js').MediaBlock[] | undefined): MessagePart[] {
+  if (!media || media.length === 0) return [];
+  return media.map((m) => ({
+    type: 'file',
+    mime: m.source.media_type,
+    url: `data:${m.source.media_type};base64,${m.source.data}`,
+    filename: 'image',
+  }));
+}
+
 /**
  * OpenCode model IDs must be fully-qualified as `provider_id/model_id`.
  * When using a non-anthropic provider (e.g. `openrouter`) users often set
@@ -290,13 +308,17 @@ export class OpenCodeProvider implements AgentProvider {
       this.activeSessionId = undefined;
     }
 
-    const pending: string[] = [];
+    const pending: MessagePart[][] = [];
     let waiting: (() => void) | null = null;
     let ended = false;
     let aborted = false;
 
     const systemInstructions = input.systemContext?.instructions;
-    pending.push(wrapPromptWithContext(input.prompt, systemInstructions));
+    const initialParts: MessagePart[] = [
+      ...textParts(wrapPromptWithContext(input.prompt, systemInstructions)),
+      ...mediaToFileParts(input.media),
+    ];
+    pending.push(initialParts);
 
     const kick = (): void => {
       waiting?.();
@@ -321,7 +343,7 @@ export class OpenCodeProvider implements AgentProvider {
         if (aborted) return;
         if (pending.length === 0 && ended) return;
 
-        const text = pending.shift()!;
+        const parts = pending.shift()!;
         let sessionId = self.activeSessionId;
 
         if (!sessionId) {
@@ -341,7 +363,7 @@ export class OpenCodeProvider implements AgentProvider {
 
         const promptRes = await client.session.promptAsync({
           path: { id: sessionId },
-          body: { parts: [{ type: 'text', text }] },
+          body: { parts },
         });
         if (promptRes.error) {
           self.activeSessionId = undefined;
@@ -472,11 +494,15 @@ export class OpenCodeProvider implements AgentProvider {
 
     return {
       push: (message: string) => {
-        pending.push(wrapPromptWithContext(message, systemInstructions));
+        pending.push(textParts(wrapPromptWithContext(message, systemInstructions)));
         kick();
       },
-      pushMedia: (message: string, _media?: import('./types.js').MediaBlock[]) => {
-        pending.push(wrapPromptWithContext(message, systemInstructions));
+      pushMedia: (message: string, media?: import('./types.js').MediaBlock[]) => {
+        const parts: MessagePart[] = [
+          ...textParts(wrapPromptWithContext(message, systemInstructions)),
+          ...mediaToFileParts(media),
+        ];
+        pending.push(parts);
         kick();
       },
       end: () => {
