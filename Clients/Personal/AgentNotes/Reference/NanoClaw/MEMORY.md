@@ -127,7 +127,8 @@ When working with git repos:
 1. **One branch per PR.** Create a specific branch for the task, do all work there, and only move on once it's fully done.
 2. **PR from that branch.** Open the PR with the branch as-is.
 3. **Changes to an existing PR** = additional commits on the same branch, pushed normally. Never force-push unless Mathias explicitly asks for a rebase or similar.
-4. **Sign your own commits** so they're attributed to Claudette, not to Mathias. Set up git user config accordingly before committing if not already configured.
+4. **Merge conflicts on an existing PR**: resolve conflicts via `git merge origin/main` (not rebase), then push normally with a new fix-commit. Never rebase + force-push on an existing PR branch — it rewrites history and collapses commits.
+5. **Sign your own commits** so they're attributed to Claudette, not to Mathias. Set up git user config accordingly before committing if not already configured.
 
 ## Repos
 
