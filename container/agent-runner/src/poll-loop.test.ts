@@ -29,11 +29,15 @@ function insertMessage(
     .run(id, kind, opts?.processAfter ?? null, opts?.trigger ?? 1, opts?.onWake ?? 0, JSON.stringify(content));
 }
 
+function fmt(msgs: import('./db/messages-in.js').MessageInRow[]): string {
+  return formatMessages(msgs).text;
+}
+
 describe('formatter', () => {
   it('should format a single chat message', () => {
     insertMessage('m1', 'chat', { sender: 'John', text: 'Hello world' });
     const messages = getPendingMessages();
-    const prompt = formatMessages(messages);
+    const prompt = fmt(messages);
     expect(prompt).toContain('sender="John"');
     expect(prompt).toContain('Hello world');
   });
@@ -42,9 +46,7 @@ describe('formatter', () => {
     insertMessage('m1', 'chat', { sender: 'John', text: 'Hello' });
     insertMessage('m2', 'chat', { sender: 'Jane', text: 'Hi there' });
     const messages = getPendingMessages();
-    const prompt = formatMessages(messages);
-    // The <messages> envelope was dropped in fe2e881b (#2556) so the SDK calls
-    // the API; each message is now its own self-contained <message> block.
+    const prompt = fmt(messages);
     expect(prompt).not.toContain('<messages>');
     expect(prompt.match(/<message /g) ?? []).toHaveLength(2);
     expect(prompt).toContain('sender="John"');
@@ -54,7 +56,7 @@ describe('formatter', () => {
   it('should format task messages', () => {
     insertMessage('m1', 'task', { prompt: 'Review open PRs' });
     const messages = getPendingMessages();
-    const prompt = formatMessages(messages);
+    const prompt = fmt(messages);
     expect(prompt).toContain('<task');
     expect(prompt).toContain('Review open PRs');
   });
@@ -62,7 +64,7 @@ describe('formatter', () => {
   it('should format webhook messages', () => {
     insertMessage('m1', 'webhook', { source: 'github', event: 'push', payload: { ref: 'main' } });
     const messages = getPendingMessages();
-    const prompt = formatMessages(messages);
+    const prompt = fmt(messages);
     expect(prompt).toContain('<webhook');
     expect(prompt).toContain('source="github"');
     expect(prompt).toContain('event="push"');
@@ -71,7 +73,7 @@ describe('formatter', () => {
   it('should format system messages', () => {
     insertMessage('m1', 'system', { action: 'register_group', status: 'success', result: { id: 'ag-1' } });
     const messages = getPendingMessages();
-    const prompt = formatMessages(messages);
+    const prompt = fmt(messages);
     expect(prompt).toContain('<system_response');
     expect(prompt).toContain('action="register_group"');
   });
@@ -80,7 +82,7 @@ describe('formatter', () => {
     insertMessage('m1', 'chat', { sender: 'John', text: 'Hello' });
     insertMessage('m2', 'system', { action: 'test', status: 'ok', result: null });
     const messages = getPendingMessages();
-    const prompt = formatMessages(messages);
+    const prompt = fmt(messages);
     expect(prompt).toContain('sender="John"');
     expect(prompt).toContain('<system_response');
   });
@@ -88,7 +90,7 @@ describe('formatter', () => {
   it('should escape XML in content', () => {
     insertMessage('m1', 'chat', { sender: 'A<B', text: 'x > y && z' });
     const messages = getPendingMessages();
-    const prompt = formatMessages(messages);
+    const prompt = fmt(messages);
     expect(prompt).toContain('A&lt;B');
     expect(prompt).toContain('x &gt; y &amp;&amp; z');
   });
@@ -231,33 +233,33 @@ describe('origin metadata (from= attribute)', () => {
   it('chat message includes from= when destination matches', () => {
     seedDestination('discord-main', 'discord', 'chan-1');
     insertWithRouting('m1', 'chat', { sender: 'Alice', text: 'hi' }, 'discord', 'chan-1');
-    const prompt = formatMessages(getPendingMessages());
+    const prompt = fmt(getPendingMessages());
     expect(prompt).toContain('from="discord-main"');
   });
 
   it('chat message falls back to raw routing when no destination matches', () => {
     insertWithRouting('m1', 'chat', { sender: 'Alice', text: 'hi' }, 'telegram', 'chat-999');
-    const prompt = formatMessages(getPendingMessages());
+    const prompt = fmt(getPendingMessages());
     expect(prompt).toContain('from="unknown:telegram:chat-999"');
   });
 
   it('chat message omits from= when routing is null', () => {
     insertMessage('m1', 'chat', { sender: 'Alice', text: 'hi' });
-    const prompt = formatMessages(getPendingMessages());
+    const prompt = fmt(getPendingMessages());
     expect(prompt).not.toContain('from=');
   });
 
   it('task message includes from= when destination matches', () => {
     seedDestination('slack-ops', 'slack', 'C-OPS');
     insertWithRouting('t1', 'task', { prompt: 'check status' }, 'slack', 'C-OPS');
-    const prompt = formatMessages(getPendingMessages());
+    const prompt = fmt(getPendingMessages());
     expect(prompt).toContain('<task');
     expect(prompt).toContain('from="slack-ops"');
   });
 
   it('task message omits from= when routing is null', () => {
     insertMessage('t1', 'task', { prompt: 'check status' });
-    const prompt = formatMessages(getPendingMessages());
+    const prompt = fmt(getPendingMessages());
     expect(prompt).toContain('<task');
     expect(prompt).not.toContain('from=');
   });
@@ -265,7 +267,7 @@ describe('origin metadata (from= attribute)', () => {
   it('webhook message includes from= when destination matches', () => {
     seedDestination('github-ch', 'github', 'repo-1');
     insertWithRouting('w1', 'webhook', { source: 'github', event: 'push', payload: {} }, 'github', 'repo-1');
-    const prompt = formatMessages(getPendingMessages());
+    const prompt = fmt(getPendingMessages());
     expect(prompt).toContain('<webhook');
     expect(prompt).toContain('from="github-ch"');
   });
@@ -273,10 +275,11 @@ describe('origin metadata (from= attribute)', () => {
   it('system message includes from= when destination matches', () => {
     seedDestination('discord-main', 'discord', 'chan-1');
     insertWithRouting('s1', 'system', { action: 'test', status: 'ok', result: null }, 'discord', 'chan-1');
-    const prompt = formatMessages(getPendingMessages());
+    const prompt = fmt(getPendingMessages());
     expect(prompt).toContain('<system_response');
     expect(prompt).toContain('from="discord-main"');
   });
+
 });
 
 describe('mock provider', () => {
@@ -334,12 +337,12 @@ describe('end-to-end with mock provider', () => {
     expect(messages).toHaveLength(1);
 
     const routing = extractRouting(messages);
-    const prompt = formatMessages(messages);
+    const formatted = formatMessages(messages);
 
     // Create mock provider and run query
     const provider = new MockProvider({}, () => 'The answer is 4');
     const query = provider.query({
-      prompt,
+      prompt: formatted.text,
       cwd: '/tmp',
     });
 

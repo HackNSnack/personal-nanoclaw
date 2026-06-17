@@ -11,6 +11,7 @@ import {
   isClearCommand,
   isRunnerCommand,
   stripInternalTags,
+  type FormattedMessages,
   type RoutingContext,
 } from './formatter.js';
 import { isUploadTraceCommand, uploadTrace } from './upload-trace.js';
@@ -214,12 +215,13 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
 
     // Format messages: passthrough commands get raw text (only if the
     // provider natively handles slash commands), others get XML.
-    const prompt = formatMessagesWithCommands(keep, config.provider.supportsNativeSlashCommands);
+    const formatted = formatMessagesWithCommands(keep, config.provider.supportsNativeSlashCommands);
 
     log(`Processing ${keep.length} message(s), kinds: ${[...new Set(keep.map((m) => m.kind))].join(',')}`);
 
     const query = config.provider.query({
-      prompt,
+      prompt: formatted.text,
+      media: formatted.media,
       continuation,
       cwd: config.cwd,
       systemContext: config.systemContext,
@@ -271,13 +273,22 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
 }
 
 /**
+ * Result of formatting a batch with command-aware handling.
+ */
+interface FormattedWithMedia {
+  text: string;
+  media: import('./providers/types.js').MediaBlock[];
+}
+
+/**
  * Format messages, handling passthrough commands differently.
  * When the provider handles slash commands natively (Claude Code),
  * passthrough commands are sent raw (no XML wrapping) so the SDK can
  * dispatch them. Otherwise they fall through to standard XML formatting.
  */
-function formatMessagesWithCommands(messages: MessageInRow[], nativeSlashCommands: boolean): string {
-  const parts: string[] = [];
+function formatMessagesWithCommands(messages: MessageInRow[], nativeSlashCommands: boolean): FormattedWithMedia {
+  const textParts: string[] = [];
+  const allMedia: import('./providers/types.js').MediaBlock[] = [];
   const normalBatch: MessageInRow[] = [];
 
   for (const msg of messages) {
@@ -286,11 +297,13 @@ function formatMessagesWithCommands(messages: MessageInRow[], nativeSlashCommand
       if (cmdInfo.category === 'passthrough' || cmdInfo.category === 'admin') {
         // Flush normal batch first
         if (normalBatch.length > 0) {
-          parts.push(formatMessages(normalBatch));
+          const formatted = formatMessages(normalBatch);
+          textParts.push(formatted.text);
+          allMedia.push(...formatted.media);
           normalBatch.length = 0;
         }
         // Pass raw command text (no XML wrapping) — SDK handles it natively
-        parts.push(cmdInfo.text);
+        textParts.push(cmdInfo.text);
         continue;
       }
     }
@@ -298,10 +311,12 @@ function formatMessagesWithCommands(messages: MessageInRow[], nativeSlashCommand
   }
 
   if (normalBatch.length > 0) {
-    parts.push(formatMessages(normalBatch));
+    const formatted = formatMessages(normalBatch);
+    textParts.push(formatted.text);
+    allMedia.push(...formatted.media);
   }
 
-  return parts.join('\n\n');
+  return { text: textParts.join('\n\n'), media: allMedia };
 }
 
 interface QueryResult {
@@ -389,10 +404,14 @@ async function processQuery(
         if (done) return;
 
         const keptIds = keep.map((m) => m.id);
-        const prompt = formatMessages(keep);
+        const formatted = formatMessages(keep);
         log(`Pushing ${keep.length} follow-up message(s) into active query`);
         unwrappedNudged = false;
-        query.push(prompt);
+        if (formatted.media.length > 0 && query.pushMedia) {
+          query.pushMedia(formatted.text, formatted.media);
+        } else {
+          query.push(formatted.text);
+        }
         markCompleted(keptIds);
       } catch (err) {
         // Without this catch the rejection escapes the void IIFE and Node

@@ -1,6 +1,8 @@
+import fs from 'fs';
 import { findByRouting } from './destinations.js';
 import type { MessageInRow } from './db/messages-in.js';
 import { TIMEZONE, formatLocalTime } from './timezone.js';
+import type { MediaBlock } from './providers/types.js';
 
 /**
  * Command categories for messages starting with '/'.
@@ -115,7 +117,18 @@ export function extractRouting(messages: MessageInRow[]): RoutingContext {
 }
 
 /**
- * Format a batch of messages_in rows into a prompt string.
+ * Result of formatting a batch: the text prompt plus any media content blocks
+ * extracted from message attachments.
+ */
+export interface FormattedMessages {
+  /** XML-wrapped prompt string. */
+  text: string;
+  /** Media blocks (images, etc.) to inject as native content blocks. */
+  media: MediaBlock[];
+}
+
+/**
+ * Format a batch of messages_in rows into a prompt string and extract media.
  *
  * Prepends a `<context timezone="<IANA>" />` header so the agent always knows
  * what timezone it's in — every timestamp it sees in message bodies is the
@@ -126,9 +139,9 @@ export function extractRouting(messages: MessageInRow[]): RoutingContext {
  *
  * Strips routing fields — the agent never sees platform_id, channel_type, thread_id.
  */
-export function formatMessages(messages: MessageInRow[]): string {
+export function formatMessages(messages: MessageInRow[]): FormattedMessages {
   const header = `<context timezone="${escapeXml(TIMEZONE)}" />\n`;
-  if (messages.length === 0) return header;
+  if (messages.length === 0) return { text: header, media: [] };
 
   // Group by kind
   const chatMessages = messages.filter((m) => m.kind === 'chat' || m.kind === 'chat-sdk');
@@ -137,9 +150,12 @@ export function formatMessages(messages: MessageInRow[]): string {
   const systemMessages = messages.filter((m) => m.kind === 'system');
 
   const parts: string[] = [];
+  const media: MediaBlock[] = [];
 
   if (chatMessages.length > 0) {
-    parts.push(formatChatMessages(chatMessages));
+    const { text, media: chatMedia } = formatChatMessages(chatMessages);
+    parts.push(text);
+    media.push(...chatMedia);
   }
   if (taskMessages.length > 0) {
     parts.push(...taskMessages.map(formatTaskMessage));
@@ -151,10 +167,10 @@ export function formatMessages(messages: MessageInRow[]): string {
     parts.push(...systemMessages.map(formatSystemMessage));
   }
 
-  return header + parts.join('\n\n');
+  return { text: header + parts.join('\n\n'), media };
 }
 
-function formatChatMessages(messages: MessageInRow[]): string {
+function formatChatMessages(messages: MessageInRow[]): { text: string; media: MediaBlock[] } {
   // Each `<message id="..." from="...">...</message>` block is self-contained;
   // concatenating them reads to the agent as a sequence of distinct messages.
   // Earlier revisions wrapped multi-message batches in an outer `<messages>`
@@ -163,10 +179,17 @@ function formatChatMessages(messages: MessageInRow[]): string {
   // requested."`) instead of calling the API — see #2555 for the full trace.
   // The fix is simply to drop the wrapper; the single-message path (which
   // already worked) is now just the N=1 case of the same code.
-  return messages.map(formatSingleChat).join('\n');
+  const textParts: string[] = [];
+  const media: MediaBlock[] = [];
+  for (const msg of messages) {
+    const result = formatSingleChat(msg);
+    textParts.push(result.text);
+    media.push(...result.media);
+  }
+  return { text: textParts.join('\n'), media };
 }
 
-function formatSingleChat(msg: MessageInRow): string {
+function formatSingleChat(msg: MessageInRow): { text: string; media: MediaBlock[] } {
   const content = parseContent(msg.content);
   const sender = content.sender || content.author?.fullName || content.author?.userName || 'Unknown';
   const time = formatLocalTime(msg.timestamp, TIMEZONE);
@@ -174,11 +197,15 @@ function formatSingleChat(msg: MessageInRow): string {
   const idAttr = msg.seq != null ? ` id="${msg.seq}"` : '';
   const replyAttr = content.replyTo?.id ? ` reply_to="${escapeXml(String(content.replyTo.id))}"` : '';
   const replyPrefix = formatReplyContext(content.replyTo);
+  const media = extractMediaBlocks(content.attachments);
   const attachmentsSuffix = formatAttachments(content.attachments);
   const threadHistoryPrefix = formatThreadHistory(content.threadHistory);
   const fromAttr = originAttr(msg);
 
-  return `${threadHistoryPrefix}<message${idAttr}${fromAttr} sender="${escapeXml(sender)}" time="${escapeXml(time)}"${replyAttr}>${replyPrefix}${escapeXml(text)}${attachmentsSuffix}</message>`;
+  return {
+    text: `${threadHistoryPrefix}<message${idAttr}${fromAttr} sender="${escapeXml(sender)}" time="${escapeXml(time)}"${replyAttr}>${replyPrefix}${escapeXml(text)}${attachmentsSuffix}</message>`,
+    media,
+  };
 }
 
 /**
@@ -272,6 +299,44 @@ function formatAttachments(attachments: any[] | undefined): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+/**
+ * Extract media blocks (images) from attachment data for native injection into
+ * the Claude Messages API content blocks.
+ *
+ * Reads the base64 data from the saved local file if available, or uses inline
+ * data from the attachment. Only returns blocks for image-type attachments with
+ * a known MIME type that Claude supports.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractMediaBlocks(attachments: any[] | undefined): MediaBlock[] {
+  if (!Array.isArray(attachments) || attachments.length === 0) return [];
+  const SUPPORTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+  const blocks: MediaBlock[] = [];
+  for (const a of attachments) {
+    const mimeType = a.mimeType || a.mime_type || '';
+    if (!SUPPORTED_TYPES.has(mimeType)) continue;
+    let data = a.data || '';
+    if (!data && a.localPath) {
+      const filePath = `/workspace/${a.localPath}`;
+      try {
+        data = fs.readFileSync(filePath, { encoding: 'base64' });
+      } catch {
+        continue;
+      }
+    }
+    if (!data) continue;
+    blocks.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: mimeType,
+        data,
+      },
+    });
+  }
+  return blocks;
+}
+
 function parseContent(json: string): any {
   try {
     return JSON.parse(json);

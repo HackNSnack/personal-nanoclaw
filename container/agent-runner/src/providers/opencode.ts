@@ -475,6 +475,10 @@ export class OpenCodeProvider implements AgentProvider {
         pending.push(wrapPromptWithContext(message, systemInstructions));
         kick();
       },
+      pushMedia: (message: string, _media?: import('./types.js').MediaBlock[]) => {
+        pending.push(wrapPromptWithContext(message, systemInstructions));
+        kick();
+      },
       end: () => {
         ended = true;
         kick();

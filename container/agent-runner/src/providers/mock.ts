@@ -61,6 +61,10 @@ export class MockProvider implements AgentProvider {
         pending.push(message);
         waiting?.();
       },
+      pushMedia(message: string, _media?: import('./types.js').MediaBlock[]) {
+        pending.push(message);
+        waiting?.();
+      },
       end() {
         ended = true;
         waiting?.();
