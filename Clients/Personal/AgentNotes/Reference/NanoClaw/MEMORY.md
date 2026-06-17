@@ -130,6 +130,37 @@ When working with git repos:
 4. **Merge conflicts on an existing PR**: resolve conflicts via `git merge origin/main` (not rebase), then push normally with a new fix-commit. Never rebase + force-push on an existing PR branch — it rewrites history and collapses commits.
 5. **Sign your own commits** so they're attributed to Claudette, not to Mathias. Set up git user config accordingly before committing if not already configured.
 
+## GitHub API via OneCLI (PRs & operations)
+
+**No `gh` CLI available** in this container. All GitHub operations go through the REST API with OneCLI auth.
+
+### Known issues
+
+- **SSL cert error:** `git push` fails with `server certificate verification failed. CAfile: none`. Fix: prefix commands with `GIT_SSL_NO_VERIFY=1`: `GIT_SSL_NO_VERIFY=1 git push -u origin <branch>`
+- **No `gh` binary** — use `curl` to the GitHub API directly.
+
+### PR creation via curl + OneCLI
+
+```bash
+curl -s --insecure -X POST https://api.github.com/repos/<owner>/<repo>/pulls \
+  -H "Authorization: Bearer onecli-managed" \
+  -H "Content-Type: application/json" \
+  -H "User-Agent: Claudette/1.0" \
+  -d '{
+    "title": "<PR title>",
+    "body": "<PR body (use actual newlines, not \\n)>",
+    "head": "<branch-name>",
+    "base": "main"
+  }'
+```
+
+Key points:
+- `onecli-managed` is a placeholder — the OneCLI gateway proxy injects the real GitHub token at request time.
+- Use `--insecure` for curl to match the `GIT_SSL_NO_VERIFY=1` pattern (self-signed certs in the proxy chain).
+- The response contains `html_url` with the PR link.
+- `body` can contain markdown with backticks — just use actual newlines in the JSON string.
+- For other API operations (list PRs, add comments, merge, etc.) use the same auth header pattern against the appropriate endpoint.
+
 ## Repos
 
 | Repo | Local path | Notes |
