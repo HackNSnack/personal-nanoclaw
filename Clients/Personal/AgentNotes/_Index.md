@@ -22,7 +22,8 @@ Map of Content for Personal development notes.
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw Operations]] — Quick-reference runbook: start/stop, logs, common fixes
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Channel Setup & Debugging]] — Socket mode setup, four-layer failure diagnosis, `agent_destinations` wiring bug fix, portability notes
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode + OpenRouter Configuration]] — Full architecture: OneCLI bearer sentinel, model ID format, bundled model list workaround, new-machine checklist
-- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — `Error: Model not found` runbook: three root causes (bundled list, missing prefix, stale session) + diagnostic playbook + code changes applied
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — `Error: Model not found` runbook
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/DeepSeek Missing Closing Tag — Silent Response Drop]] — Agent responses silently dropped when DeepSeek omits closing message tag on long outputs: full investigation log, SSE race root cause, two fixes applied: three root causes (bundled list, missing prefix, stale session) + diagnostic playbook + code changes applied
 
 ### Slackbot (superseded — old Python/Ollama bot)
 
@@ -39,6 +40,16 @@ Map of Content for Personal development notes.
 - [[Clients/Personal/AgentNotes/Reference/OpenRouter/03 - Models & Pricing]] — Recommended models, cost comparison
 - [[Clients/Personal/AgentNotes/Reference/OpenRouter/04 - Pi Integration]] — Full `models.json` config reference
 - [[Clients/Personal/AgentNotes/Reference/OpenRouter/05 - Work vs Personal Setup]] — Two-level settings, switching
+
+### Hyprland Config (KoolDots)
+
+- [[Clients/Personal/AgentNotes/Reference/Hyprland/KoolDots Keybind Override — ChangeLayout Runtime Clobber]] — Why `SUPER+HJKL` overrides in `UserKeybinds.conf` were silently overwritten at startup: two `exec-once` scripts (`ChangeLayout.sh init`, `KeybindsLayoutInit.sh`) used `hyprctl keyword` to clobber J/K after config parsing. Includes full git archaeology of both scripts, the static-vs-runtime bind phase distinction, and the fix applied (stripped J/K lines from `ChangeLayout.sh`, deleted `KeybindsLayoutInit.sh`).
+
+### NixOS Config (NixOS-Hyprland)
+
+- [[Clients/Personal/AgentNotes/Reference/NixOS/Debugging nixpkgs Evaluation Warnings & Insecure Packages]] — How to trace renamed packages, catppuccin migration, pnpm node override, and hunting down transitive `nodejs-slim_20` via `nix eval` + flake.lock analysis
+- [[Clients/Personal/AgentNotes/Reference/NixOS/Replacing Source-Built Packages with Pre-Built Binaries]] — Step-by-step guide for swapping source-compiled packages with pre-built binaries or AppImages via overlays; includes moon as worked example (bambu-studio moved to Flatpak)
+- [[Clients/Personal/AgentNotes/Reference/NixOS/Declarative Flatpak with nix-flatpak]] — When to use Flatpak instead of overlays; nix-flatpak setup, bambu-studio migration, adding more apps declaratively
 
 ## PiDev Reference Links
 
