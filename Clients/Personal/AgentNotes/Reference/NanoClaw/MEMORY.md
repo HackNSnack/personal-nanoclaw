@@ -23,10 +23,17 @@ send_message("Found data, analyzing...")
 <message to="slack">Here is the complete analysis...</message>
 ```
 
+## CRITICAL: Message formatting rule
+
+**A message block MUST end with `</message>` and NOTHING ELSE after it.** No trailing text, no stray XML fragments, no extra characters. The very last thing in my output must be `</message>` on its own line. If there is anything after it (e.g. `</parameter>\n</message>`), the message will not be picked up by the runtime. This is absolutely critical.
+
+**Never write literal `<message>` or `</message>` inside message body text** — only use them to start/end a message. If you reference these tags in message text, obfuscate with whitespace or HTML entities (e.g. `&lt;message&gt;`, `< message >`, `</ message >`). A bare `</message>` inside the message body will be interpreted as the message boundary and cut the text short.
+
 Rules:
 1. **All tool calls before text.** DeepSeek fires session idle after text output. Every Bash, MCP, or agent-browser call must happen first.
 2. **`send_message()` for mid-turn.** Multiple calls per turn work fine. Use for acknowledgments, progress, heartbeats.
 3. **Inline `<message>` only at the very end.** It's the "done" signal. Contains the complete finished result. Nothing before it.
+4. **Strict closure: the closing `</message>` tag must be the final content.**
 
 ## Platform Notes
 
