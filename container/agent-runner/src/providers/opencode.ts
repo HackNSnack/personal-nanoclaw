@@ -25,6 +25,72 @@ const SESSION_STATUS_RETRY_ERROR_AFTER = 3;
 const STALE_SESSION_RE =
   /no conversation found|ENOENT.*\.jsonl|session.*not found|NotFoundError|connection reset|ECONNRESET|404|event timeout|model not found|ProviderModelNotFoundError/i;
 
+// ── Retry configuration (env vars) ──
+
+/** Master switch: enable retry on transient errors. Default true. Set OPENCODE_RETRY_ENABLED=false to disable. */
+const RETRY_ENABLED = (process.env.OPENCODE_RETRY_ENABLED || 'true').toLowerCase() !== 'false';
+
+/** Max retry attempts per turn on retryable errors. Env OPENCODE_RETRY_MAX_ATTEMPTS. */
+const RETRY_MAX_ATTEMPTS = Number(process.env.OPENCODE_RETRY_MAX_ATTEMPTS) || 3;
+
+/** Base backoff (ms), doubled each retry. Env OPENCODE_RETRY_BASE_DELAY_MS. */
+const RETRY_BASE_DELAY_MS = Number(process.env.OPENCODE_RETRY_BASE_DELAY_MS) || 1000;
+
+/** Max backoff (ms). Env OPENCODE_RETRY_MAX_DELAY_MS. */
+const RETRY_MAX_DELAY_MS = Number(process.env.OPENCODE_RETRY_MAX_DELAY_MS) || 60_000;
+
+/**
+ * Classify an error as retryable (transient upstream/timeout) or permanent.
+ * Exported for testing.
+ */
+export function isRetryableError(err: unknown): boolean {
+  if (!err) return false;
+  const msg = err instanceof Error ? err.message : String(err);
+  // Non-retryable take precedence
+  if (
+    /4(?!28)0[0-9]/.test(msg) ||
+    /rate limit|429|model not found|ProviderModelNotFoundError|InvalidRequestError|AuthenticationError|PermissionError/i.test(
+      msg,
+    )
+  ) {
+    return false;
+  }
+  return /50[0-9]|timeout|Upstream idle timeout|ETIMEDOUT|ECONNRESET|deadline exceeded|event timeout|temporarily unavailable/i.test(
+    msg,
+  );
+}
+
+/** Exported for testing. */
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Exponential backoff + jitter for retry delays.
+ * attempt=2 returns base, 3=2x, etc. Clamped at maxMs.
+ * Optional baseMs/maxMs params allow tests to pass fixed values without
+ * touching module-level constants (which are read at load time).
+ * Exported for testing.
+ */
+export function retryDelay(attempt: number, baseMs = RETRY_BASE_DELAY_MS, maxMs = RETRY_MAX_DELAY_MS): number {
+  if (attempt <= 1) return 0;
+  const exp = baseMs * 2 ** (attempt - 2);
+  const clamped = Math.min(exp, maxMs);
+  const jitter = clamped * 0.3 * Math.random();
+  return Math.floor(clamped + jitter);
+}
+
+/**
+ * Sleep implementation — injectable so tests can replace it with a no-op
+ * and avoid real delays. Call _setSleepForTest(fn) in beforeEach.
+ */
+let _sleepFn: (ms: number) => Promise<void> = sleep;
+
+/** Test hook: replace the sleep implementation (e.g. with a no-op). */
+export function _setSleepForTest(fn: (ms: number) => Promise<void>): void {
+  _sleepFn = fn;
+}
+
 function killProcessTree(proc: ChildProcess): void {
   if (!proc.pid) return;
   try {
@@ -195,7 +261,7 @@ function buildOpenCodeConfig(options: ProviderOptions): Record<string, unknown> 
   };
 }
 
-type SharedRuntime = {
+export type SharedRuntime = {
   proc: ChildProcess;
   client: OpencodeClient;
   stream: AsyncGenerator<{ type: string; properties: Record<string, unknown> }, void, void>;
@@ -257,6 +323,22 @@ export function destroySharedRuntime(): void {
     sharedRuntime = null;
     sharedConfigKey = null;
   }
+  sharedInit = null;
+}
+
+/**
+ * Test hook: inject a pre-built runtime instead of spawning a real OpenCode
+ * server process. Bypasses spawnOpencodeServer entirely. Call in beforeEach,
+ * then _setRuntimeForTest(null) in afterEach.
+ *
+ * The injected config key is set to match whatever runtimeConfigKey() returns
+ * for the current env, so ensureSharedRuntime() returns the mock immediately
+ * instead of falling through to spawnOpencodeServer.
+ */
+export function _setRuntimeForTest(rt: SharedRuntime | null): void {
+  sharedRuntime = rt;
+  // Use the real config key so ensureSharedRuntime's equality check passes.
+  sharedConfigKey = rt ? runtimeConfigKey({}) : null;
   sharedInit = null;
 }
 
@@ -322,151 +404,179 @@ export class OpenCodeProvider implements AgentProvider {
         if (pending.length === 0 && ended) return;
 
         const text = pending.shift()!;
-        let sessionId = self.activeSessionId;
 
-        if (!sessionId) {
-          const created = await client.session.create();
-          if (created.error) {
-            throw new Error(`OpenCode: failed to create session: ${JSON.stringify(created.error)}`);
+        // ── Retry loop ──────────────────────────────────────────────────────────
+        // Each attempt: create/reuse session → promptAsync → stream events.
+        // On a retryable error (504, timeout, 5xx) we clear the dead session,
+        // reset initYielded so the poll-loop gets a fresh continuation, back off,
+        // and try again.  Non-retryable errors (4xx, auth, model-not-found) and
+        // aborts propagate immediately.  RETRY_ENABLED=false collapses to 1 attempt.
+        const maxAttempts = RETRY_ENABLED ? RETRY_MAX_ATTEMPTS : 1;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          if (attempt > 1) {
+            const delay = retryDelay(attempt);
+            log(`Turn error — retrying (attempt ${attempt}/${maxAttempts}, backoff ${delay}ms)`);
+            await _sleepFn(delay);
           }
-          sessionId = created.data?.id;
-          if (!sessionId) throw new Error('OpenCode: failed to create session (no id)');
-          self.activeSessionId = sessionId;
-        }
 
-        if (!initYielded) {
-          yield { type: 'init', continuation: sessionId };
-          initYielded = true;
-        }
+          try {
+            // activeSessionId was cleared in the catch block on retry
+            let sessionId = self.activeSessionId;
 
-        const promptRes = await client.session.promptAsync({
-          path: { id: sessionId },
-          body: { parts: [{ type: 'text', text }] },
-        });
-        if (promptRes.error) {
-          self.activeSessionId = undefined;
-          throw new Error(`OpenCode promptAsync: ${JSON.stringify(promptRes.error)}`);
-        }
-
-        const partTextByMessageId = new Map<string, string>();
-        const roleByMessageId = new Map<string, string>();
-        let lastEventAt = Date.now();
-        let eventTimedOut = false;
-        const timeoutCheck = setInterval(() => {
-          if (Date.now() - lastEventAt > IDLE_TIMEOUT_MS) {
-            log(`OpenCode event timeout (${IDLE_TIMEOUT_MS}ms) — aborting session ${sessionId}`);
-            eventTimedOut = true;
-            self.activeSessionId = undefined;
-            // Do NOT destroy shared runtime — OpenCode server + SSE stream may be healthy
-            // for other sessions. Only this session's query stalled. destroySharedRuntime()
-            // kills the server process for everyone, breaking concurrent agents.
-            kick();
-          }
-        }, 5000);
-
-        try {
-          turn: while (true) {
-            if (aborted) return;
-            if (eventTimedOut) {
-              throw new Error(`OpenCode event timeout (${IDLE_TIMEOUT_MS}ms)`);
-            }
-
-            const { value: ev, done } = await stream.next();
-            if (done) {
-              throw new Error('OpenCode SSE stream ended unexpectedly');
-            }
-
-            // Update idle timer BEFORE filtering — heartbeats and connection events
-            // prove the SSE stream is alive even if no message events arrived yet
-            // (e.g. during extended model computation). Without this, long-running
-            // turns always timeout at IDLE_TIMEOUT_MS regardless of health.
-            lastEventAt = Date.now();
-
-            if (!ev?.type || ev.type === 'server.connected' || ev.type === 'server.heartbeat') {
-              logDebug(`heartbeat`);
-              continue;
-            }
-
-            logDebug(`event: ${ev.type}`);
-            yield { type: 'activity' };
-
-            switch (ev.type) {
-              case 'message.updated': {
-                const info = ev.properties.info as { id?: string; role?: string } | undefined;
-                if (info?.id && info?.role) {
-                  roleByMessageId.set(info.id, info.role);
-                }
-                break;
+            if (!sessionId) {
+              const created = await client.session.create();
+              if (created.error) {
+                throw new Error(`OpenCode: failed to create session: ${JSON.stringify(created.error)}`);
               }
-              case 'message.part.updated': {
-                const part = ev.properties.part as { type?: string; messageID?: string; text?: string } | undefined;
-                if (part?.type === 'text' && part.messageID && part.text) {
-                  partTextByMessageId.set(part.messageID, part.text);
-                }
-                break;
+              sessionId = created.data?.id;
+              if (!sessionId) throw new Error('OpenCode: failed to create session (no id)');
+              self.activeSessionId = sessionId;
+            }
+
+            if (!initYielded) {
+              yield { type: 'init', continuation: sessionId };
+              initYielded = true;
+            }
+
+            const promptRes = await client.session.promptAsync({
+              path: { id: sessionId },
+              body: { parts: [{ type: 'text', text }] },
+            });
+            if (promptRes.error) {
+              // Throw so the catch block decides whether to retry
+              throw new Error(`OpenCode promptAsync: ${JSON.stringify(promptRes.error)}`);
+            }
+
+            const partTextByMessageId = new Map<string, string>();
+            const roleByMessageId = new Map<string, string>();
+            let lastEventAt = Date.now();
+            let eventTimedOut = false;
+            const timeoutCheck = setInterval(() => {
+              if (Date.now() - lastEventAt > IDLE_TIMEOUT_MS) {
+                log(`OpenCode event timeout (${IDLE_TIMEOUT_MS}ms) — aborting session ${sessionId}`);
+                eventTimedOut = true;
+                self.activeSessionId = undefined;
+                // Do NOT destroy shared runtime — OpenCode server + SSE stream may be healthy
+                // for other sessions. Only this session's query stalled. destroySharedRuntime()
+                // kills the server process for everyone, breaking concurrent agents.
+                kick();
               }
-              case 'permission.updated': {
-                const perm = ev.properties as { id?: string; sessionID?: string };
-                if (perm.sessionID === sessionId && perm.id) {
-                  try {
-                    await client.postSessionIdPermissionsPermissionId({
-                      path: { id: sessionId, permissionID: perm.id },
-                      body: { response: 'always' },
-                    });
-                  } catch (err) {
-                    log(`Failed to auto-reply permission: ${err instanceof Error ? err.message : String(err)}`);
+            }, 5000);
+
+            try {
+              turn: while (true) {
+                if (aborted) return;
+                if (eventTimedOut) {
+                  throw new Error(`OpenCode event timeout (${IDLE_TIMEOUT_MS}ms)`);
+                }
+
+                const { value: ev, done } = await stream.next();
+                if (done) {
+                  throw new Error('OpenCode SSE stream ended unexpectedly');
+                }
+
+                // Update idle timer BEFORE filtering — heartbeats and connection events
+                // prove the SSE stream is alive even if no message events arrived yet
+                // (e.g. during extended model computation). Without this, long-running
+                // turns always timeout at IDLE_TIMEOUT_MS regardless of health.
+                lastEventAt = Date.now();
+
+                if (!ev?.type || ev.type === 'server.connected' || ev.type === 'server.heartbeat') {
+                  logDebug(`heartbeat`);
+                  continue;
+                }
+
+                logDebug(`event: ${ev.type}`);
+                yield { type: 'activity' };
+
+                switch (ev.type) {
+                  case 'message.updated': {
+                    const info = ev.properties.info as { id?: string; role?: string } | undefined;
+                    if (info?.id && info?.role) {
+                      roleByMessageId.set(info.id, info.role);
+                    }
+                    break;
                   }
+                  case 'message.part.updated': {
+                    const part = ev.properties.part as { type?: string; messageID?: string; text?: string } | undefined;
+                    if (part?.type === 'text' && part.messageID && part.text) {
+                      partTextByMessageId.set(part.messageID, part.text);
+                    }
+                    break;
+                  }
+                  case 'permission.updated': {
+                    const perm = ev.properties as { id?: string; sessionID?: string };
+                    if (perm.sessionID === sessionId && perm.id) {
+                      try {
+                        await client.postSessionIdPermissionsPermissionId({
+                          path: { id: sessionId, permissionID: perm.id },
+                          body: { response: 'always' },
+                        });
+                      } catch (err) {
+                        log(`Failed to auto-reply permission: ${err instanceof Error ? err.message : String(err)}`);
+                      }
+                    }
+                    break;
+                  }
+                  case 'session.status': {
+                    const props = ev.properties as {
+                      sessionID?: string;
+                      status?: { type?: string; attempt?: number; message?: string };
+                    };
+                    if (props.sessionID !== sessionId) break;
+                    const st = props.status;
+                    if (
+                      st?.type === 'retry' &&
+                      typeof st.attempt === 'number' &&
+                      st.attempt >= SESSION_STATUS_RETRY_ERROR_AFTER &&
+                      st.message
+                    ) {
+                      self.activeSessionId = undefined;
+                      throw new Error(`OpenCode retry limit (${st.attempt}): ${st.message}`);
+                    }
+                    break;
+                  }
+                  case 'session.error': {
+                    const props = ev.properties as { sessionID?: string; error?: unknown };
+                    if (props.sessionID === sessionId || props.sessionID === undefined) {
+                      self.activeSessionId = undefined;
+                      throw new Error(sessionErrorMessage(props));
+                    }
+                    break;
+                  }
+                  case 'session.idle': {
+                    const sid = (ev.properties as { sessionID?: string }).sessionID;
+                    if (sid === sessionId) {
+                      break turn;
+                    }
+                    break;
+                  }
+                  default:
+                    break;
                 }
-                break;
               }
-              case 'session.status': {
-                const props = ev.properties as {
-                  sessionID?: string;
-                  status?: { type?: string; attempt?: number; message?: string };
-                };
-                if (props.sessionID !== sessionId) break;
-                const st = props.status;
-                if (
-                  st?.type === 'retry' &&
-                  typeof st.attempt === 'number' &&
-                  st.attempt >= SESSION_STATUS_RETRY_ERROR_AFTER &&
-                  st.message
-                ) {
-                  self.activeSessionId = undefined;
-                  throw new Error(`OpenCode retry limit (${st.attempt}): ${st.message}`);
-                }
-                break;
-              }
-              case 'session.error': {
-                const props = ev.properties as { sessionID?: string; error?: unknown };
-                if (props.sessionID === sessionId || props.sessionID === undefined) {
-                  self.activeSessionId = undefined;
-                  throw new Error(sessionErrorMessage(props));
-                }
-                break;
-              }
-              case 'session.idle': {
-                const sid = (ev.properties as { sessionID?: string }).sessionID;
-                if (sid === sessionId) {
-                  break turn;
-                }
-                break;
-              }
-              default:
-                break;
+            } finally {
+              clearInterval(timeoutCheck);
             }
-          }
-        } finally {
-          clearInterval(timeoutCheck);
-        }
 
-        let resultText = '';
-        for (const [msgId, role] of roleByMessageId) {
-          if (role === 'assistant') {
-            resultText = partTextByMessageId.get(msgId) ?? resultText;
+            let resultText = '';
+            for (const [msgId, role] of roleByMessageId) {
+              if (role === 'assistant') {
+                resultText = partTextByMessageId.get(msgId) ?? resultText;
+              }
+            }
+            yield { type: 'result', text: resultText || null };
+            break; // success — exit retry loop
+          } catch (err) {
+            self.activeSessionId = undefined;
+            initYielded = false; // force fresh init event with next session id on retry
+
+            const willRetry = isRetryableError(err) && attempt < maxAttempts && !aborted;
+            if (!willRetry) throw err;
+            log(`Turn error (attempt ${attempt}/${maxAttempts}): ${err instanceof Error ? err.message : String(err)}`);
           }
-        }
-        yield { type: 'result', text: resultText || null };
+        } // end attemptLoop
       }
     }
 
