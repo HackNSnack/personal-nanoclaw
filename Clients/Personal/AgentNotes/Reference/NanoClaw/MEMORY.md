@@ -14,26 +14,26 @@ Two paths, two jobs:
 | Path | Job |
 |------|-----|
 | `send_message()` MCP | All mid-turn updates — progress, heartbeats, partial findings |
-| Inline `&lt;message to="slack"&gt;` block | Final completion signal — only at the very end, after all work is done |
+| Inline `<message to="slack">` block | Final completion signal — only at the very end, after all work is done |
 
 Pattern:
 ```
 send_message("Starting research on X...")
 send_message("Found data, analyzing...")
-&lt;message to="slack"&gt;Here is the complete analysis...&lt;/message&gt;
+<message to="slack">Here is the complete analysis...</message>
 ```
 
 ## CRITICAL: Message formatting rule
 
-**A message block MUST end with `&lt;/message&gt;` and NOTHING ELSE after it.** No trailing text, no stray XML fragments, no extra characters. The very last thing in my output must be `&lt;/message&gt;` on its own line. If there is anything after it (e.g. `&lt;/parameter&gt;\n&lt;/message&gt;`), the message will not be picked up by the runtime. This is absolutely critical.
+**A message block MUST end with `</message>` and NOTHING ELSE after it.** No trailing text, no stray XML fragments, no extra characters. The very last thing in my output must be `</message>` on its own line. If there is anything after it (e.g. `</parameter>\n</message>`), the message will not be picked up by the runtime. This is absolutely critical.
 
-**NEVER write \`&lt;message&gt;\` or \`&lt;/message&gt;\` literally anywhere in text** — not in backticks, code blocks, examples, or prose. The runtime / Slack interpret these as real message boundaries and will cut the message short. If you need to reference these tags, obfuscate them with whitespace or other characters (e.g. \`&lt;message&gt;\`, \`< message >\`, \`</ message >\`).
+**Never write literal `<message>` or `</message>` inside message body text** — only use them to start/end a message. If you reference these tags in message text, obfuscate with whitespace or HTML entities (e.g. `&lt;message&gt;`, `< message >`, `</ message >`). A bare `</message>` inside the message body will be interpreted as the message boundary and cut the text short.
 
 Rules:
 1. **All tool calls before text.** DeepSeek fires session idle after text output. Every Bash, MCP, or agent-browser call must happen first.
-2. **\`send_message()\` for mid-turn.** Multiple calls per turn work fine. Use for acknowledgments, progress, heartbeats.
-3. **Inline \`&lt;message&gt;\` only at the very end.** It's the "done" signal. Contains the complete finished result. Nothing before it.
-4. **Strict closure: the closing \`&lt;/message&gt;\` tag must be the final content.** Verify before submitting — no stray text, no extra tags, no tool output fragments after it.
+2. **`send_message()` for mid-turn.** Multiple calls per turn work fine. Use for acknowledgments, progress, heartbeats.
+3. **Inline `<message>` only at the very end.** It's the "done" signal. Contains the complete finished result. Nothing before it.
+4. **Strict closure: the closing `</message>` tag must be the final content.**
 
 ## Platform Notes
 
@@ -52,12 +52,12 @@ After starting research, call `send_message("Researching X...")`. Send periodic 
 ### Step 3: Continue working
 Call more tools — browse more URLs, extract via `agent-browser snapshot -i`, compile. Send periodic `send_message` heartbeats.
 
-### Step 4: Output ONE `&lt;message&gt;` with complete answer
+### Step 4: Output ONE `<message>` with complete answer
 Only when you have the full answer, output:
 ```xml
-&lt;message to="slack"&gt;
+<message to="slack">
 [Complete findings — structured, with clear sections]
-&lt;/message&gt;
+</message>
 ```
 
 ## Research Tools
@@ -71,7 +71,7 @@ Only when you have the full answer, output:
 
 - Start research tools immediately — the user's question tells you where to begin
 - Use `send_message()` for mid-turn updates while research is in progress
-- Output a single `&lt;message to="slack"&gt;` block only at the very end, containing the complete finished result
+- Output a single `<message to="slack">` block only at the very end, containing the complete finished result
 
 ## Memory Sync
 
