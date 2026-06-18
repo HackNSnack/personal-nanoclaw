@@ -518,6 +518,15 @@ export async function processQuery(
             // The wrapping-retry result answers the SAME user prompt — keep it
             // queued so the retry archives against it, not the nudge text.
             if (!willRetryWrapping) archivePrompts.shift();
+            // Fix 2: after exhausting the one wrapping-retry, the message would
+            // be silently dropped and the user left with no feedback. Deliver a
+            // notice so they know to resend rather than waiting indefinitely.
+            if (hasUnwrapped && !willRetryWrapping) {
+              deliverErrorResult(
+                '_My response couldn\'t be delivered due to a formatting error. Please resend your message._',
+                routing,
+              );
+            }
           }
         } else {
           archivePrompts.shift();
@@ -633,6 +642,27 @@ function dispatchResultText(text: string, routing: RoutingContext): { sent: numb
 
   if (scratchpad) {
     log(`[scratchpad] ${scratchpad.slice(0, 500)}${scratchpad.length > 500 ? '…' : ''}`);
+  }
+
+  // Fix 1: fallback for unclosed <message to="name"> blocks.
+  // Models like DeepSeek V4 Flash frequently omit the closing </message> tag on
+  // long responses, causing the regex above to find no matches even though the
+  // entire response is a valid (but unclosed) message block. Detect this case:
+  // if nothing was matched AND the full text (after stripping internal tags)
+  // starts with an opening <message to="..."> tag, treat everything after the
+  // opening tag as the message body and deliver it rather than discarding it.
+  if (sent === 0 && scratchpad) {
+    const UNCLOSED_RE = /^<message\s+to="([^"]+)"\s*>([\s\S]*)$/;
+    const uc = stripInternalTags(text.trim()).match(UNCLOSED_RE);
+    if (uc) {
+      const dest = findByName(uc[1]);
+      if (dest) {
+        const body = uc[2].trim();
+        log(`WARNING: <message to="${uc[1]}"> was missing closing tag — delivering anyway`);
+        sendToDestination(dest, body, routing);
+        sent++;
+      }
+    }
   }
 
   const hasUnwrapped = sent === 0 && !!scratchpad;

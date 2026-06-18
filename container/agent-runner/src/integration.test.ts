@@ -114,20 +114,23 @@ describe('poll loop integration', () => {
     await loopPromise.catch(() => {});
   });
 
-  it('bare text produces no outbound messages (scratchpad only)', async () => {
+  it('bare text (scratchpad only) delivers an error notice to the user after retry exhausted', async () => {
     insertMessage('m1', { sender: 'Alice', text: 'hello' }, { platformId: 'chan-1', channelType: 'discord' });
 
-    // Agent responds with bare text — no <message to="..."> wrapping
+    // Agent responds with bare text — no <message to="..."> wrapping.
+    // After two failed attempts the loop delivers a formatting-error notice.
     const provider = new MockProvider({}, () => 'I am thinking about this...');
     const controller = new AbortController();
     const loopPromise = runPollLoopWithTimeout(provider, controller.signal, 2000);
 
-    // Wait long enough for the poll loop to process
+    // Wait long enough for the poll loop to process (two provider round-trips + nudge).
     await sleep(1000);
     controller.abort();
 
     const out = getUndeliveredMessages();
-    expect(out).toHaveLength(0);
+    expect(out).toHaveLength(1);
+    const body = JSON.parse(out[0].content) as { text: string };
+    expect(body.text).toContain("formatting error");
 
     await loopPromise.catch(() => {});
   });
@@ -586,7 +589,6 @@ class BlockingProvider {
   }
 
   query() {
-    const owner = this;
     this.queries += 1;
     let wake: (() => void) | null = null;
     let ended = false;
@@ -595,12 +597,12 @@ class BlockingProvider {
     return {
       push() {},
       end: () => {
-        owner.ends += 1;
+        this.ends += 1;
         ended = true;
         wake?.();
       },
       abort: () => {
-        owner.aborts += 1;
+        this.aborts += 1;
         aborted = true;
         wake?.();
       },

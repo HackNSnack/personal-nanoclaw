@@ -470,7 +470,7 @@ async function buildContainerArgs(
     }
     log.info('OneCLI gateway applied', { containerName });
   } else {
-    log.info('OneCLI skipped (local provider)', { containerName, provider });
+    log.info('OneCLI skipped (local provider)', { containerName });
   }
 
   // Egress lockdown when enabled — throws if it can't be established, aborting
