@@ -24,6 +24,7 @@ Map of Content for Personal development notes.
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode + OpenRouter Configuration]] — Full architecture: OneCLI bearer sentinel, model ID format, bundled model list workaround, new-machine checklist
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — `Error: Model not found` runbook
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/DeepSeek Missing Closing Tag — Silent Response Drop]] — Agent responses silently dropped when DeepSeek omits closing message tag on long outputs: full investigation log, SSE race root cause, two fixes applied: three root causes (bundled list, missing prefix, stale session) + diagnostic playbook + code changes applied
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenRouter 504 Upstream Idle Timeout — Retry Logic]] — Full investigation: wrong hypothesis (accumulated context) → correct root cause (OpenRouter SSE mid-stream stall), session lifecycle discovery, retry loop implementation, 28 tests, timeout docs research (no client-side control)
 
 ### Slackbot (superseded — old Python/Ollama bot)
 
@@ -49,7 +50,7 @@ Map of Content for Personal development notes.
 
 - [[Clients/Personal/AgentNotes/Reference/NixOS/Debugging nixpkgs Evaluation Warnings & Insecure Packages]] — How to trace renamed packages, catppuccin migration, pnpm node override, and hunting down transitive `nodejs-slim_20` via `nix eval` + flake.lock analysis
 - [[Clients/Personal/AgentNotes/Reference/NixOS/Replacing Source-Built Packages with Pre-Built Binaries]] — Step-by-step guide for swapping source-compiled packages with pre-built binaries or AppImages via overlays; includes moon as worked example (bambu-studio moved to Flatpak)
-- [[Clients/Personal/AgentNotes/Reference/NixOS/Declarative Flatpak with nix-flatpak]] — When to use Flatpak instead of overlays; nix-flatpak setup, bambu-studio migration, adding more apps declaratively
+- [[Clients/Personal/AgentNotes/Reference/NixOS/Declarative Flatpak with nix-flatpak]] — When to use Flatpak instead of declarative overlays; nix-flatpak setup, bambu-studio migration, adding more apps declaratively
 
 ## PiDev Reference Links
 
