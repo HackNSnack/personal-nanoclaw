@@ -4,19 +4,19 @@ When replying in a Slack channel, use Slack mrkdwn — **not** standard Markdown
 
 ### Quick reference
 
-| Style | Write this |
-|-------|-----------|
-| Bold | `*text*` — single asterisk |
-| Italic | `_text_` |
-| Strikethrough | `~text~` |
-| Inline code | `` `code` `` |
-| Code block | ` ```code``` ` |
-| Named link | `<https://example.com\|Link text>` |
-| Mention user | `<@UXXXXXXX>` (user ID, not display name) |
-| Mention channel | `<#CXXXXXXX>` |
-| Emoji | `:white_check_mark:` `:rocket:` `:tada:` `:x:` |
-| Block quote | `> text` |
-| Bullet | `• item` or `- item` |
+| Style           | Write this                                     |
+| --------------- | ---------------------------------------------- |
+| Bold            | `*text*` — single asterisk                     |
+| Italic          | `_text_`                                       |
+| Strikethrough   | `~text~`                                       |
+| Inline code     | `` `code` ``                                   |
+| Code block      | ` ```code``` `                                 |
+| Named link      | `<https://example.com\|Link text>`             |
+| Mention user    | `<@UXXXXXXX>` (user ID, not display name)      |
+| Mention channel | `<#CXXXXXXX>`                                  |
+| Emoji           | `:white_check_mark:` `:rocket:` `:tada:` `:x:` |
+| Block quote     | `> text`                                       |
+| Bullet          | `• item` or `- item`                           |
 
 ### Never use in Slack
 

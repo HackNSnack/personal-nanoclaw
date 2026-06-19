@@ -593,10 +593,7 @@ export class OpenCodeProvider implements AgentProvider {
                         if (outcome.done) break;
                         const drainEv = outcome.value;
                         if (!drainEv?.type) continue;
-                        if (
-                          drainEv.type === 'server.heartbeat' ||
-                          drainEv.type === 'server.connected'
-                        ) {
+                        if (drainEv.type === 'server.heartbeat' || drainEv.type === 'server.connected') {
                           logDebug('drain: heartbeat');
                           continue;
                         }
@@ -608,15 +605,11 @@ export class OpenCodeProvider implements AgentProvider {
                             | undefined;
                           if (drainPart?.type === 'text' && drainPart.messageID && drainPart.text) {
                             partTextByMessageId.set(drainPart.messageID, drainPart.text);
-                            logDebug(
-                              `drain: captured trailing text for msg ${drainPart.messageID}`,
-                            );
+                            logDebug(`drain: captured trailing text for msg ${drainPart.messageID}`);
                           }
                         } else if (drainEv.type === 'session.idle') {
                           // Second idle for same session — genuinely done
-                          const innerSid = (
-                            drainEv.properties as { sessionID?: string }
-                          ).sessionID;
+                          const innerSid = (drainEv.properties as { sessionID?: string }).sessionID;
                           if (innerSid === sessionId) break;
                         }
                       }
