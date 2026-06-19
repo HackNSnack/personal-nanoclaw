@@ -21,6 +21,15 @@ function logDebug(msg: string): void {
 
 const SESSION_STATUS_RETRY_ERROR_AFTER = 3;
 
+/**
+ * Grace period (ms) after session.idle during which we continue draining
+ * message.part.updated events. DeepSeek V4 Flash (and similar models) emit
+ * the final tokens — including the `</message>` closing tag — AFTER
+ * session.idle fires due to an ordering race in OpenCode's SSE pipeline.
+ * Configurable via OPENCODE_IDLE_DRAIN_WINDOW_MS.
+ */
+const IDLE_DRAIN_WINDOW_MS = Number(process.env.OPENCODE_IDLE_DRAIN_WINDOW_MS) || 400;
+
 /** Stale / dead OpenCode session heuristics (complement Claude-centric host patterns). */
 const STALE_SESSION_RE =
   /no conversation found|ENOENT.*\.jsonl|session.*not found|NotFoundError|connection reset|ECONNRESET|404|event timeout|model not found|ProviderModelNotFoundError/i;
@@ -548,6 +557,69 @@ export class OpenCodeProvider implements AgentProvider {
                   case 'session.idle': {
                     const sid = (ev.properties as { sessionID?: string }).sessionID;
                     if (sid === sessionId) {
+                      // Drain window: DeepSeek V4 Flash (and similar models) emit
+                      // the final message.part.updated tokens AFTER session.idle
+                      // due to an ordering race in OpenCode's SSE pipeline.
+                      // Continue consuming events for a short grace window before
+                      // assembling resultText so we capture the closing </message>
+                      // tag and any trailing body text.
+                      //
+                      // Note on Promise.race + stream.next(): if the timeout fires
+                      // first the pending stream.next() remains in-flight and will
+                      // consume the next SSE event (typically a heartbeat) without
+                      // anyone observing the result. For a single-session agent
+                      // this is acceptable — the eaten event is benign.
+                      type DrainEvent = { type: string; properties: Record<string, unknown> };
+                      type DrainOutcome =
+                        | { timedOut: false; value: DrainEvent | undefined; done: boolean }
+                        | { timedOut: true };
+                      const drainDeadline = Date.now() + IDLE_DRAIN_WINDOW_MS;
+                      while (true) {
+                        const remaining = drainDeadline - Date.now();
+                        if (remaining <= 0) break;
+                        const outcome = await (Promise.race([
+                          stream.next().then(
+                            (r): DrainOutcome => ({
+                              timedOut: false,
+                              value: r.value ?? undefined,
+                              done: r.done ?? false,
+                            }),
+                          ),
+                          new Promise<DrainOutcome>((resolve) =>
+                            setTimeout(() => resolve({ timedOut: true }), remaining),
+                          ),
+                        ]) as Promise<DrainOutcome>);
+                        if (outcome.timedOut) break;
+                        if (outcome.done) break;
+                        const drainEv = outcome.value;
+                        if (!drainEv?.type) continue;
+                        if (
+                          drainEv.type === 'server.heartbeat' ||
+                          drainEv.type === 'server.connected'
+                        ) {
+                          logDebug('drain: heartbeat');
+                          continue;
+                        }
+                        lastEventAt = Date.now();
+                        logDebug(`drain: event ${drainEv.type}`);
+                        if (drainEv.type === 'message.part.updated') {
+                          const drainPart = drainEv.properties.part as
+                            | { type?: string; messageID?: string; text?: string }
+                            | undefined;
+                          if (drainPart?.type === 'text' && drainPart.messageID && drainPart.text) {
+                            partTextByMessageId.set(drainPart.messageID, drainPart.text);
+                            logDebug(
+                              `drain: captured trailing text for msg ${drainPart.messageID}`,
+                            );
+                          }
+                        } else if (drainEv.type === 'session.idle') {
+                          // Second idle for same session — genuinely done
+                          const innerSid = (
+                            drainEv.properties as { sessionID?: string }
+                          ).sessionID;
+                          if (innerSid === sessionId) break;
+                        }
+                      }
                       break turn;
                     }
                     break;
