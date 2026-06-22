@@ -63,11 +63,9 @@ Based on typical award pricing:
 - **Shell/YX:** 30 øre Trumf per liter fuel
 - **Apotek 1 / Vita:** Trumf bonus on purchases
 
-### Example: Trumf Visa Credit Card
-- **2% Trumf-bonus** on NorgesGruppen grocery stores
-- **0.5% Trumf-bonus** on all other purchases
-- 2% at Kiwi/Meny → 2 kr Trumf per 100 kr spent → **27 EuroBonus points per 100 kr** (with auto-transfer)
-- This rivals SAS Amex Elite (20 EB/100 kr) but **completely free** (no annual fee)
+### ~~Trumf Visa~~ (Discontinued)
+- Trumf Visa has been discontinued by Trumf/NorgesGruppen and is no longer available.
+- The current card offering is **Trumf Kredittkort (Mastercard)** with similar benefits (2 % Trumf on NorgesGruppen groceries, 0.5 % elsewhere). However, free Trumf membership + SAS Amex gives better total returns (see stacking table below).
 
 ### Key Insight: Trumf Membership + SAS Amex Premium (No Trumf Card Needed)
 
@@ -253,7 +251,7 @@ Kiwi, Meny, Spar, Joker, Nærbutikken, Jacob's, CC Mat, Lerøy Mat, Gigaboks, Me
 |--------|-----------------|
 | SAS Amex Elite (all purchases) | 20 EB |
 | SAS MC Premium (SAS flights) | 25 EB |
-| Trumf Visa at Kiwi/Meny (2% + auto-transfer) | 27 EB |
+| Trumf Kredittkort at Kiwi/Meny (2% + auto-transfer) | 27 EB |
 | **Trumf medlem + Amex Premium (Kiwi)** | **28.5 EB** 🔥 |
 | **Trumf medlem + Amex Elite (Kiwi)** | **33.5 EB** 💎 |
 | Trumf Netthandel 5% bonus + auto-transfer | ~6.75 EB |

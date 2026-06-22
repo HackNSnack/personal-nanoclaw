@@ -87,3 +87,4 @@ Map of Content for Personal development notes.
 ### Travel
 
 - [[Clients/Personal/AgentNotes/Reference/SAS Travels/SAS EuroBonus & SkyTeam Analysis]] — SkyTeam routes to Asia/Japan/NZ, EuroBonus award chart, point costs, feasibility for fully points-funded trip.
+- [[Clients/Personal/AgentNotes/Reference/SAS Travels/Grocery Store Price Comparison with EuroBonus]] — Effective price comparison across Kiwi, Coop, Rema 1000 with Trumf + Amex stacking.
