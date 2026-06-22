@@ -312,6 +312,23 @@ cd ~/.onecli && docker compose down && docker compose up -d
 
 ---
 
+## Environment Variables — Container Tuning
+
+Set these in `<projectRoot>/.env` to override container agent-runner defaults.
+
+| Variable | Default | Purpose |
+|----------|---------|--------|
+| `OPENCODE_IDLE_DRAIN_WINDOW_MS` | `400` | Grace period (ms) after `session.idle` before assembling result. Prevents truncated responses from DeepSeek's SSE race. Increase if truncation persists on very long outputs. |
+| `OPENCODE_RETRY_ENABLED` | `true` | Master switch for transient-error retry logic. |
+| `OPENCODE_RETRY_MAX_ATTEMPTS` | `3` | Max retry attempts per turn on retryable errors (5xx, timeout). |
+| `OPENCODE_RETRY_BASE_DELAY_MS` | `1000` | Base backoff (ms), doubled each retry. |
+| `OPENCODE_RETRY_MAX_DELAY_MS` | `60000` | Max backoff cap (ms). |
+| `OPENCODE_IDLE_TIMEOUT_MS` | `300000` | How long to wait for any SSE event before declaring session stalled. |
+| `SLACK_CLIENT_PING_TIMEOUT_MS` | `15000` | Socket Mode client-side ping timeout. |
+| `SLACK_SERVER_PING_TIMEOUT_MS` | `30000` | Socket Mode server-side ping timeout. |
+
+---
+
 ## Related
 
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw NixOS Setup]] — full setup reference and bootstrap checklist

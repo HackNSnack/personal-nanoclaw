@@ -1,11 +1,5 @@
 ---
-tags:
-  - nanoclaw
-  - opencode
-  - debugging
-  - deepseek
-  - openrouter
-  - poll-loop
+tags: [nanoclaw, opencode, debugging, deepseek, openrouter, poll-loop]
 type: reference
 status: active
 ---
@@ -111,15 +105,10 @@ docker logs nanoclaw-v2-cli-with-mathipe-1781777948416 2>&1 | tail -30
 Output:
 ```
 [10:40:25.899Z][poll-loop] Pushing 1 follow-up message(s) into active query
-[10:40:35.238Z][poll-loop] Result: 
-
-<message to="slack">Here's my understanding of what you want me to do:
-**Task:** Create a document ...
+[10:40:35.238Z][poll-loop] Result: <message to="slack">Here's my understanding of what you want me to do:\n**Task:** Create a document ...
 [10:40:35.271Z][poll-loop] [scratchpad] <message to="slack">Here's my understanding...
 [10:40:35.271Z][poll-loop] WARNING: agent output had no <message to="..."> blocks — nothing was sent
-[10:40:43.832Z][poll-loop] Result: 
-
-<message to="slack">Here's my understanding of what you want:
+[10:40:43.832Z][poll-loop] Result: <message to="slack">Here's my understanding of what you want:
 [10:40:43.865Z][poll-loop] [scratchpad] <message to="slack">Here's my understanding...
 [10:40:43.865Z][poll-loop] WARNING: agent output had no <message to="..."> blocks — nothing was sent
 ```
@@ -136,30 +125,11 @@ const MESSAGE_RE = /<message\s+to="([^"]+)"\s*>([\s\S]*?)<\/message>/g;
 
 This regex requires **both** an opening `<message to="...">` AND a closing `</message>`. Non-greedy `[\s\S]*?` still needs the closing tag to terminate.
 
-Verified with a quick test:
-```js
-// Complete tag → matches
-/<message\s+to="([^"]+)"\s*>([\s\S]*?)<\/message>/g.exec('<message to="slack">Hello</message>')
-// → match
-
-// Missing closing tag → no match
-/<message\s+to="([^"]+)"\s*>([\s\S]*?)<\/message>/g.exec('<message to="slack">Hello world')
-// → null
-```
-
-The scratchpad log shows the ENTIRE response starting at `<message to="slack">` — meaning the regex found no complete block at all, so `lastIndex` stayed at 0, and everything was accumulated as scratchpad. The `</message>` tag was simply not in `event.text`.
+The scratchpad log shows the ENTIRE response starting at `<message to="slack">` — the regex found no complete block at all, so `lastIndex` stayed at 0, and everything accumulated as scratchpad. The `</message>` tag was simply not in `event.text`.
 
 ### Step 7 — Confirm via OpenRouter trace
 
-The user's pasted OpenRouter trace (with pi-lens DSML encoding) decoded to:
-```
-<message to="slack">Here's my understanding of what you want:
-...
-Is that right? Give me your shop list and I'll get started.
-</message>
-```
-
-So the *model* did generate `</message>`. But the agent-runner never received it. The conclusion: **`session.idle` fired from OpenCode's SSE stream before the final `message.part.updated` event that would have included the closing tag**. The `partTextByMessageId` map captured an incomplete snapshot, missing the last few tokens.
+The OpenRouter trace confirmed the *model* did generate `</message>`. But the agent-runner never received it. Conclusion: **`session.idle` fired from OpenCode's SSE stream before the final `message.part.updated` event that would have included the closing tag**. The `partTextByMessageId` map captured an incomplete snapshot.
 
 ### Step 8 — Trace the retry/nudge behaviour
 
@@ -171,9 +141,9 @@ From the poll-loop code, after a failed dispatch:
 4. Model retries at 10:40:43 — same failure (same truncation from the same SSE race)
 5. Now `unwrappedNudged = true` → `willRetryWrapping = false`
 6. `archivePrompts.shift()` runs, loop idles, **nothing delivered, no error shown**
-7. Container sits waiting for new inbound messages until killed at 13:11 (52 min later)
+7. Container sits waiting until killed at 13:11 (52 min later)
 
-This confirmed there was no user-visible failure signal at all — the message was silently eaten.
+This confirmed there was no user-visible failure signal at all.
 
 ---
 
@@ -183,7 +153,7 @@ Two compounding issues:
 
 **1. OpenCode SSE race condition with long responses**
 
-The OpenCode provider (`providers/opencode.ts`) builds `resultText` from `message.part.updated` SSE events that stream progressive text snapshots. When `session.idle` fires, the agent-runner breaks out of the turn loop and assembles `resultText` from whatever is currently in `partTextByMessageId`. For long responses, the final SSE chunk (containing the `</message>` closing tag) can arrive *after* `session.idle`, meaning it is never processed. Short responses (≤ ~200 tokens) consistently avoid this because all chunks arrive well before idle.
+The OpenCode provider (`providers/opencode.ts`) builds `resultText` from `message.part.updated` SSE events. When `session.idle` fires, the agent-runner breaks out of the turn loop and assembles `resultText` from whatever is currently in `partTextByMessageId`. For long responses, the final SSE chunk (containing the `</message>` closing tag) arrives *after* `session.idle`, so it is never processed.
 
 **2. `dispatchResultText` requires a complete `</message>` tag**
 
@@ -193,11 +163,11 @@ The regex has no fallback for unclosed tags. If `</message>` is absent, the enti
 
 ## Code Changes Applied (2026-06-18)
 
-All changes in `container/agent-runner/src/poll-loop.ts`. **Container rebuild required** (source is live-mounted but the agent-runner is compiled via bun at build time for this provider).
+All changes in `container/agent-runner/src/poll-loop.ts`.
 
 ### Fix 1 — Fallback for unclosed `<message>` tags
 
-Added after the main `MESSAGE_RE` loop in `dispatchResultText`. If no complete blocks matched but the full text (stripped of internal tags) starts with an opening `<message to="...">`, treat everything after it as the message body:
+Added after the main `MESSAGE_RE` loop in `dispatchResultText`. If no complete blocks matched but the text starts with `<message to="...">`, treat everything after it as the body and deliver it:
 
 ```typescript
 if (sent === 0 && scratchpad) {
@@ -206,20 +176,15 @@ if (sent === 0 && scratchpad) {
   if (uc) {
     const dest = findByName(uc[1]);
     if (dest) {
-      const body = uc[2].trim();
       log(`WARNING: <message to="${uc[1]}"> was missing closing tag — delivering anyway`);
-      sendToDestination(dest, body, routing);
+      sendToDestination(dest, uc[2].trim(), routing);
       sent++;
     }
   }
 }
 ```
 
-Log signature when triggered: `WARNING: <message to="slack"> was missing closing tag — delivering anyway`
-
 ### Fix 2 — User-visible error notice after retry exhaustion
-
-Added after `if (!willRetryWrapping) archivePrompts.shift()`. When both attempts have failed, instead of silently dropping:
 
 ```typescript
 if (hasUnwrapped && !willRetryWrapping) {
@@ -230,52 +195,50 @@ if (hasUnwrapped && !willRetryWrapping) {
 }
 ```
 
-### Test update
+---
 
-`integration.test.ts`: the `bare text produces no outbound messages (scratchpad only)` test was renamed and updated to assert that **1** outbound message is written (the error notice) and that its body contains `"formatting error"`.
+## SSE Race Root-Cause Fix (2026-06-19)
+
+The underlying race was addressed in a follow-up full system audit.
+
+A **400ms drain window** was added after `session.idle` in `providers/opencode.ts` (commit `7278c1e`). When `session.idle` fires, the code now continues consuming the SSE stream for up to `OPENCODE_IDLE_DRAIN_WINDOW_MS` (default 400ms, configurable) before assembling `resultText`. This captures any trailing `message.part.updated` events that race with the idle signal.
+
+Fix 1 (unclosed-tag fallback) remains in place as a safety net.
+
+Full documentation: [[Clients/Personal/AgentNotes/Active/2026-06-19 NanoClaw Full System Audit & Fixes]]
 
 ---
 
-## Future Impacts & Things to Watch Out For
-
-### ⚠️ The underlying SSE race is not fixed
-
-Fix 1 is a recovery mechanism, not a root-cause fix. The `session.idle` / `message.part.updated` ordering issue in the OpenCode provider still exists. If DeepSeek starts producing responses where the *body itself* (not just the closing tag) is truncated, Fix 1 will deliver a partial response rather than nothing. This is still better than silence, but worth knowing.
-
-A proper fix would be to wait a short grace period after `session.idle` to drain any remaining `message.part.updated` events before assembling `resultText`. This has not been implemented.
+## Remaining Issues (as of 2026-06-19)
 
 ### ⚠️ Fix 1 only handles the simple case
 
-The fallback regex `^<message\s+to="...">` anchors to the *start* of the stripped text. This handles the common pattern where the entire response is one unclosed block. It will **not** handle:
-- Multiple blocks where the last one is unclosed (middle blocks would still be dispatched correctly by the main regex; only the tail block is lost)
-- A leading `<internal>` block followed by an unclosed `<message>` (the `stripInternalTags` call removes it first, so this should be fine)
-- A case where the truncation removes content mid-word inside the body (the partial text will be delivered as-is)
+The fallback regex anchors to the *start* of the stripped text. It will not handle:
+- Multiple blocks where the last one is unclosed (middle blocks still dispatch; only the tail is lost)
+- Truncation mid-word inside the body (partial text is delivered as-is)
 
 ### ⚠️ Model-specific: Claude would not trigger this
 
-Claude (claude-sonnet, claude-opus etc.) reliably closes XML tags even in long responses. This issue is specific to cheaper/faster models like DeepSeek V4 Flash that are less rigorous about structured output adherence. If the model is ever switched back to Claude, this code path will never fire. If a new cheap model is trialled, test it with a long-response prompt before relying on it.
+Claude reliably closes XML tags even on long responses. This issue is specific to cheaper/faster models like DeepSeek V4 Flash. If the model is ever switched back to Claude, neither Fix 1 nor the drain window will ever fire.
 
 ### ⚠️ The `files:read` OAuth scope is missing
 
-A separate issue surfaced during this investigation: the Slack app is missing the `files:read` scope. Every message with an image or file attachment fails silently with:
+Every Slack message with a file/image attachment fails silently:
 ```
 Failed to download file from Slack: received HTML login page instead of file data.
 ```
-This needs to be added in the Slack app configuration at api.slack.com → OAuth & Permissions → Scopes → Bot Token Scopes. Without it, any attachment sent to the bot is silently dropped.
+Fix: add `files:read` to Bot Token Scopes at api.slack.com → OAuth & Permissions, then reinstall the app.
 
 ### ⚠️ Slack WebSocket pong timeouts are recurring
 
-`socket-mode:SlackWebSocket:N A pong wasn't received from the server before the timeout of 15000ms` appeared repeatedly across sessions. The SDK reconnects automatically but if these timeouts happen *during* a message delivery attempt, the Slack API call (`chat.postMessage`) could fail and leave the message undelivered. This has not been observed causing a confirmed failure, but it is worth watching — if "delivered but not visible" reports come in, this is a candidate cause.
-
-### ⚠️ Absolute ceiling kills long-running sessions mid-work
-
-Several containers were killed at the 30-minute ceiling during this session, including one that had been waiting 52 minutes (ceiling was not enforced promptly). If the agent is asked to do something genuinely long-running (e.g. browse 18 pages of a website, write a large document), it will be killed before finishing. The ceiling is a safety net, not a design limit — but users should be aware that very long tasks may time out silently.
+`socket-mode:SlackWebSocket:N A pong wasn't received from the server before the timeout of 15000ms` appears repeatedly. SDK reconnects automatically but delivery during a reconnect may fail silently.
 
 ---
 
 ## Related
 
-- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode + OpenRouter Configuration]] — full architecture, OneCLI auth, model format  
-- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — related OpenCode provider debugging  
-- [[Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw Operations]] — start/stop, logs, common fixes  
+- [[Clients/Personal/AgentNotes/Active/2026-06-19 NanoClaw Full System Audit & Fixes]] — full audit session: SSE race fixed, memory synced, Slack skill added
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode + OpenRouter Configuration]] — full architecture, OneCLI auth, model format
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — related OpenCode provider debugging
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw Operations]] — start/stop, logs, common fixes
 - [[Clients/Personal/AgentNotes/Reference/SAS Travels/SAS EuroBonus & SkyTeam Analysis]] — the conversation that triggered this bug

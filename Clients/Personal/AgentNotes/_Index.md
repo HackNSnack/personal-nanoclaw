@@ -4,6 +4,7 @@ Map of Content for Personal development notes.
 
 ## Active Work
 
+- [[Clients/Personal/AgentNotes/Active/2026-06-19 NanoClaw Full System Audit & Fixes]] — Full pi-driven audit: SSE race root-cause fix (400ms drain window), memory sync, Slack formatting skill added, architecture map, all findings documented (status: **done** ✅)
 - [[Clients/Personal/AgentNotes/Active/2026-06-11 NanoClaw OpenCode Provider Setup]] — Full OpenCode+OpenRouter debug session: model ID format, bundled registry bypass, OneCLI bearer sentinel, wirings→destinations bug fix (status: **done** ✅)
 - [[Clients/Personal/AgentNotes/Active/2026-05-29 Pi OpenRouter Config & Model Skill]] — Tasks 1.1 (pi config) + 1.2 (model skill)
 
@@ -23,7 +24,7 @@ Map of Content for Personal development notes.
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Channel Setup & Debugging]] — Socket mode setup, four-layer failure diagnosis, `agent_destinations` wiring bug fix, portability notes
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode + OpenRouter Configuration]] — Full architecture: OneCLI bearer sentinel, model ID format, bundled model list workaround, new-machine checklist
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — `Error: Model not found` runbook
-- [[Clients/Personal/AgentNotes/Reference/NanoClaw/DeepSeek Missing Closing Tag — Silent Response Drop]] — Agent responses silently dropped when DeepSeek omits closing message tag on long outputs: full investigation log, SSE race root cause, two fixes applied: three root causes (bundled list, missing prefix, stale session) + diagnostic playbook + code changes applied
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/DeepSeek Missing Closing Tag — Silent Response Drop]] — Agent responses silently dropped when DeepSeek omits closing message tag; SSE race root cause; Fix 1 (unclosed tag fallback) + Fix 2 (error notice) applied 2026-06-18; **SSE race root-cause fix** (400ms drain window) applied 2026-06-19
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenRouter 504 Upstream Idle Timeout — Retry Logic]] — Full investigation: wrong hypothesis (accumulated context) → correct root cause (OpenRouter SSE mid-stream stall), session lifecycle discovery, retry loop implementation, 28 tests, timeout docs research (no client-side control)
 
 ### Slackbot (superseded — old Python/Ollama bot)
