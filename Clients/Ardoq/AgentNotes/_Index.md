@@ -4,7 +4,9 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
-_No active items._
+- [[Clients/Ardoq/AgentNotes/Active/2026-06-22 AI-962 MCP + Agent Tool Consolidation - Architecture Analysis|AI-962 MCP + Agent Tool Consolidation — Architecture Analysis]] — Why full tool consolidation is impossible; the 6-location scaffolding redundancy map + A→E sequence; ties into AI-1286 (Approach 1)
+- [[Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 1 - Domain Errors|AI-1286 Approach 1 — Domain Errors + Handler Classification]]
+- [[Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 2 - Raise at Source|AI-1286 Approach 2 — Raise at Source]]
 
 ## Recently Archived
 

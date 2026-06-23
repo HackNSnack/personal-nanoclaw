@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Clients/Personal/AgentNotes/Reference/NanoClaw/MEMORY.md",
+                "file": "Daily Tracker/2026/06-June/2026-06-22-Monday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "MEMORY"
+              "title": "2026-06-22-Monday"
             }
           }
         ]
@@ -193,8 +193,15 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "a11e31b45eb19892",
+  "active": "5c4640ee71da1801",
   "lastOpenFiles": [
+    "Clients/Personal/AgentNotes/Reference/SAS Travels/Grocery Store Price Comparison with EuroBonus.md",
+    "Clients/Personal/AgentNotes/Reference/SAS Travels/EuroBonus Best Case Value — Sale Awards + Companion Ticket.md",
+    "Clients/Ardoq/AgentNotes/Active/2026-06-22 AI-962 MCP + Agent Tool Consolidation - Architecture Analysis.md",
+    "Daily Tracker/2026/06-June/Untitled.md",
+    "Daily Tracker/2026/06-June/2026-06-22-Monday.md",
+    "Daily Tracker/2026/06-June/2026-06-12-Friday.md",
+    "Clients/Personal/AgentNotes/Reference/NanoClaw/MEMORY.md",
     "Clients/Personal/AgentNotes/Active/2026-06-19 NanoClaw Full System Audit & Fixes.md",
     "Clients/Personal/AgentNotes/Reference/NixOS/Debugging nixpkgs Evaluation Warnings & Insecure Packages.md",
     "Clients/Personal/AgentNotes/Reference/SAS Travels/Trumf-EuroBonus-Shop-Analysis.md",
@@ -205,10 +212,8 @@
     "Clients/Personal/AgentNotes/Reference/NixOS/Declarative Flatpak with nix-flatpak.md",
     "Clients/Personal/AgentNotes/Reference/SAS Travels/EuroBonus Optimization Norway.md",
     "Clients/Personal/AgentNotes/Reference/NixOS",
-    "Clients/Personal/AgentNotes/Reference/NanoClaw/MEMORY.md",
     "Clients/Personal/AgentNotes/Reference/NanoClaw/skills.md",
     "Clients/Personal/AgentNotes/Reference/SAS Travels/SAS EuroBonus & SkyTeam Analysis.md",
-    "Daily Tracker/2026/06-June/2026-06-12-Friday.md",
     "Clients/Personal/AgentNotes/Reference/Nanoclaw",
     "Clients/Personal/AgentNotes/Reference/SAS Travels",
     "Clients/Ardoq/Weeklies/Week-24-2026.md",
@@ -220,11 +225,6 @@
     "Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 2 - Raise at Source.md",
     "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/Untitled.md",
     "Clients/Personal/AgentNotes/Active/2026-06-11 NanoClaw OpenCode Provider Setup.md",
-    "Daily Tracker/2026/06-June/2026-06-10-Wednesday.md",
-    "Clients/Personal/AgentNotes/Reference/NanoClaw/NanoClaw Operations.md",
-    "Daily Tracker/2026/06-June/2026-06-09-Tuesday.md",
-    "Daily Tracker/2026/06-June/2026-06-08-Monday.md",
-    "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/_Index.md",
     "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/Untitled.canvas",
     "Clients/Personal/AgentNotes/Reference/NanoClaw",
     "Untitled 1.base",
