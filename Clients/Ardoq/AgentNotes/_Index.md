@@ -5,11 +5,11 @@ Map of Content for Ardoq development notes.
 ## Active Work
 
 - [[Clients/Ardoq/AgentNotes/Active/2026-06-22 AI-962 MCP + Agent Tool Consolidation - Architecture Analysis|AI-962 MCP + Agent Tool Consolidation — Architecture Analysis]] — Why full tool consolidation is impossible; the 6-location scaffolding redundancy map + A→E sequence; ties into AI-1286 (Approach 1)
-- [[Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 1 - Domain Errors|AI-1286 Approach 1 — Domain Errors + Handler Classification]]
-- [[Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 2 - Raise at Source|AI-1286 Approach 2 — Raise at Source]]
 
 ## Recently Archived
 
+- [[Clients/Ardoq/AgentNotes/Archive/2026-06-10 AI-1286 Approach 1 - Domain Errors|AI-1286 Approach 1 — Domain Errors + Handler Classification]]
+- [[Clients/Ardoq/AgentNotes/Archive/2026-06-10 AI-1286 Approach 2 - Raise at Source|AI-1286 Approach 2 — Raise at Source]]
 - [[Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/_Index|Starlette BadHost (CVE-2026-48710) — Monorepo Upgrade Map]] — Dependency graph + per-project starlette audit across the monorepo
 - [[Clients/Ardoq/AgentNotes/Archive/2026-04-27 Sub-agent visibility - non-technical overview]] - Non-technical explainer: what is visible in real time today, the silent window, and effort levels to improve it
 - [[Clients/Ardoq/AgentNotes/Archive/2026-04-21 Pi.dev Claude Code API Key 429 Error Investigation]] - Root cause analysis and extension workaround for pi.dev Sonnet/Opus 429 errors

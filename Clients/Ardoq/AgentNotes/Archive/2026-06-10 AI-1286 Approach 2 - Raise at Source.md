@@ -1,7 +1,10 @@
 ---
-tags: [ai-1286, error-handling, design]
+tags:
+  - ai-1286
+  - error-handling
+  - design
 type: work
-status: in-progress
+status: done
 ---
 
 # AI-1286 — Approach 2: Raise at Source

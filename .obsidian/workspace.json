@@ -4,7 +4,7 @@
     "type": "split",
     "children": [
       {
-        "id": "499d5b000c8b4293",
+        "id": "9f39993221675a16",
         "type": "tabs",
         "children": [
           {
@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/06-June/2026-06-22-Monday.md",
+                "file": "Daily Tracker/2026/06-June/2026-06-23-Tuesday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-06-22-Monday"
+              "title": "2026-06-23-Tuesday"
             }
           }
         ]
@@ -193,13 +193,16 @@
       "smart-connections:Smart Connections: Open random connection": false
     }
   },
-  "active": "5c4640ee71da1801",
+  "active": "e957b2dc8c2c09f6",
   "lastOpenFiles": [
-    "Clients/Personal/AgentNotes/Reference/SAS Travels/Grocery Store Price Comparison with EuroBonus.md",
+    "Daily Tracker/2026/06-June/2026-06-23-Tuesday.md",
+    "Clients/Ardoq/AgentNotes/Archive/2026-06-10 AI-1286 Approach 2 - Raise at Source.md",
+    "Clients/Ardoq/AgentNotes/Archive/2026-06-10 AI-1286 Approach 1 - Domain Errors.md",
     "Clients/Personal/AgentNotes/Reference/SAS Travels/EuroBonus Best Case Value — Sale Awards + Companion Ticket.md",
+    "Daily Tracker/2026/06-June/2026-06-22-Monday.md",
+    "Clients/Personal/AgentNotes/Reference/SAS Travels/Grocery Store Price Comparison with EuroBonus.md",
     "Clients/Ardoq/AgentNotes/Active/2026-06-22 AI-962 MCP + Agent Tool Consolidation - Architecture Analysis.md",
     "Daily Tracker/2026/06-June/Untitled.md",
-    "Daily Tracker/2026/06-June/2026-06-22-Monday.md",
     "Daily Tracker/2026/06-June/2026-06-12-Friday.md",
     "Clients/Personal/AgentNotes/Reference/NanoClaw/MEMORY.md",
     "Clients/Personal/AgentNotes/Active/2026-06-19 NanoClaw Full System Audit & Fixes.md",
@@ -222,9 +225,6 @@
     "Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Channel Setup & Debugging.md",
     "Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop.md",
     "Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 1 - Domain Errors.md",
-    "Clients/Ardoq/AgentNotes/Active/2026-06-10 AI-1286 Approach 2 - Raise at Source.md",
-    "Clients/Ardoq/AgentNotes/Active/Starlette BadHost Upgrade/Untitled.md",
-    "Clients/Personal/AgentNotes/Active/2026-06-11 NanoClaw OpenCode Provider Setup.md",
     "Clients/Ardoq/AgentNotes/Archive/Starlette BadHost Upgrade/Untitled.canvas",
     "Clients/Personal/AgentNotes/Reference/NanoClaw",
     "Untitled 1.base",
