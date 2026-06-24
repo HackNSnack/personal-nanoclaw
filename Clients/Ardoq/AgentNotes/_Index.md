@@ -42,6 +42,9 @@ Map of Content for Ardoq development notes.
 - [[Clients/Ardoq/AgentNotes/Reference/Development/My Code Review Standards]] - Personal review standards extracted from PR history
 - [[Clients/Ardoq/AgentNotes/Reference/Development/API Request Headers]] - Complete HTTP header reference for ardoq-api
 
+- [[Clients/Ardoq/AgentNotes/Reference/Development/2026-06-22 AI-1026 Pydantic Model Sync CI Approaches]] - Dependency chain problem, committed-artifact vs generate-in-CI approaches with full Mermaid diagrams
+- [[Clients/Ardoq/AgentNotes/Reference/Development/2026-06-22 AI-1026 Implementation Plan]] - Concrete implementation plan: lein alias, committed JSON artifact, unified sync_models.sh (--check), moon tasks, both CI checks
+
 #### Sub-Agent Streaming
 - [[Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Demo Agent]] — `nested_demo_agent` + `word_count_agent` reference implementation
 - [[Clients/Ardoq/AgentNotes/Reference/Development/Sub-Agent Streaming - Test Suite]] — Unit test harness: `conftest.py`, `test_sub_agent.py`, `test_sub_agent_nesting.py`, `test_streaming_sub_agent.py`
