@@ -4,6 +4,8 @@ Map of Content for Ardoq development notes.
 
 ## Active Work
 
+- [[Clients/Ardoq/AgentNotes/Active/2026-06-26 AI-1300 PR 1230 - Agent Run Timeout Analysis|AI-1300 PR #1230 — Agent Run Timeout Analysis]] — ModelSettings/tool timeout vs asyncio.timeout comparison; PR structural critique (non-streaming placement, streaming asymmetry, constant configurability)
+
 - [[Clients/Ardoq/AgentNotes/Active/2026-06-22 AI-962 MCP + Agent Tool Consolidation - Architecture Analysis|AI-962 MCP + Agent Tool Consolidation — Architecture Analysis]] — Why full tool consolidation is impossible; the 6-location scaffolding redundancy map + A→E sequence; ties into AI-1286 (Approach 1)
 
 ## Recently Archived
