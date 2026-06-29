@@ -1,98 +1,147 @@
 # Task: Enable git-based cross-machine sync for NanoClaw state
 
-**For the LLM reading this:** This is an action file left by a pi session on the
-desktop machine. Execute the steps below in order, then delete this file and commit.
+**For the LLM reading this on the laptop:** execute every step below in order,
+then delete this file and push. This file was committed from the desktop so the
+laptop can do all the real work against the live data.
 
 ---
 
 ## Background
 
-Mathipe runs NanoClaw on two machines: a laptop (you, now) and a desktop (Linux).
-The desktop was set up as a clone of this repo. Because `data/` and `groups/` are
-gitignored, the desktop started with an empty database and no agent groups — the
-agent doesn't work there yet.
+Mathipe runs NanoClaw on two machines: this laptop and a desktop (Linux/NixOS).
+The desktop was set up as a git clone of this repo. Because `data/` and `groups/`
+are gitignored, the desktop started with an empty database and no agent groups —
+the agent doesn't work there yet.
 
-The fix: track the state files in git so switching machines is just `git push` /
-`git pull`. Both machines will never run simultaneously (Slack socket mode +
-SQLite single-writer make that impractical), so git is sufficient — just
-commit before switching.
+The fix: track the right state files in git so switching machines is just
+`git push` / `git pull`. Both machines will never run simultaneously (Slack
+socket mode and SQLite single-writer make that impractical anyway), so git is
+sufficient. The discipline is: commit before switching.
 
-A pi session on the desktop already made these changes (not yet on this machine):
-
-- **`.gitignore`** — `data/` unblocked; only machine-specific runtime files
-  (sockets, circuit-breaker, WAL files) remain ignored.
-- **`.gitattributes`** — `.db` files marked as `binary` so git never attempts
-  a text merge. Conflicts (if they ever occur from forgetting to push) are
-  resolved with `git checkout --ours` or `--theirs`, not a line merge.
-- **`.stignore`** — ignore rules for Syncthing (optional; harmless if unused).
-- **`docs/native-module-node-version-mismatch.md`** — documents the
-  `better-sqlite3` NODE_MODULE_VERSION mismatch error that hit the desktop on
-  first boot (Node version changed; fixed with `pnpm rebuild better-sqlite3`).
+A separate issue also hit the desktop on first boot: `better-sqlite3` was
+compiled against a different Node.js version (NODE_MODULE_VERSION 137 vs 127).
+That was fixed with `pnpm rebuild better-sqlite3`. A doc explaining this was
+written at `docs/native-module-node-version-mismatch.md` and should be committed
+here too.
 
 ---
 
 ## Steps to execute
 
-### 1. Pull the desktop's changes
+### 1. Pull this task file (already done if you're reading this)
 
 ```bash
 git pull
 ```
 
-Verify the updated `.gitignore` is in place — `data/v2.db` should now be
-untracked-but-visible (`git status` should show it under untracked or modified,
-not silently ignored).
+### 2. Update `.gitignore`
 
-### 2. Stop the service cleanly
+The current file has a blanket `data/` ignore and a `groups/*` glob that prevents
+tracking. Replace both with specific exclusions so the DB and group files are
+tracked while sockets, logs, and WAL files stay ignored.
 
-This checkpoints the SQLite WAL back into the main `.db` file before committing.
+Find this block in `.gitignore`:
 
-```bash
-systemctl --user stop "$(. setup/lib/install-slug.sh && systemd_unit)" 2>/dev/null \
-  || launchctl stop "$(. setup/lib/install-slug.sh && launchd_label)" 2>/dev/null
+```
+# Local data & auth
+store/
+data/
+logs/
+
+# Groups - per-installation state, not tracked
+groups/*
 ```
 
-Wait ~5 seconds for the process to exit and SQLite to flush.
+Replace it with:
 
-### 3. Stage the state files
+```
+# Local data & auth
+store/
+logs/
+
+# Machine-specific runtime files — never commit
+data/cli.sock
+data/ncl.sock
+data/circuit-breaker.json
+data/upgrade-state.json
+data/env/
+
+# SQLite WAL/shared-memory files — transient, unsafe to commit mid-write.
+# The main .db files ARE tracked so they can move between machines.
+data/*.db-shm
+data/*.db-wal
+data/v2-sessions/**/*.db-shm
+data/v2-sessions/**/*.db-wal
+
+# Groups - tracked for cross-machine sync
+```
+
+### 3. Create `.gitattributes`
+
+Create a new file `.gitattributes` at the repo root with this content:
+
+```
+# SQLite databases — mark as binary so git never attempts a text merge.
+# If a conflict ever occurs (forgot to push before switching machines),
+# resolve with: git checkout --ours data/v2.db  (or --theirs)
+*.db binary
+*.db-shm binary
+*.db-wal binary
+```
+
+### 4. Stop the service cleanly
+
+This flushes the SQLite WAL back into the main `.db` file before committing,
+so the desktop receives a clean, complete database.
 
 ```bash
+# macOS (launchd):
+launchctl stop "$(. setup/lib/install-slug.sh && launchd_label)"
+```
+
+Wait ~5 seconds for the process to exit.
+
+### 5. Stage everything
+
+```bash
+git add .gitignore
+git add .gitattributes
+git add docs/native-module-node-version-mismatch.md
 git add data/v2.db
 git add data/v2-sessions/   # if this directory exists
 git add groups/              # agent group filesystems
 ```
 
-Check what's staged:
+Sanity-check what's staged — you should see the DB, sessions, groups, and the
+config files. You should NOT see `data/cli.sock`, `data/ncl.sock`,
+`data/circuit-breaker.json`, or any `*.db-wal` / `*.db-shm` files:
 
 ```bash
 git status --short
 ```
 
-You should see `data/v2.db`, any session DBs under `data/v2-sessions/`, and
-the contents of `groups/` staged. You should NOT see `data/cli.sock`,
-`data/ncl.sock`, `data/circuit-breaker.json`, or any `*.db-wal` / `*.db-shm`
-files — those remain ignored.
-
-### 4. Commit and push
+### 6. Commit and push
 
 ```bash
-git commit -m "Add state files for cross-machine sync
+git commit -m "Enable git-based cross-machine sync
 
-Tracks data/v2.db, data/v2-sessions/, and groups/ so the desktop
-can pull and run with the same agent state. See TASK-enable-git-sync.md
-for full context (that file is now deleted)."
+- .gitignore: unblock data/v2.db, data/v2-sessions/, groups/;
+  keep sockets, WAL files, and runtime state ignored
+- .gitattributes: mark .db files as binary (no text-merge attempts)
+- Commit current DB and agent groups so the desktop can pull and run
+- docs/native-module-node-version-mismatch.md: document the
+  better-sqlite3 NODE_MODULE_VERSION mismatch error seen on desktop"
 
 git push
 ```
 
-### 5. Restart the service on this machine
+### 7. Restart the service
 
 ```bash
-systemctl --user start "$(. setup/lib/install-slug.sh && systemd_unit)" 2>/dev/null \
-  || launchctl start "$(. setup/lib/install-slug.sh && launchd_label)" 2>/dev/null
+launchctl start "$(. setup/lib/install-slug.sh && launchd_label)"
 ```
 
-### 6. Delete this file and commit that too
+### 8. Delete this file and push
 
 ```bash
 git rm TASK-enable-git-sync.md
@@ -102,18 +151,18 @@ git push
 
 ---
 
-## The ongoing workflow (tell Mathipe)
+## Tell Mathipe: the ongoing switching workflow
 
 **Before switching from laptop → desktop (or vice versa):**
 
 ```bash
-# Stop the service
-systemctl --user stop <unit>      # Linux
-# or: launchctl stop <label>      # macOS
+# 1. Stop the service (flushes SQLite WAL)
+launchctl stop <label>          # macOS
+systemctl --user stop <unit>    # Linux
 
-# Commit and push state
+# 2. Commit and push state
 git add data/v2.db data/v2-sessions/ groups/
-git commit -m "State snapshot before switching to <other machine>"
+git commit -m "State snapshot before switching machines"
 git push
 ```
 
@@ -121,22 +170,19 @@ git push
 
 ```bash
 git pull
-systemctl --user start <unit>    # Linux
-# or: launchctl start <label>    # macOS
+launchctl start <label>         # macOS
+systemctl --user start <unit>   # Linux
 ```
 
-**If a conflict ever happens** (forgot to push before switching):
+**If a conflict ever happens** (forgot to push before switching — binary conflict,
+not a line-level merge conflict):
 
 ```bash
-# Keep whichever machine had the more recent session:
-git checkout --theirs data/v2.db   # or --ours
+# Keep whichever side had the more recent session:
+git checkout --theirs data/v2.db   # desktop's version
+# or:
+git checkout --ours data/v2.db     # this machine's version
 git add data/v2.db
 git commit -m "Resolve DB conflict, kept <machine> version"
+git push
 ```
-
----
-
-## Done
-
-Once steps 1–6 are complete, the desktop can `git pull` and have a fully working
-NanoClaw instance with all existing agents, sessions, and history intact.
