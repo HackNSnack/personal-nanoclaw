@@ -80,14 +80,14 @@ This is the only working-tree change expected before the preflight check; the fu
 Run:
 
 - `git status --porcelain`
-If output is non-empty:
+  If output is non-empty:
 - Tell the user to commit or stash first, then stop.
 - Exception: changes limited to `.claude/skills/update-nanoclaw/` are the Step 0a self-refresh — ignore those and proceed.
 
 Confirm remotes:
 
 - `git remote -v`
-If `upstream` is missing:
+  If `upstream` is missing:
 - Ask the user for the upstream repo URL (default: `https://github.com/nanocoai/nanoclaw.git`).
 - Add it: `git remote add upstream <user-provided-url>`
 - Then: `git fetch upstream --prune`
@@ -202,7 +202,7 @@ If conflicts during cherry-pick:
 - Resolve only conflict markers, then:
   - `git add <file>`
   - `git cherry-pick --continue`
-If user wants to stop:
+    If user wants to stop:
   - `git cherry-pick --abort`
 
 # Step 4C: Rebase (only if user explicitly chose option D)
@@ -216,7 +216,7 @@ If conflicts:
 - Resolve conflict markers only, then:
   - `git add <file>`
   - `git rebase --continue`
-If it gets messy (more than 3 rounds of conflicts):
+    If it gets messy (more than 3 rounds of conflicts):
   - `git rebase --abort`
   - Recommend merge instead.
 
