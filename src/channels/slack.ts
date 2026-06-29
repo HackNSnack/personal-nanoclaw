@@ -1,6 +1,9 @@
 /**
  * Slack channel adapter (v2) — uses Chat SDK bridge.
  * Self-registers on import.
+ *
+ * Socket Mode opt-in: set SLACK_APP_TOKEN (xapp-…) to receive events over an
+ * outbound WebSocket instead of an inbound HTTPS webhook.
  */
 import { createSlackAdapter } from '@chat-adapter/slack';
 
@@ -10,18 +13,18 @@ import { registerChannelAdapter } from './channel-registry.js';
 
 registerChannelAdapter('slack', {
   factory: () => {
-    const env = readEnvFile(['SLACK_BOT_TOKEN', 'SLACK_SIGNING_SECRET']);
+    const env = readEnvFile(['SLACK_BOT_TOKEN', 'SLACK_SIGNING_SECRET', 'SLACK_APP_TOKEN']);
     if (!env.SLACK_BOT_TOKEN) return null;
-
-    // Prefer Socket Mode (outbound WebSocket — no public URL required) when
-    // SLACK_APP_TOKEN (xapp-...) is present in the environment. This is set
-    // via EnvironmentFile in the systemd service unit. Falls back to webhook
-    // mode when no app token is available (requires a publicly reachable URL
-    // and the signing secret for request verification).
-    const appToken = process.env.SLACK_APP_TOKEN;
-    const slackAdapter = appToken
-      ? createSlackAdapter({ botToken: env.SLACK_BOT_TOKEN, mode: 'socket', appToken })
-      : createSlackAdapter({ botToken: env.SLACK_BOT_TOKEN, signingSecret: env.SLACK_SIGNING_SECRET });
+    // SLACK_APP_TOKEN (xapp-…) enables Socket Mode: events arrive over an
+    // outbound WebSocket, so no public HTTPS endpoint is required. When set,
+    // the signing secret is optional (Slack signs socket frames separately).
+    const useSocketMode = Boolean(env.SLACK_APP_TOKEN);
+    const slackAdapter = createSlackAdapter({
+      botToken: env.SLACK_BOT_TOKEN,
+      signingSecret: env.SLACK_SIGNING_SECRET,
+      appToken: env.SLACK_APP_TOKEN,
+      mode: useSocketMode ? 'socket' : 'webhook',
+    });
 
     // Intercept socketClient assignment to inject ping timeout values into
     // SocketModeClient before start() reads them. The adapter's startSocketMode()
