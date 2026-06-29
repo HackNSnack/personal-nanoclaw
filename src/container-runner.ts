@@ -463,25 +463,6 @@ async function buildContainerArgs(
     }
   }
 
-  // OneCLI gateway — injects HTTPS_PROXY + certs so container API calls
-  // are routed through the agent vault for credential injection. Treated as
-  // a transient hard failure: if we can't wire the gateway, we don't spawn.
-  // The caller (router or host-sweep) catches the throw, leaves the inbound
-  // message pending, and the next sweep tick retries.
-  // Skipped for providers that handle auth locally (bypassOnecli: true).
-  if (!providerContribution.bypassOnecli) {
-    if (agentIdentifier) {
-      await onecli.ensureAgent({ name: agentGroup.name, identifier: agentIdentifier });
-    }
-    const onecliApplied = await onecli.applyContainerConfig(args, { addHostMapping: false, agent: agentIdentifier });
-    if (!onecliApplied) {
-      throw new Error('OneCLI gateway not applied — refusing to spawn container without credentials');
-    }
-    log.info('OneCLI gateway applied', { containerName });
-  } else {
-    log.info('OneCLI skipped (local provider)', { containerName });
-  }
-
   // Egress lockdown when enabled — throws if it can't be established, aborting
   // the spawn rather than running with open egress. Otherwise the host gateway.
   if (ensureEgressNetwork()) {
@@ -545,8 +526,14 @@ export async function buildAgentGroupImage(agentGroupId: string): Promise<void> 
 
   const configRow = getContainerConfig(agentGroup.id);
   if (!configRow) throw new Error('Container config not found');
-  const aptPackages = JSON.parse(configRow.packages_apt) as string[];
-  const npmPackages = JSON.parse(configRow.packages_npm) as string[];
+  let aptPackages: string[];
+  let npmPackages: string[];
+  try {
+    aptPackages = JSON.parse(configRow.packages_apt) as string[];
+    npmPackages = JSON.parse(configRow.packages_npm) as string[];
+  } catch (err) {
+    throw new Error('Container config has invalid package lists (not valid JSON)', { cause: err });
+  }
   if (aptPackages.length === 0 && npmPackages.length === 0) {
     throw new Error('No packages to install. Use install_packages first.');
   }
