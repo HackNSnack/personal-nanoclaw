@@ -81,6 +81,21 @@ export interface ProviderOptions {
   effort?: string;
 }
 
+/**
+ * A file/image attachment that has been saved to the session inbox on disk.
+ * The `localPath` is relative to `/workspace` inside the container — e.g.
+ * `"inbox/{messageId}/image.png"`. Only vision-capable providers use this;
+ * text-only providers ignore the field.
+ */
+export interface AttachmentRef {
+  /** Path relative to /workspace, e.g. "inbox/{msgId}/image.png" */
+  localPath: string;
+  /** MIME type, e.g. "image/png" */
+  mimeType: string;
+  /** Original filename */
+  name?: string;
+}
+
 export interface QueryInput {
   /** Initial prompt (already formatted by agent-runner). */
   prompt: string;
@@ -101,6 +116,14 @@ export interface QueryInput {
   systemContext?: {
     instructions?: string;
   };
+
+  /**
+   * Image attachments from the inbound message, already saved to the session
+   * inbox by the host. Vision-capable providers (e.g. the OpenCode provider
+   * with a multimodal model) should forward these alongside the text prompt.
+   * Text-only providers silently ignore this field.
+   */
+  attachments?: AttachmentRef[];
 }
 
 export interface McpServerConfig {
@@ -111,7 +134,7 @@ export interface McpServerConfig {
 
 export interface AgentQuery {
   /** Push a follow-up message into the active query. */
-  push(message: string): void;
+  push(message: string, attachments?: AttachmentRef[]): void;
 
   /** Signal that no more input will be sent. */
   end(): void;

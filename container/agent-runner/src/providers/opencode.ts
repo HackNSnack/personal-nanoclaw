@@ -3,7 +3,7 @@ import { spawn, type ChildProcess } from 'child_process';
 import { createOpencodeClient, type OpencodeClient } from '@opencode-ai/sdk';
 
 import { registerProvider } from './provider-registry.js';
-import type { AgentProvider, AgentQuery, ProviderEvent, ProviderOptions, QueryInput } from './types.js';
+import type { AgentProvider, AgentQuery, AttachmentRef, ProviderEvent, ProviderOptions, QueryInput } from './types.js';
 import { mcpServersToOpenCodeConfig } from './mcp-to-opencode.js';
 
 function log(msg: string): void {
@@ -381,13 +381,18 @@ export class OpenCodeProvider implements AgentProvider {
       this.activeSessionId = undefined;
     }
 
-    const pending: string[] = [];
+    interface PendingTurn {
+      text: string;
+      attachments?: AttachmentRef[];
+    }
+
+    const pending: PendingTurn[] = [];
     let waiting: (() => void) | null = null;
     let ended = false;
     let aborted = false;
 
     const systemInstructions = input.systemContext?.instructions;
-    pending.push(wrapPromptWithContext(input.prompt, systemInstructions));
+    pending.push({ text: wrapPromptWithContext(input.prompt, systemInstructions), attachments: input.attachments });
 
     const kick = (): void => {
       waiting?.();
@@ -401,6 +406,60 @@ export class OpenCodeProvider implements AgentProvider {
       const rt = await ensureSharedRuntime(self.options);
       const { client, stream } = rt;
 
+      // Drain window helper: defined here (inside gen(), above any loop) so
+      // all lexical declarations live in function scope and never trigger
+      // no-case-declarations when called from the `session.idle` switch arm.
+      // Closes over `stream`, `IDLE_DRAIN_WINDOW_MS`, and `logDebug`.
+      // Mutable per-attempt state (`partTextByMessageId`, `sessionId`,
+      // `lastEventAt`) is passed in explicitly so the function compiles
+      // cleanly without capturing stale bindings across retry attempts.
+      async function drainIdleWindow(
+        partTextByMessageId: Map<string, string>,
+        sessionId: string,
+        updateLastEventAt: (t: number) => void,
+      ): Promise<void> {
+        type DrainEvent = { type: string; properties: Record<string, unknown> };
+        type DrainOutcome = { timedOut: false; value: DrainEvent | undefined; done: boolean } | { timedOut: true };
+        const drainDeadline = Date.now() + IDLE_DRAIN_WINDOW_MS;
+        while (true) {
+          const remaining = drainDeadline - Date.now();
+          if (remaining <= 0) break;
+          const outcome = await (Promise.race([
+            stream.next().then(
+              (r): DrainOutcome => ({
+                timedOut: false,
+                value: r.value ?? undefined,
+                done: r.done ?? false,
+              }),
+            ),
+            new Promise<DrainOutcome>((resolve) => setTimeout(() => resolve({ timedOut: true }), remaining)),
+          ]) as Promise<DrainOutcome>);
+          if (outcome.timedOut) break;
+          if (outcome.done) break;
+          const drainEv = outcome.value;
+          if (!drainEv?.type) continue;
+          if (drainEv.type === 'server.heartbeat' || drainEv.type === 'server.connected') {
+            logDebug('drain: heartbeat');
+            continue;
+          }
+          updateLastEventAt(Date.now());
+          logDebug(`drain: event ${drainEv.type}`);
+          if (drainEv.type === 'message.part.updated') {
+            const drainPart = drainEv.properties.part as
+              | { type?: string; messageID?: string; text?: string }
+              | undefined;
+            if (drainPart?.type === 'text' && drainPart.messageID && drainPart.text) {
+              partTextByMessageId.set(drainPart.messageID, drainPart.text);
+              logDebug(`drain: captured trailing text for msg ${drainPart.messageID}`);
+            }
+          } else if (drainEv.type === 'session.idle') {
+            // Second idle for same session — genuinely done
+            const innerSid = (drainEv.properties as { sessionID?: string }).sessionID;
+            if (innerSid === sessionId) break;
+          }
+        }
+      }
+
       while (!aborted) {
         while (pending.length === 0 && !ended && !aborted) {
           await new Promise<void>((resolve) => {
@@ -412,7 +471,28 @@ export class OpenCodeProvider implements AgentProvider {
         if (aborted) return;
         if (pending.length === 0 && ended) return;
 
-        const text = pending.shift()!;
+        const { text, attachments: turnAttachments } = pending.shift()!;
+
+        // Build file parts for any image attachments in this turn.
+        // The files are already saved to the session inbox by the host;
+        // we reference them via file:// URL so the OpenCode server (which
+        // runs in the same container) can read and forward them to the model.
+        // Text-only models (modality=text->text) will have the parts stripped
+        // or rejected by the upstream API — switch OPENCODE_MODEL to a
+        // vision-capable model (e.g. google/gemini-2.0-flash-001) for images.
+        const fileParts: Array<{ type: 'file'; mime: string; filename?: string; url: string }> = [];
+        if (turnAttachments && turnAttachments.length > 0) {
+          for (const att of turnAttachments) {
+            if (!att.mimeType.startsWith('image/')) continue;
+            fileParts.push({
+              type: 'file',
+              mime: att.mimeType,
+              filename: att.name,
+              url: `file:///workspace/${att.localPath}`,
+            });
+            logDebug(`Attaching image: ${att.name ?? att.localPath} (${att.mimeType})`);
+          }
+        }
 
         // ── Retry loop ──────────────────────────────────────────────────────────
         // Each attempt: create/reuse session → promptAsync → stream events.
@@ -450,7 +530,7 @@ export class OpenCodeProvider implements AgentProvider {
 
             const promptRes = await client.session.promptAsync({
               path: { id: sessionId },
-              body: { parts: [{ type: 'text', text }] },
+              body: { parts: [{ type: 'text', text }, ...fileParts] },
             });
             if (promptRes.error) {
               // Throw so the catch block decides whether to retry
@@ -557,62 +637,17 @@ export class OpenCodeProvider implements AgentProvider {
                   case 'session.idle': {
                     const sid = (ev.properties as { sessionID?: string }).sessionID;
                     if (sid === sessionId) {
-                      // Drain window: DeepSeek V4 Flash (and similar models) emit
-                      // the final message.part.updated tokens AFTER session.idle
-                      // due to an ordering race in OpenCode's SSE pipeline.
-                      // Continue consuming events for a short grace window before
-                      // assembling resultText so we capture the closing </message>
-                      // tag and any trailing body text.
-                      //
+                      // Drain window — see drainIdleWindow helper defined above
+                      // the main loop. The labeled `break turn` must be here
+                      // (outside the function boundary of drainIdleWindow).
                       // Note on Promise.race + stream.next(): if the timeout fires
                       // first the pending stream.next() remains in-flight and will
                       // consume the next SSE event (typically a heartbeat) without
                       // anyone observing the result. For a single-session agent
                       // this is acceptable — the eaten event is benign.
-                      type DrainEvent = { type: string; properties: Record<string, unknown> };
-                      type DrainOutcome =
-                        | { timedOut: false; value: DrainEvent | undefined; done: boolean }
-                        | { timedOut: true };
-                      const drainDeadline = Date.now() + IDLE_DRAIN_WINDOW_MS;
-                      while (true) {
-                        const remaining = drainDeadline - Date.now();
-                        if (remaining <= 0) break;
-                        const outcome = await (Promise.race([
-                          stream.next().then(
-                            (r): DrainOutcome => ({
-                              timedOut: false,
-                              value: r.value ?? undefined,
-                              done: r.done ?? false,
-                            }),
-                          ),
-                          new Promise<DrainOutcome>((resolve) =>
-                            setTimeout(() => resolve({ timedOut: true }), remaining),
-                          ),
-                        ]) as Promise<DrainOutcome>);
-                        if (outcome.timedOut) break;
-                        if (outcome.done) break;
-                        const drainEv = outcome.value;
-                        if (!drainEv?.type) continue;
-                        if (drainEv.type === 'server.heartbeat' || drainEv.type === 'server.connected') {
-                          logDebug('drain: heartbeat');
-                          continue;
-                        }
-                        lastEventAt = Date.now();
-                        logDebug(`drain: event ${drainEv.type}`);
-                        if (drainEv.type === 'message.part.updated') {
-                          const drainPart = drainEv.properties.part as
-                            | { type?: string; messageID?: string; text?: string }
-                            | undefined;
-                          if (drainPart?.type === 'text' && drainPart.messageID && drainPart.text) {
-                            partTextByMessageId.set(drainPart.messageID, drainPart.text);
-                            logDebug(`drain: captured trailing text for msg ${drainPart.messageID}`);
-                          }
-                        } else if (drainEv.type === 'session.idle') {
-                          // Second idle for same session — genuinely done
-                          const innerSid = (drainEv.properties as { sessionID?: string }).sessionID;
-                          if (innerSid === sessionId) break;
-                        }
-                      }
+                      await drainIdleWindow(partTextByMessageId, sessionId, (t) => {
+                        lastEventAt = t;
+                      });
                       break turn;
                     }
                     break;
@@ -646,8 +681,8 @@ export class OpenCodeProvider implements AgentProvider {
     }
 
     return {
-      push: (message: string) => {
-        pending.push(wrapPromptWithContext(message, systemInstructions));
+      push: (message: string, attachments?: AttachmentRef[]) => {
+        pending.push({ text: wrapPromptWithContext(message, systemInstructions), attachments });
         kick();
       },
       end: () => {

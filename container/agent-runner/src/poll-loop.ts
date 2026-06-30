@@ -14,7 +14,7 @@ import {
   type RoutingContext,
 } from './formatter.js';
 import { isUploadTraceCommand, uploadTrace } from './upload-trace.js';
-import type { AgentProvider, AgentQuery, ProviderEvent, ProviderExchange } from './providers/types.js';
+import type { AgentProvider, AgentQuery, AttachmentRef, ProviderEvent, ProviderExchange } from './providers/types.js';
 
 const POLL_INTERVAL_MS = 1000;
 const ACTIVE_POLL_INTERVAL_MS = 500;
@@ -222,6 +222,7 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
     // Format messages: passthrough commands get raw text (only if the
     // provider natively handles slash commands), others get XML.
     const prompt = formatMessagesWithCommands(keep, config.provider.supportsNativeSlashCommands);
+    const attachments = extractImageAttachments(keep);
 
     log(`Processing ${keep.length} message(s), kinds: ${[...new Set(keep.map((m) => m.kind))].join(',')}`);
 
@@ -230,6 +231,7 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
       continuation,
       cwd: config.cwd,
       systemContext: config.systemContext,
+      attachments: attachments.length > 0 ? attachments : undefined,
     });
 
     // Process the query while concurrently polling for new messages
@@ -291,6 +293,38 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
  * passthrough commands are sent raw (no XML wrapping) so the SDK can
  * dispatch them. Otherwise they fall through to standard XML formatting.
  */
+/**
+ * Extract image attachments from a batch of messages so vision-capable
+ * providers can forward them to the model alongside the text prompt.
+ * Only `image/*` MIME types are included; other file types are skipped.
+ * Files that have no `localPath` (e.g. text messages) are silently ignored.
+ *
+ * Exported for unit testing.
+ */
+export function extractImageAttachments(messages: MessageInRow[]): AttachmentRef[] {
+  const result: AttachmentRef[] = [];
+  for (const msg of messages) {
+    let content: Record<string, unknown>;
+    try {
+      content = JSON.parse(msg.content) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    const atts = content.attachments as Array<Record<string, unknown>> | undefined;
+    if (!Array.isArray(atts)) continue;
+    for (const att of atts) {
+      if (typeof att.localPath === 'string' && typeof att.mimeType === 'string' && att.mimeType.startsWith('image/')) {
+        result.push({
+          localPath: att.localPath,
+          mimeType: att.mimeType,
+          name: typeof att.name === 'string' ? att.name : undefined,
+        });
+      }
+    }
+  }
+  return result;
+}
+
 function formatMessagesWithCommands(messages: MessageInRow[], nativeSlashCommands: boolean): string {
   const parts: string[] = [];
   const normalBatch: MessageInRow[] = [];
@@ -415,11 +449,12 @@ export async function processQuery(
         if (done) return;
 
         const keptIds = keep.map((m) => m.id);
-        const prompt = formatMessages(keep);
+        const followUpPrompt = formatMessages(keep);
+        const followUpAttachments = extractImageAttachments(keep);
         log(`Pushing ${keep.length} follow-up message(s) into active query`);
         unwrappedNudged = false;
-        query.push(prompt);
-        archivePrompts.push(prompt);
+        query.push(followUpPrompt, followUpAttachments.length > 0 ? followUpAttachments : undefined);
+        archivePrompts.push(followUpPrompt);
         markCompleted(keptIds);
       } catch (err) {
         // Without this catch the rejection escapes the void IIFE and Node
@@ -523,7 +558,7 @@ export async function processQuery(
             // notice so they know to resend rather than waiting indefinitely.
             if (hasUnwrapped && !willRetryWrapping) {
               deliverErrorResult(
-                '_My response couldn\'t be delivered due to a formatting error. Please resend your message._',
+                "_My response couldn't be delivered due to a formatting error. Please resend your message._",
                 routing,
               );
             }
@@ -676,7 +711,9 @@ function sendToDestination(dest: DestinationEntry, body: string, routing: Routin
   const platformId = dest.type === 'channel' ? dest.platformId! : dest.agentGroupId!;
   const channelType = dest.type === 'channel' ? dest.channelType! : 'agent';
   const sameChannel = routing.channelType === channelType && routing.platformId === platformId;
-  const threadId = sameChannel ? routing.threadId : resolveDestinationThread(channelType, platformId)?.threadId ?? null;
+  const threadId = sameChannel
+    ? routing.threadId
+    : (resolveDestinationThread(channelType, platformId)?.threadId ?? null);
   writeMessageOut({
     id: generateId(),
     in_reply_to: routing.inReplyTo,
