@@ -27,7 +27,13 @@ import { closeSessionDb, getInboundDb, initTestSessionDb } from './db/connection
 import type { MessageInRow } from './db/messages-in.js';
 import { formatMessages } from './formatter.js';
 import { extractImageAttachments } from './poll-loop.js';
-import { OpenCodeProvider, _setRuntimeForTest, _setSleepForTest, type SharedRuntime } from './providers/opencode.js';
+import {
+  OpenCodeProvider,
+  _setImageReaderForTest,
+  _setRuntimeForTest,
+  _setSleepForTest,
+  type SharedRuntime,
+} from './providers/opencode.js';
 import type { AttachmentRef, ProviderEvent } from './providers/types.js';
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
@@ -170,7 +176,14 @@ afterEach(() => {
   closeSessionDb();
   _setRuntimeForTest(null);
   _setSleepForTest((ms) => new Promise((r) => setTimeout(r, ms)));
+  _setImageReaderForTest(null);
 });
+
+// Deterministic stand-in for reading image bytes off /workspace. The base64
+// encodes the localPath itself so tests can assert which file was inlined.
+const FAKE_IMAGE_READER = (localPath: string): string => Buffer.from(`IMG:${localPath}`).toString('base64');
+const fakeDataUrl = (mime: string, localPath: string): string =>
+  `data:${mime};base64,${Buffer.from(`IMG:${localPath}`).toString('base64')}`;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Layer 1: extractImageAttachments
@@ -405,6 +418,12 @@ describe('formatter attachment rendering', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('OpenCodeProvider — file parts in promptAsync', () => {
+  // Default: deterministic in-memory image bytes so file parts don't depend
+  // on /workspace existing on disk. Individual tests may override.
+  beforeEach(() => {
+    _setImageReaderForTest(FAKE_IMAGE_READER);
+  });
+
   it('sends only the text part when the query has no attachments', async () => {
     const stream = makeStream([idleEvent('s1')]);
     const rt = makeRuntime(['s1'], [PROMPT_OK], stream);
@@ -417,10 +436,11 @@ describe('OpenCodeProvider — file parts in promptAsync', () => {
     expect(parts[0]).toMatchObject({ type: 'text' });
   });
 
-  it('adds a FilePartInput for a single image attachment', async () => {
+  it('adds a FilePartInput (base64 data URL) for a single image attachment', async () => {
     const stream = makeStream([idleEvent('s1')]);
     const rt = makeRuntime(['s1'], [PROMPT_OK], stream);
     _setRuntimeForTest(rt);
+    _setImageReaderForTest(FAKE_IMAGE_READER);
 
     const attachments: AttachmentRef[] = [
       { localPath: 'inbox/msg-1/photo.png', mimeType: 'image/png', name: 'photo.png' },
@@ -434,14 +454,15 @@ describe('OpenCodeProvider — file parts in promptAsync', () => {
       type: 'file',
       mime: 'image/png',
       filename: 'photo.png',
-      url: 'file:///workspace/inbox/msg-1/photo.png',
+      url: fakeDataUrl('image/png', 'inbox/msg-1/photo.png'),
     });
   });
 
-  it('builds the file:// URL by prepending /workspace/ to localPath', async () => {
+  it('inlines image bytes as a base64 data: URL (NOT a file:// reference)', async () => {
     const stream = makeStream([idleEvent('s1')]);
     const rt = makeRuntime(['s1'], [PROMPT_OK], stream);
     _setRuntimeForTest(rt);
+    _setImageReaderForTest(FAKE_IMAGE_READER);
 
     const attachments: AttachmentRef[] = [
       { localPath: 'inbox/abc:def/screenshot.jpg', mimeType: 'image/jpeg', name: 'screenshot.jpg' },
@@ -449,7 +470,30 @@ describe('OpenCodeProvider — file parts in promptAsync', () => {
     await collectResults(new OpenCodeProvider(), { prompt: 'what is this?', cwd: '/test', attachments });
 
     const filePart = partsFromCall(rt.client.session.promptAsync)[1];
-    expect(filePart.url).toBe('file:///workspace/inbox/abc:def/screenshot.jpg');
+    // A file:// URL is treated by OpenCode as a resource_link and never inlined
+    // into the user turn — the image must be a data: URL to reach the model.
+    expect(String(filePart.url).startsWith('data:image/jpeg;base64,')).toBe(true);
+    expect(filePart.url).not.toContain('file://');
+    expect(filePart.url).toBe(fakeDataUrl('image/jpeg', 'inbox/abc:def/screenshot.jpg'));
+  });
+
+  it('skips an image whose file cannot be read, without aborting the turn', async () => {
+    const stream = makeStream([idleEvent('s1')]);
+    const rt = makeRuntime(['s1'], [PROMPT_OK], stream);
+    _setRuntimeForTest(rt);
+    _setImageReaderForTest(() => {
+      throw new Error('ENOENT');
+    });
+
+    const attachments: AttachmentRef[] = [
+      { localPath: 'inbox/msg-1/missing.png', mimeType: 'image/png', name: 'missing.png' },
+    ];
+    await collectResults(new OpenCodeProvider(), { prompt: 'describe this', cwd: '/test', attachments });
+
+    const parts = partsFromCall(rt.client.session.promptAsync);
+    // Unreadable image is dropped; the text part still goes through.
+    expect(parts).toHaveLength(1);
+    expect(parts[0]).toMatchObject({ type: 'text' });
   });
 
   it('adds one FilePartInput per image when multiple attachments are present', async () => {
@@ -569,6 +613,10 @@ function idleEventsForTurns(n: number, sessionId: string): SseEvent[] {
 }
 
 describe('AgentQuery.push() with image attachments', () => {
+  beforeEach(() => {
+    _setImageReaderForTest(FAKE_IMAGE_READER);
+  });
+
   it('sends file parts on the second turn when push() carries attachments', async () => {
     // Two turns → 4 idle events (2 per turn: main loop + drain window)
     const stream = makeStream(idleEventsForTurns(2, 's1'));
@@ -606,7 +654,7 @@ describe('AgentQuery.push() with image attachments', () => {
       type: 'file',
       mime: 'image/png',
       filename: 'new.png',
-      url: 'file:///workspace/inbox/msg-2/new.png',
+      url: fakeDataUrl('image/png', 'inbox/msg-2/new.png'),
     });
     // Ensure resultCount is used (lint)
     void resultCount;
@@ -663,10 +711,13 @@ describe('AgentQuery.push() with image attachments', () => {
     expect(promptMock.mock.calls).toHaveLength(3);
 
     expect(partsFromCall(promptMock, 0)).toHaveLength(1); // first: text only
-    expect(partsFromCall(promptMock, 1)[1]).toMatchObject({ mime: 'image/png', url: expect.stringContaining('a.png') });
+    expect(partsFromCall(promptMock, 1)[1]).toMatchObject({
+      mime: 'image/png',
+      url: fakeDataUrl('image/png', 'inbox/m1/a.png'),
+    });
     expect(partsFromCall(promptMock, 2)[1]).toMatchObject({
       mime: 'image/jpeg',
-      url: expect.stringContaining('b.jpg'),
+      url: fakeDataUrl('image/jpeg', 'inbox/m2/b.jpg'),
     });
     void call;
   });

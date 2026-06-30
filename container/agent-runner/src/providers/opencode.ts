@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'child_process';
+import { readFileSync } from 'fs';
 
 import { createOpencodeClient, type OpencodeClient } from '@opencode-ai/sdk';
 
@@ -98,6 +99,19 @@ let _sleepFn: (ms: number) => Promise<void> = sleep;
 /** Test hook: replace the sleep implementation (e.g. with a no-op). */
 export function _setSleepForTest(fn: (ms: number) => Promise<void>): void {
   _sleepFn = fn;
+}
+
+/**
+ * Read an image attachment off the session inbox and return its base64.
+ * Injectable so tests can supply deterministic bytes without touching
+ * /workspace on disk. `localPath` is relative to /workspace in the container.
+ */
+let _readImageBase64: (localPath: string) => string = (localPath) =>
+  readFileSync(`/workspace/${localPath}`).toString('base64');
+
+/** Test hook: replace the image reader (e.g. to return fixed bytes). */
+export function _setImageReaderForTest(fn: ((localPath: string) => string) | null): void {
+  _readImageBase64 = fn ?? ((localPath) => readFileSync(`/workspace/${localPath}`).toString('base64'));
 }
 
 function killProcessTree(proc: ChildProcess): void {
@@ -492,25 +506,40 @@ export class OpenCodeProvider implements AgentProvider {
         const { text, attachments: turnAttachments } = pending.shift()!;
 
         // Build file parts for any image attachments in this turn.
-        // The files are already saved to the session inbox by the host;
-        // we reference them via file:// URL so the OpenCode server (which
-        // runs in the same container) can read and forward them to the model.
-        // For the parts to actually reach the model, the model must be declared
-        // with an `image` input modality (see buildOpenCodeConfig) — otherwise
-        // OpenCode treats it as text-only and strips these parts. Point
-        // OPENCODE_MODEL at a vision-capable model and keep image in
+        // The files are already saved to the session inbox by the host. We must
+        // inline them as base64 `data:` URLs — NOT `file://` URLs. OpenCode
+        // treats a `file://` part as a `resource_link` (a mere reference) and
+        // does NOT forward the image bytes into the user turn; only `data:`
+        // URLs are decoded into actual `type:"image"` content the model can
+        // see. (With a `file://` URL the model receives only the text hint,
+        // then calls the Read tool — delivering the image as a tool RESULT,
+        // a position vision providers like Mistral/DeepInfra won't process,
+        // so the model replies "I can't read images".)
+        //
+        // Two conditions must BOTH hold for the image to reach the model:
+        //   1. a base64 `data:` URL part here (so the bytes are inlined), and
+        //   2. the model declared with an `image` input modality
+        //      (see buildOpenCodeConfig) — otherwise OpenCode strips the part.
+        // Point OPENCODE_MODEL at a vision-capable model and keep image in
         // OPENCODE_MODEL_INPUT_MODALITIES (the default).
         const fileParts: Array<{ type: 'file'; mime: string; filename?: string; url: string }> = [];
         if (turnAttachments && turnAttachments.length > 0) {
           for (const att of turnAttachments) {
             if (!att.mimeType.startsWith('image/')) continue;
-            fileParts.push({
-              type: 'file',
-              mime: att.mimeType,
-              filename: att.name,
-              url: `file:///workspace/${att.localPath}`,
-            });
-            logDebug(`Attaching image: ${att.name ?? att.localPath} (${att.mimeType})`);
+            try {
+              const base64 = _readImageBase64(att.localPath);
+              fileParts.push({
+                type: 'file',
+                mime: att.mimeType,
+                filename: att.name,
+                url: `data:${att.mimeType};base64,${base64}`,
+              });
+              logDebug(`Attaching image: ${att.name ?? att.localPath} (${att.mimeType}, ${base64.length} b64 chars)`);
+            } catch (err) {
+              log(
+                `Failed to read image attachment /workspace/${att.localPath}: ${err instanceof Error ? err.message : String(err)}`,
+              );
+            }
           }
         }
 
