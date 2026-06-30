@@ -26,6 +26,8 @@ Map of Content for Personal development notes.
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — `Error: Model not found` runbook
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/DeepSeek Missing Closing Tag — Silent Response Drop]] — Agent responses silently dropped when DeepSeek omits closing message tag; SSE race root cause; Fix 1 (unclosed tag fallback) + Fix 2 (error notice) applied 2026-06-18; **SSE race root-cause fix** (400ms drain window) applied 2026-06-19
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenRouter 504 Upstream Idle Timeout — Retry Logic]] — Full investigation: wrong hypothesis (accumulated context) → correct root cause (OpenRouter SSE mid-stream stall), session lifecycle discovery, retry loop implementation, 28 tests, timeout docs research (no client-side control)
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/Mistral Vision Images & System Prompt — OpenCode Provider Fixes]] — DeepSeek→Mistral switch broke image reading (modality metadata dropped by explicit `models:` registration → image parts stripped) and leaked the system prompt (`<system>` XML in user turn echoed by Mistral); both fixed in `opencode.ts` — `modalities` declaration + `promptAsync` `body.system`; 9 new tests
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/Env Var Loading Architecture — secrets.env vs .env]] — Two-file env system: `EnvironmentFile` (secrets.env → process.env → container OPENCODE_* passthrough) vs `readEnvFile()` (.env → specific keys only, never process.env). Full variable-by-variable map with exact file:line locations.
 
 ### Slackbot (superseded — old Python/Ollama bot)
 

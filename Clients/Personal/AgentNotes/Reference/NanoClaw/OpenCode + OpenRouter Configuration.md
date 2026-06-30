@@ -8,7 +8,7 @@ status: active
 
 How the `opencode` provider works inside NanoClaw containers, how OneCLI injects credentials, and what can go wrong.
 
-**Last updated:** 2026-06-11
+**Last updated:** 2026-06-30 (added vision modalities + system-prompt delivery)
 
 ---
 
@@ -128,6 +128,25 @@ docker run --rm --entrypoint bash nanoclaw-agent-v2-a72e394a:latest -c \
 ```
 
 This is automatic — any model set via `OPENCODE_MODEL` or `OPENCODE_SMALL_MODEL` is registered. No manual config changes needed when switching models.
+
+### ⚠️ Explicit registration drops modality metadata (vision)
+
+A hand-declared model entry carries **no modality info** — the data models.dev would normally supply is gone. With no `modalities`, OpenCode treats the model as **text-only** and silently strips image `file` parts before the upstream call. On a vision model this means images never reach the API; the model falls back to a `Read` tool call on the inbox path and replies "I can't read images".
+
+Fix (2026-06-30): `buildOpenCodeConfig()` now declares an `image` input modality by default on every declared slug:
+
+```json
+"mistralai/mistral-small-3.2-24b-instruct": {
+  "options": { "provider": { /* OPENCODE_OPENROUTER_ROUTING */ } },
+  "modalities": { "input": ["text", "image"], "output": ["text"] }
+}
+```
+
+Override via `OPENCODE_MODEL_INPUT_MODALITIES` (comma-separated; set to `text` for a genuinely text-only model). Full write-up: [[Clients/Personal/AgentNotes/Reference/NanoClaw/Mistral Vision Images & System Prompt — OpenCode Provider Fixes]].
+
+### System prompt delivery (not `<system>` XML)
+
+The runtime addendum (agent name + destinations + message-wrapping rules) is sent via the `promptAsync` body's dedicated **`system` field** — a real system message — **not** folded into the user turn as `<system>…</system>` XML. The old XML approach worked on DeepSeek but Mistral echoed it back verbatim and ignored the rules. (Static project docs / `CLAUDE.local.md` still load via the native `instructions` file list.)
 
 ---
 
