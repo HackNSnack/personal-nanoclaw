@@ -162,13 +162,12 @@ function spawnOpencodeServer(
   });
 }
 
-function wrapPromptWithContext(text: string, systemInstructions?: string): string {
-  let out = text;
-  if (systemInstructions) {
-    out = `<system>\n${systemInstructions}\n</system>\n\n${out}`;
-  }
-  return out;
-}
+// NOTE: System instructions are NOT wrapped into the user turn here. OpenCode's
+// promptAsync body has a dedicated `system` field (forwarded to the provider as
+// a real system message). Earlier revisions embedded instructions as
+// `<system>...</system>` XML inside the user text; DeepSeek tolerated that, but
+// Mistral-family models echo the XML back verbatim instead of following it.
+// See the `system:` field on the promptAsync call below.
 
 /**
  * OpenCode model IDs must be fully-qualified as `provider_id/model_id`.
@@ -198,7 +197,11 @@ function modelSlug(provider: string, qualifiedModel: string | undefined): string
   return qualifiedModel;
 }
 
-function buildOpenCodeConfig(options: ProviderOptions): Record<string, unknown> {
+/**
+ * Build the OpenCode server config from env + provider options. Exported for
+ * unit testing (model declaration, vision modalities, OpenRouter routing).
+ */
+export function buildOpenCodeConfig(options: ProviderOptions): Record<string, unknown> {
   const provider = process.env.OPENCODE_PROVIDER || 'anthropic';
   const model = fullyQualifiedModel(provider, process.env.OPENCODE_MODEL);
   const smallModel = fullyQualifiedModel(provider, process.env.OPENCODE_SMALL_MODEL);
@@ -221,7 +224,22 @@ function buildOpenCodeConfig(options: ProviderOptions): Record<string, unknown> 
       log('Warning: OPENCODE_OPENROUTER_ROUTING is not valid JSON, ignoring');
     }
   }
-  const modelEntry = routingOpts ? { options: { provider: routingOpts } } : {};
+  // Declaring a model in provider.<id>.models to bypass the bundled-list check
+  // also DROPS the modality metadata models.dev would have supplied. With no
+  // modalities, OpenCode treats the model as text-only and silently strips
+  // image file parts before the upstream call — the model then never sees the
+  // image and (in the DeepSeek→Mistral switch) falls back to a Read tool call
+  // on the inbox path, returning "I can't read images". Declaring image input
+  // restores vision forwarding. Override via OPENCODE_MODEL_INPUT_MODALITIES
+  // (comma-separated, e.g. "text" for a text-only model).
+  const inputModalities = (process.env.OPENCODE_MODEL_INPUT_MODALITIES || 'text,image')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const modelEntry = {
+    ...(routingOpts ? { options: { provider: routingOpts } } : {}),
+    modalities: { input: inputModalities, output: ['text'] },
+  };
 
   const providerModels: Record<string, unknown> = {};
   const mainSlug = modelSlug(provider, model);
@@ -392,7 +410,7 @@ export class OpenCodeProvider implements AgentProvider {
     let aborted = false;
 
     const systemInstructions = input.systemContext?.instructions;
-    pending.push({ text: wrapPromptWithContext(input.prompt, systemInstructions), attachments: input.attachments });
+    pending.push({ text: input.prompt, attachments: input.attachments });
 
     const kick = (): void => {
       waiting?.();
@@ -477,9 +495,11 @@ export class OpenCodeProvider implements AgentProvider {
         // The files are already saved to the session inbox by the host;
         // we reference them via file:// URL so the OpenCode server (which
         // runs in the same container) can read and forward them to the model.
-        // Text-only models (modality=text->text) will have the parts stripped
-        // or rejected by the upstream API — switch OPENCODE_MODEL to a
-        // vision-capable model (e.g. google/gemini-2.0-flash-001) for images.
+        // For the parts to actually reach the model, the model must be declared
+        // with an `image` input modality (see buildOpenCodeConfig) — otherwise
+        // OpenCode treats it as text-only and strips these parts. Point
+        // OPENCODE_MODEL at a vision-capable model and keep image in
+        // OPENCODE_MODEL_INPUT_MODALITIES (the default).
         const fileParts: Array<{ type: 'file'; mime: string; filename?: string; url: string }> = [];
         if (turnAttachments && turnAttachments.length > 0) {
           for (const att of turnAttachments) {
@@ -530,7 +550,14 @@ export class OpenCodeProvider implements AgentProvider {
 
             const promptRes = await client.session.promptAsync({
               path: { id: sessionId },
-              body: { parts: [{ type: 'text', text }, ...fileParts] },
+              body: {
+                parts: [{ type: 'text', text }, ...fileParts],
+                // Deliver the NanoClaw runtime addendum (agent name + live
+                // destinations + message-wrapping rules) as a real system
+                // message. Do NOT fold it into the user turn — Mistral-family
+                // models echo `<system>` XML back verbatim instead of obeying it.
+                ...(systemInstructions ? { system: systemInstructions } : {}),
+              },
             });
             if (promptRes.error) {
               // Throw so the catch block decides whether to retry
@@ -682,7 +709,7 @@ export class OpenCodeProvider implements AgentProvider {
 
     return {
       push: (message: string, attachments?: AttachmentRef[]) => {
-        pending.push({ text: wrapPromptWithContext(message, systemInstructions), attachments });
+        pending.push({ text: message, attachments });
         kick();
       },
       end: () => {

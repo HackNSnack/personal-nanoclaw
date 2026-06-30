@@ -100,7 +100,7 @@ Wraps `@anthropic-ai/claude-agent-sdk`'s `query()`.
 ```typescript
 class ClaudeProvider implements AgentProvider {
   query(input: QueryInput): AgentQuery {
-    const stream = new MessageStream();  // AsyncIterable<SDKUserMessage>
+    const stream = new MessageStream(); // AsyncIterable<SDKUserMessage>
     stream.push(input.prompt);
 
     const sdkQuery = query({
@@ -112,7 +112,7 @@ class ClaudeProvider implements AgentProvider {
         systemPrompt: input.systemPrompt
           ? { type: 'preset', preset: 'claude_code', append: input.systemPrompt }
           : undefined,
-        mcpServers: input.mcpServers,  // already the right shape
+        mcpServers: input.mcpServers, // already the right shape
         additionalDirectories: input.additionalDirectories,
         env: input.env,
         allowedTools: NANOCLAW_TOOL_ALLOWLIST,
@@ -136,6 +136,7 @@ class ClaudeProvider implements AgentProvider {
 ```
 
 `translateClaudeEvents` is an async generator that maps SDK messages to `ProviderEvent`:
+
 - `message.type === 'system' && message.subtype === 'init'` → `{ type: 'init', sessionId }`
 - `message.type === 'result'` → `{ type: 'result', text }`
 - `message.type === 'system' && message.subtype === 'api_retry'` → `{ type: 'error', retryable: true }`
@@ -144,6 +145,7 @@ class ClaudeProvider implements AgentProvider {
 - Everything else → logged, not emitted
 
 **Claude-specific features preserved inside the provider:**
+
 - `MessageStream` for async iterable input (push-based)
 - `resumeSessionAt` for resume at specific message UUID
 - PreCompact hook for transcript archiving
@@ -173,7 +175,9 @@ class CodexProvider implements AgentProvider {
         pendingFollowUp = msg;
         abortController.abort();
       },
-      end: () => { /* no-op — Codex turns end naturally */ },
+      end: () => {
+        /* no-op — Codex turns end naturally */
+      },
       abort: () => abortController.abort(),
       events: this.run(thread, input.prompt, abortController, () => pendingFollowUp),
     };
@@ -231,6 +235,7 @@ class CodexProvider implements AgentProvider {
 ```
 
 **Codex-specific behavior inside the provider:**
+
 - `developer_instructions` for system prompt (loaded from CLAUDE.md)
 - `git init` in workspace (Codex requires a git repo)
 - Abort+restart pattern for follow-up messages
@@ -254,10 +259,15 @@ class OpenCodeProvider implements AgentProvider {
     return {
       push: (msg) => {
         pendingFollowUp = msg;
-        server.close();  // interrupt current query
+        server.close(); // interrupt current query
       },
-      end: () => { /* no-op */ },
-      abort: () => { aborted = true; server.close(); },
+      end: () => {
+        /* no-op */
+      },
+      abort: () => {
+        aborted = true;
+        server.close();
+      },
       events: this.run(client, server, stream, input, () => pendingFollowUp),
     };
   }
@@ -299,11 +309,13 @@ class OpenCodeProvider implements AgentProvider {
 ```
 
 **OpenCode-specific behavior inside the provider:**
+
 - Local gRPC/HTTP server lifecycle (`server.close()`)
 - SSE event stream for output
 - Provider/model selection via config (`OPENCODE_PROVIDER`, `OPENCODE_MODEL`)
 - MCP config format translation (`type: 'local'`, `command: [cmd, ...args]`, `environment`)
-- System prompt injected via `<system>` prefix in prompt text
+- System prompt sent via the `promptAsync` body's dedicated `system` field (a real system message), **not** prefixed into the user turn. Folding it in as `<system>` XML worked on DeepSeek but Mistral-family models echo the XML back verbatim instead of obeying it.
+- Vision: declared models carry an explicit `modalities.input` (default `text,image`, override via `OPENCODE_MODEL_INPUT_MODALITIES`). Without it, OpenCode treats a hand-declared model (one registered to bypass the bundled models.dev list) as text-only and strips image `file` parts before the upstream call.
 - No resume support (sessions are always new or reused by ID)
 
 ## Agent-Runner Core
@@ -345,6 +357,7 @@ Everything below is handled by the agent-runner, not the provider.
 **Idle behavior:** When no messages are pending and no query is active, the agent-runner sleeps briefly (1s) and re-polls. The container stays warm until the host kills it (idle timeout).
 
 **Idle detection exceptions:** The container should NOT be considered idle when:
+
 - An `ask_user_question` tool call is pending (waiting for user response in messages_in)
 - The agent is actively working (tool calls in progress, subagents running)
 
@@ -359,6 +372,7 @@ The agent-runner transforms messages_in rows into a prompt string. The provider 
 **Single message formatting by kind:**
 
 - **`chat`** — format into message XML:
+
   ```xml
   <message sender="John" time="2024-01-01 10:00">
     Check this PR
@@ -366,15 +380,18 @@ The agent-runner transforms messages_in rows into a prompt string. The provider 
   ```
 
 - **`chat-sdk`** — extract fields from serialized Chat SDK message:
+
   ```xml
   <message sender="John (john@slack)" time="2024-01-01 10:00">
     Check this PR
     [image: screenshot.png — https://signed-url...]
   </message>
   ```
+
   Attachments are listed inline. Images/PDFs that Claude handles natively are passed as content blocks (see Media Handling below).
 
 - **`task`** — task prompt, optionally with script output:
+
   ```
   [SCHEDULED TASK]
 
@@ -386,6 +403,7 @@ The agent-runner transforms messages_in rows into a prompt string. The provider 
   ```
 
 - **`webhook`** — webhook payload:
+
   ```
   [WEBHOOK: github/pull_request]
 
@@ -393,6 +411,7 @@ The agent-runner transforms messages_in rows into a prompt string. The provider 
   ```
 
 - **`system`** — host action result (response to an earlier system request):
+
   ```
   [SYSTEM RESPONSE]
 
@@ -424,7 +443,7 @@ interface RoutingContext {
   platformId: string | null;
   channelType: string | null;
   threadId: string | null;
-  inReplyTo: string | null;  // messages_in.id of the triggering message
+  inReplyTo: string | null; // messages_in.id of the triggering message
 }
 ```
 
@@ -485,6 +504,7 @@ Send a file to the current conversation.
 ```
 
 Implementation:
+
 1. Generate a message ID
 2. Create `outbox/{messageId}/` directory
 3. Copy the file into the outbox directory
@@ -523,6 +543,7 @@ Send an interactive question and wait for the user's response. This is a **block
 ```
 
 Implementation:
+
 1. Generate a `questionId`
 2. Write a `messages_out` row with `operation: 'ask_question'`, the question, options, and questionId
 3. Poll `messages_in` for a row with matching `questionId` in content
@@ -655,12 +676,12 @@ The agent-runner inspects attachments in chat/chat-sdk messages and handles them
 
 **Provider-native content blocks:**
 
-| Type | Claude | Codex / OpenCode |
-|------|--------|------------------|
-| Images (JPEG, PNG, GIF, WebP) | Native image content block | Save to disk |
-| PDFs | Native document content block | Save to disk |
-| Audio | Native audio content block | Save to disk |
-| Other files (code, data, video, archives) | Save to disk | Save to disk |
+| Type                                      | Claude                        | Codex / OpenCode |
+| ----------------------------------------- | ----------------------------- | ---------------- |
+| Images (JPEG, PNG, GIF, WebP)             | Native image content block    | Save to disk     |
+| PDFs                                      | Native document content block | Save to disk     |
+| Audio                                     | Native audio content block    | Save to disk     |
+| Other files (code, data, video, archives) | Save to disk                  | Save to disk     |
 
 **"Save to disk"** means: download to `/workspace/downloads/{messageId}/`, reference in the prompt text:
 
