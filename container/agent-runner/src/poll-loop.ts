@@ -1,6 +1,6 @@
 import { findByName, getAllDestinations, type DestinationEntry } from './destinations.js';
 import { getPendingMessages, markProcessing, markCompleted, type MessageInRow } from './db/messages-in.js';
-import { writeMessageOut } from './db/messages-out.js';
+import { writeMessageOut, getMaxOutboundSeq, hasMatchingOutboundSince } from './db/messages-out.js';
 import { getInboundDb, touchHeartbeat, clearStaleProcessingAcks } from './db/connection.js';
 import { clearContinuation, migrateLegacyContinuation, setContinuation } from './db/session-state.js';
 import { clearCurrentInReplyTo, setCurrentInReplyTo } from './current-batch.js';
@@ -9,6 +9,7 @@ import {
   extractRouting,
   categorizeMessage,
   isClearCommand,
+  isStopCommand,
   isRunnerCommand,
   stripInternalTags,
   type RoutingContext,
@@ -165,6 +166,19 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
           channel_type: routing.channelType,
           thread_id: routing.threadId,
           content: JSON.stringify({ text: 'Session cleared.' }),
+        });
+        commandIds.push(msg.id);
+        continue;
+      }
+      if ((msg.kind === 'chat' || msg.kind === 'chat-sdk') && isStopCommand(msg)) {
+        log('Stop command received — aborting active query if any');
+        writeMessageOut({
+          id: generateId(),
+          kind: 'chat',
+          platform_id: routing.platformId,
+          channel_type: routing.channelType,
+          thread_id: routing.threadId,
+          content: JSON.stringify({ text: 'Stopped.' }),
         });
         commandIds.push(msg.id);
         continue;
@@ -374,6 +388,12 @@ export async function processQuery(
   // the same prompt again. Unused (and unmaintained) when the provider
   // doesn't implement `onExchangeComplete`.
   const archivePrompts: string[] = [initialPrompt];
+  // Per-turn baseline for the OpenCode echo check (see hasMatchingOutboundSince).
+  // Captured fresh before each turn's tool calls can write to outbound.db, then
+  // advanced after each result event so the NEXT turn's window only covers rows
+  // written during that turn — not a wall-clock heuristic, immune to clock skew.
+  // Cheap to call even for non-opencode providers (single indexed MAX query).
+  let outboundSeqCheckpoint = getMaxOutboundSeq();
 
   // Concurrent polling: push follow-ups into the active query as they arrive.
   // We do NOT force-end the stream on silence — keeping the query open avoids
@@ -517,7 +537,32 @@ export async function processQuery(
         // at all — either way the turn is finished.
         markCompleted(initialBatchIds);
         if (event.text) {
-          const { sent, hasUnwrapped } = dispatchResultText(event.text, routing);
+          const { sent, hasUnwrapped: rawHasUnwrapped } = dispatchResultText(event.text, routing);
+          let hasUnwrapped = rawHasUnwrapped;
+          // OpenCode's tool-calling loop forces one more completion after every
+          // send_message call; weaker models often fill it with a near-verbatim
+          // repeat of what the tool just delivered. dispatchResultText() can't
+          // tell that apart from a genuinely undelivered answer — it only knows
+          // the text has no <message> block, which is true for ALL opencode output
+          // (it never uses that protocol). Check the two cross-process signals
+          // available for "was this already sent" before treating it as unwrapped:
+          // an explicit DONE sentinel, or a verbatim match against something the
+          // send_message tool already wrote to outbound.db this turn. Deliberately
+          // NOT a boolean "did send_message fire at all this turn" check — that
+          // would also suppress a genuinely new, never-delivered second message
+          // (e.g. a status ping followed by a distinct final answer left as bare
+          // text). See the reference note for the upstream PR that hit this exact
+          // false-positive with a boolean flag.
+          if (providerName === 'opencode' && hasUnwrapped) {
+            const isNoOp = isNoOpTrailingText(event.text);
+            const isEcho = isNoOp || hasMatchingOutboundSince(event.text, outboundSeqCheckpoint);
+            if (isEcho) {
+              log(
+                `OpenCode trailing text looks like a post-tool-call echo (${isNoOp ? 'no real content after stripping scratchpad/finish/DONE' : 'matches an already-sent message'}) — suppressing nudge`,
+              );
+              hasUnwrapped = false;
+            }
+          }
           if (sent === 0 && event.isError === true) {
             // Non-retryable error turn (e.g. a 403 billing_error) with no
             // <message> envelope: deliver the notice instead of dropping it as
@@ -543,12 +588,21 @@ export async function processQuery(
               unwrappedNudged = true;
               const destinations = getAllDestinations();
               const names = destinations.map((d) => d.name).join(', ');
-              query.push(
-                `<system>Your response was not delivered — it was not wrapped in <message to="name">...</message> blocks. ` +
-                  `All output must be wrapped: use <message to="name"> for content to send, or <internal> for scratchpad. ` +
-                  `Your destinations: ${names}. ` +
-                  `Please re-send your response with the correct wrapping.</system>`,
-              );
+              // Nudge text is provider-aware: OpenCode's sole delivery path is
+              // the send_message tool (see destinations.ts), so a nudge telling
+              // it to use <message> blocks would just contradict the system
+              // prompt again. Only non-opencode providers get the <message>
+              // wrapping nudge.
+              const nudgeText =
+                providerName === 'opencode'
+                  ? `<system>Nothing was delivered — you output text with no send_message call. ` +
+                    `Call send_message with your complete answer. Wrap any reasoning in ` +
+                    `<internal>...</internal>. Your destinations: ${names}.</system>`
+                  : `<system>Your response was not delivered — it was not wrapped in <message to="name">...</message> blocks. ` +
+                    `All output must be wrapped: use <message to="name"> for content to send, or <internal> for scratchpad. ` +
+                    `Your destinations: ${names}. ` +
+                    `Please re-send your response with the correct wrapping.</system>`;
+              query.push(nudgeText);
             }
             // The wrapping-retry result answers the SAME user prompt — keep it
             // queued so the retry archives against it, not the nudge text.
@@ -566,6 +620,10 @@ export async function processQuery(
         } else {
           archivePrompts.shift();
         }
+        // Advance the echo-check baseline past everything written during this
+        // turn (including the nudge retry, if one was just pushed) so the NEXT
+        // result event's window only covers rows written after this point.
+        outboundSeqCheckpoint = getMaxOutboundSeq();
       }
     }
   } catch (err) {
@@ -583,6 +641,29 @@ export async function processQuery(
   }
 
   return { continuation: queryContinuation };
+}
+
+/**
+ * True when `text`, after stripping scratchpad and known completion-only
+ * markers, has no real content left — i.e. the model is signaling "nothing
+ * further to add" rather than leaving an answer undelivered. Covers two
+ * cases: the taught `DONE` sentinel (see destinations.ts), and the model's
+ * own natural completion habit. Mistral (and likely other OpenRouter models)
+ * keeps reaching for a bare `<finish/>` tag — a leftover from an earlier
+ * version of this app's protocol, or a generic agentic-completion convention
+ * baked into the base model — even after being told the sole delivery path
+ * is send_message and to reply with DONE when finished. Rather than fight
+ * that indefinitely with more prompt wording, recognize it directly: if
+ * nothing but scratchpad, a `<finish/>`-style tag, or the DONE sentinel
+ * remains, there is no content being silently dropped, so it's always safe
+ * to treat as a no-op — unlike hasMatchingOutboundSince(), this needs no
+ * outbound.db lookup at all, since there's no content left to match.
+ */
+function isNoOpTrailingText(text: string): boolean {
+  const stripped = stripInternalTags(text)
+    .replace(/<\/?finish\s*\/?>/gi, '')
+    .trim();
+  return stripped.length === 0 || /^done\.?$/i.test(stripped);
 }
 
 function notifyExchangeComplete(

@@ -11,7 +11,7 @@ import { TIMEZONE, formatLocalTime } from './timezone.js';
  */
 export type CommandCategory = 'admin' | 'filtered' | 'passthrough' | 'none';
 
-const ADMIN_COMMANDS = new Set(['/remote-control', '/clear', '/compact', '/context', '/cost', '/files', '/upload-trace']);
+const ADMIN_COMMANDS = new Set(['/remote-control', '/clear', '/compact', '/context', '/cost', '/files', '/upload-trace', '/stop']);
 const FILTERED_COMMANDS = new Set(['/help', '/login', '/logout', '/doctor', '/config', '/start']);
 
 export interface CommandInfo {
@@ -64,6 +64,12 @@ export function isClearCommand(msg: MessageInRow): boolean {
   const content = parseContent(msg.content);
   const text = (content.text || '').trim();
   return text.toLowerCase().startsWith('/clear');
+}
+
+export function isStopCommand(msg: MessageInRow): boolean {
+  const content = parseContent(msg.content);
+  const text = (content.text || '').trim();
+  return text.toLowerCase().startsWith('/stop');
 }
 
 /**

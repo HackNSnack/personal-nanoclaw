@@ -91,9 +91,7 @@ export function getMessageIdBySeq(seq: number): string | null {
   const inbound = getInboundDb();
 
   // Inbound messages: ID is already the platform message ID
-  const inRow = inbound.prepare('SELECT id FROM messages_in WHERE seq = ?').get(seq) as
-    | { id: string }
-    | undefined;
+  const inRow = inbound.prepare('SELECT id FROM messages_in WHERE seq = ?').get(seq) as { id: string } | undefined;
   if (inRow) return inRow.id;
 
   // Outbound messages: look up platform message ID from delivered table
@@ -140,4 +138,58 @@ export function getUndeliveredMessages(): MessageOutRow[] {
        ORDER BY timestamp ASC`,
     )
     .all() as MessageOutRow[];
+}
+
+/**
+ * Current max seq in messages_out (container-owned rows only — outbound.db,
+ * not the combined inbound+outbound space writeMessageOut() reads for
+ * numbering). Used as a per-turn baseline: capture this before a turn
+ * starts, then pass it to hasMatchingOutboundSince() to scope the echo
+ * check to rows written *during* that turn only.
+ */
+export function getMaxOutboundSeq(): number {
+  return (getOutboundDb().prepare('SELECT COALESCE(MAX(seq), 0) AS m FROM messages_out').get() as { m: number }).m;
+}
+
+/** Whitespace-normalize for content comparison: trim + collapse runs of whitespace. */
+function normalizeForMatch(text: string): string {
+  return text.trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Detect the OpenCode forced-follow-up echo: after the send_message MCP
+ * tool writes a row to outbound.db (from its own OS process — see the
+ * cross-process note on writeMessageOut), OpenCode's tool-calling loop
+ * forces one more model completion, which weaker models often fill with a
+ * near-verbatim repeat of what the tool just sent. dispatchResultText()
+ * has no way to know that text is an echo of an already-delivered message
+ * rather than a genuinely new, undelivered one — outbound.db is the only
+ * cross-process signal available to tell the difference.
+ *
+ * Scoped by seq (not a wall-clock time window) so it's exactly turn-bound
+ * and immune to clock skew: only rows written after `sinceSeq` (the seq
+ * captured at the start of the turn) are considered. Comparison is
+ * deliberately verbatim (post whitespace-normalization), not fuzzy —
+ * see the PR #2531 lesson in the reference note: a boolean "was send_message
+ * called at all this turn" check would also suppress the nudge for a
+ * genuinely new, never-delivered second message (e.g. a status ping
+ * followed by a distinct final answer left as bare text). A content match
+ * only fires when the trailing text truly duplicates something already sent.
+ */
+export function hasMatchingOutboundSince(text: string, sinceSeq: number): boolean {
+  const target = normalizeForMatch(text);
+  if (!target) return false;
+  const rows = getOutboundDb()
+    .prepare('SELECT content FROM messages_out WHERE seq > ? ORDER BY seq DESC')
+    .all(sinceSeq) as { content: string }[];
+  for (const row of rows) {
+    let parsed: { text?: unknown };
+    try {
+      parsed = JSON.parse(row.content) as { text?: unknown };
+    } catch {
+      continue;
+    }
+    if (typeof parsed.text === 'string' && normalizeForMatch(parsed.text) === target) return true;
+  }
+  return false;
 }

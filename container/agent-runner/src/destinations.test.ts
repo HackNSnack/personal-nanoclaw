@@ -61,3 +61,42 @@ describe('buildSystemPromptAddendum — multi-destination routing guidance', () 
     expect(prompt).toContain('`casa`');
   });
 });
+
+describe('buildSystemPromptAddendum — opencode provider (tool-call delivery)', () => {
+  it('mandates send_message as the sole delivery path, with no <message> block or <finish/> tag', () => {
+    seedDestination('slack', 'Slack', 'slack', 'C-123');
+
+    const prompt = buildSystemPromptAddendum('Andy', 'opencode');
+
+    expect(prompt).toContain('MANDATORY');
+    expect(prompt).toContain('send_message');
+    expect(prompt).toContain('<internal>');
+    // The Claude-path instruction to WRAP content in <message> blocks must
+    // be absent — OpenCode's only mention of <message> is the "NEVER put
+    // your answer" warning, not an instruction to use it.
+    expect(prompt).not.toContain('Wrap each delivered message');
+    expect(prompt).not.toContain('<finish/>');
+    expect(prompt).toContain('`slack`');
+  });
+
+  it('places the delivery rule before the destination list', () => {
+    seedDestination('slack', 'Slack', 'slack', 'C-123');
+
+    const prompt = buildSystemPromptAddendum('Andy', 'opencode');
+
+    const ruleIdx = prompt.indexOf('MANDATORY');
+    const destIdx = prompt.indexOf('Your destination is');
+    expect(ruleIdx).toBeGreaterThan(-1);
+    expect(destIdx).toBeGreaterThan(-1);
+    expect(ruleIdx).toBeLessThan(destIdx);
+  });
+
+  it('tells the model about the forced follow-up completion and the DONE sentinel', () => {
+    seedDestination('slack', 'Slack', 'slack', 'C-123');
+
+    const prompt = buildSystemPromptAddendum('Andy', 'opencode');
+
+    expect(prompt).toContain('automatic');
+    expect(prompt).toContain('reply with exactly `DONE`');
+  });
+});

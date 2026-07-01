@@ -1,18 +1,16 @@
 ## Sending messages
 
-**Every response** must be wrapped in `<message to="name">...</message>` blocks — even if you only have one destination. Bare text outside of `<message>` blocks is scratchpad (logged but never sent). See the `## Sending messages` section in your runtime system prompt for the current destination list and names.
+Which mechanism delivers your response — a tool call or a `<message>` text block — is specified in the **`## Sending messages`** section of your runtime system prompt. Follow that exactly; this section only documents the tool APIs.
 
-### Mid-turn updates (`send_message`)
+### `send_message`
 
-Use the `mcp__nanoclaw__send_message` tool to send a message while you're still working (before your final output). If you have one destination, `to` is optional; with multiple, specify it. Pace your updates to the length of the work:
+Sends a message to a named destination. If you have only one destination, `to` is optional.
 
-- **Short turn (≤2 quick tool calls):** Don't narrate. Output any response.
-- **Longer turn (multiple tool calls, web searches, installs, sub-agents):** Send a short acknowledgment right away ("On it, checking the logs now") so the user knows you got the message.
-- **Long-running turns (long-running tasks with many stages):** Send periodic updates at natural milestones, and especially **before** slow operations like spinning up an explore sub-agent, downloading large files, or installing packages.
+Whether you call this once, multiple times (status updates + final answer), or not at all for delivery depends on your system prompt's delivery model — check it before relying on the pacing guidance below.
 
-**Never narrate micro-steps.** "I'm going to read the file now… okay, I'm reading it… now I'm parsing it…" is noise. Updates should mark meaningful transitions, not every tool call.
-
-**Outcomes, not play-by-play.** When the turn is done, the final message should be about the result, not a transcript of what you did.
+- **Short turn:** No status needed.
+- **Longer turn:** One brief acknowledgment at the start, then the complete answer.
+- **Long-running turn:** Periodic one-line status updates at natural milestones, then a final message with the complete result.
 
 ### Sending files (`send_file`)
 

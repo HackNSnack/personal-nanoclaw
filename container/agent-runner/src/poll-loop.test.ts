@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 
 import { initTestSessionDb, closeSessionDb, getInboundDb, getOutboundDb } from './db/connection.js';
 import { getPendingMessages, markCompleted } from './db/messages-in.js';
-import { getUndeliveredMessages } from './db/messages-out.js';
+import { getUndeliveredMessages, writeMessageOut } from './db/messages-out.js';
 import { formatMessages, extractRouting } from './formatter.js';
 import { isCorruptionError, processQuery } from './poll-loop.js';
 import { MockProvider } from './providers/mock.js';
@@ -220,7 +220,13 @@ describe('origin metadata (from= attribute)', () => {
       .run(name, name, channelType, platformId);
   }
 
-  function insertWithRouting(id: string, kind: string, content: object, channelType: string | null, platformId: string | null): void {
+  function insertWithRouting(
+    id: string,
+    kind: string,
+    content: object,
+    channelType: string | null,
+    platformId: string | null,
+  ): void {
     getInboundDb()
       .prepare(
         `INSERT INTO messages_in (id, kind, timestamp, status, platform_id, channel_type, content)
@@ -435,6 +441,150 @@ describe('error result with no <message> envelope', () => {
     expect(getUndeliveredMessages()).toHaveLength(0);
     expect(pushes).toHaveLength(1);
     expect(pushes[0]).toContain('was not delivered');
+  });
+
+  it('nudges with send_message-specific text for the opencode provider (not <message> wrapping)', async () => {
+    const { query, pushes } = makeResultQuery({ type: 'result', text: 'bare text, no tool call' });
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(0);
+    expect(pushes).toHaveLength(1);
+    expect(pushes[0]).toContain('send_message');
+    expect(pushes[0]).not.toContain('<message to="name">');
+  });
+});
+
+describe('opencode post-tool-call echo suppression', () => {
+  /**
+   * Simulates the send_message MCP tool (a separate OS process) writing
+   * directly to outbound.db mid-turn, then OpenCode's forced follow-up
+   * completion producing `echoText` as the turn's result. `writeMessageOut`
+   * is called from inside the generator, between the init and result
+   * yields, so it lands after processQuery's per-turn seq checkpoint —
+   * matching real timing (the tool write happens during the turn, after
+   * processQuery has already captured its baseline).
+   */
+  function makeToolThenEchoQuery(toolText: string, echoText: string): { query: AgentQuery; pushes: string[] } {
+    const pushes: string[] = [];
+    async function* events(): AsyncGenerator<ProviderEvent> {
+      yield { type: 'init', continuation: 'sess-1' };
+      writeMessageOut({ id: 'tool-1', kind: 'chat', content: JSON.stringify({ text: toolText }) });
+      yield { type: 'result', text: echoText };
+    }
+    return {
+      pushes,
+      query: { push: (m: string) => pushes.push(m), end: () => {}, events: events(), abort: () => {} },
+    };
+  }
+
+  it('suppresses the nudge when trailing text verbatim-matches what send_message already sent', async () => {
+    const { query, pushes } = makeToolThenEchoQuery(
+      'Hi Mathias! How can I assist you today?',
+      'Hi Mathias! How can I assist you today?',
+    );
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    // Only the tool's original write should exist — no nudge, no duplicate.
+    expect(getUndeliveredMessages()).toHaveLength(1);
+    expect(pushes).toHaveLength(0);
+  });
+
+  it('suppresses the nudge on whitespace-only differences (normalized match)', async () => {
+    const { query, pushes } = makeToolThenEchoQuery('Hi Mathias!  How can I help?', '  Hi Mathias! How can I help?\n');
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(1);
+    expect(pushes).toHaveLength(0);
+  });
+
+  it('still nudges when trailing text is a genuinely distinct, never-delivered message', async () => {
+    // Status ping via the tool, then a DIFFERENT final answer left as bare
+    // text instead of a second send_message call. Must still nudge — this is
+    // exactly the false-negative a boolean "any send_message this turn" check
+    // would produce (see the reference note / upstream PR #2531 lesson).
+    const { query, pushes } = makeToolThenEchoQuery('Looking it up', 'The answer is 42');
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(1); // only the status ping
+    expect(pushes).toHaveLength(1);
+    expect(pushes[0]).toContain('send_message');
+  });
+
+  it('suppresses the nudge on an explicit DONE sentinel, even with no prior tool write', async () => {
+    const { query, pushes } = makeResultQuery({ type: 'result', text: 'DONE' });
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(0);
+    expect(pushes).toHaveLength(0);
+  });
+
+  it('DONE sentinel is case/whitespace-insensitive', async () => {
+    const { query, pushes } = makeResultQuery({ type: 'result', text: '  done  ' });
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(0);
+    expect(pushes).toHaveLength(0);
+  });
+
+  it('does not apply echo suppression to non-opencode providers', async () => {
+    // Same verbatim-match scenario, but for 'claude' — echo suppression is
+    // opencode-only (Claude's <message>-block protocol has its own, separate
+    // dispatch path and should be untouched by this check).
+    const { query, pushes } = makeToolThenEchoQuery('same text', 'same text');
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'claude', undefined, 'prompt', undefined);
+
+    expect(pushes).toHaveLength(1);
+    expect(pushes[0]).toContain('was not delivered');
+  });
+
+  // Reproduces the live Mistral failure: even after being told to use DONE,
+  // the model keeps reaching for its own `<finish/>` habit instead — both as
+  // the very first (no tool call yet) response, and as the forced follow-up
+  // after a real send_message call. Neither should nudge or deliver a false
+  // "couldn't be delivered" notice, since there is no real content to lose.
+  it('suppresses the nudge on a bare <finish/> tag with no prior tool call', async () => {
+    const { query, pushes } = makeResultQuery({ type: 'result', text: '<internal>done</internal>\n<finish/>' });
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(0);
+    expect(pushes).toHaveLength(0);
+  });
+
+  it('suppresses the nudge on a bare <finish/> tag as the forced follow-up after a real send_message call', async () => {
+    const { query, pushes } = makeToolThenEchoQuery(
+      "I've successfully sent you three messages in a row. Is there anything else I can help you with?",
+      '<internal>done</internal>\n<finish/>',
+    );
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    // The real message from the tool call is delivered; no spurious
+    // "couldn't be delivered due to a formatting error" fallback.
+    expect(getUndeliveredMessages()).toHaveLength(1);
+    expect(pushes).toHaveLength(0);
+  });
+
+  it('does not treat a <finish/>-adjacent but substantive message as a no-op', async () => {
+    // Guard against over-matching: real content alongside a <finish/> tag
+    // must still be recognized as real content (and, since it doesn't match
+    // anything already sent, still nudges).
+    const { query, pushes } = makeResultQuery({
+      type: 'result',
+      text: 'The meeting is at 3pm tomorrow.<finish/>',
+    });
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(0);
+    expect(pushes).toHaveLength(1);
   });
 });
 

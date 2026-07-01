@@ -63,9 +63,9 @@ export function findByRouting(
   const db = getInboundDb();
   const row =
     channelType === 'agent'
-      ? (db
-          .prepare("SELECT * FROM destinations WHERE type = 'agent' AND agent_group_id = ?")
-          .get(platformId) as DestRow | undefined)
+      ? (db.prepare("SELECT * FROM destinations WHERE type = 'agent' AND agent_group_id = ?").get(platformId) as
+          | DestRow
+          | undefined)
       : (db
           .prepare("SELECT * FROM destinations WHERE type = 'channel' AND channel_type = ? AND platform_id = ?")
           .get(channelType, platformId) as DestRow | undefined);
@@ -78,20 +78,33 @@ export function findByRouting(
  * Identity is injected here (not in the shared CLAUDE.md) because it's
  * per-agent-group and changes when the operator renames an agent, while
  * the shared base is identical across all agents.
+ *
+ * `provider` controls which delivery model is described:
+ * - 'opencode' (DeepSeek, Mistral, etc.): use the `send_message` MCP tool
+ *   as the sole delivery path — call it as many times as needed (status
+ *   updates, then the final answer). Text output is scratchpad only.
+ * - everything else (Claude): use `<message to="name">` text blocks.
  */
-export function buildSystemPromptAddendum(assistantName?: string): string {
+export function buildSystemPromptAddendum(assistantName?: string, provider?: string): string {
   const sections: string[] = [];
 
   if (assistantName) {
-    sections.push(['# You are ' + assistantName, '', `Your name is **${assistantName}**. Use it when the channel asks who you are, when introducing yourself, and when signing any message that explicitly calls for a signature.`].join('\n'));
+    sections.push(
+      [
+        '# You are ' + assistantName,
+        '',
+        `Your name is **${assistantName}**. Use it when the channel asks who you are, when introducing yourself, and when signing any message that explicitly calls for a signature.`,
+      ].join('\n'),
+    );
   }
 
-  sections.push(buildDestinationsSection());
+  sections.push(buildDestinationsSection(provider));
 
   return sections.join('\n\n');
 }
 
-function buildDestinationsSection(): string {
+function buildDestinationsSection(provider?: string): string {
+  const useSendMessage = provider === 'opencode';
   const all = getAllDestinations();
 
   if (all.length === 0) {
@@ -102,7 +115,54 @@ function buildDestinationsSection(): string {
     ].join('\n');
   }
 
+  // The delivery rule comes first — models weight earlier system-prompt
+  // content more heavily, and this rule must never lose out to whatever
+  // follows it (the destination list here, or later fragment content).
   const lines = ['## Sending messages', ''];
+
+  if (useSendMessage) {
+    // OpenCode / tool-calling delivery model: the model delivers via the
+    // send_message MCP tool; text output is scratchpad only. This is the
+    // model's SOLE delivery path — there is no <message> text-block
+    // fallback for OpenCode providers.
+    lines.push(
+      '⚠️ MANDATORY: Deliver every message — status updates and your final answer — via the `send_message` tool. ' +
+        'Call it as many times as you need:',
+    );
+    lines.push('- Early: brief status ("On it", "Searching now")');
+    lines.push('- When done: your complete answer');
+    lines.push('');
+    lines.push('Wrap any reasoning in `<internal>…</internal>` — it is never sent.');
+    lines.push('');
+    lines.push(
+      'NEVER put your answer in `<message to="name">` text blocks — that path doesn\'t exist for you. ' +
+        'If you output plain text with no tool call, nothing is delivered.',
+    );
+    lines.push('');
+    lines.push(
+      'After your last `send_message` call, you will be asked to respond one more time — this is automatic ' +
+        'and outside your control. If you have nothing further to add, reply with exactly `DONE` and nothing else.',
+    );
+  } else {
+    // Claude / text-block delivery model:
+    lines.push(
+      'Wrap each delivered message in a `<message to="name">…</message>` block written in your text output; include several blocks to address several destinations. `<internal>…</internal>` marks thinking you don\'t want sent.',
+    );
+    lines.push('');
+    lines.push(
+      'IMPORTANT: `<message to="name">…</message>` is TEXT OUTPUT — you write it directly in your response, NOT as a tool call. There is no "message" tool. Do not attempt to call a tool named "message".',
+    );
+    lines.push('');
+    lines.push(
+      'When replying to an incoming message, default to addressing the destination it came `from` (every inbound `<message>` tag carries a `from="name"` attribute). Pick a different destination when the request asks for it (e.g., "tell Laura that…").',
+    );
+    lines.push('');
+    lines.push(
+      'The `send_message` MCP tool is for brief status updates ONLY ("On it", "Searching now") — NOT for delivering your answer. Your actual answer goes in the closing `<message>` text block. Both paths deliver to the user as separate messages, so putting your answer in BOTH causes duplicates.',
+    );
+  }
+
+  lines.push('');
   if (all.length === 1) {
     const d = all[0];
     const label = d.displayName && d.displayName !== d.name ? ` (${d.displayName})` : '';
@@ -114,17 +174,5 @@ function buildDestinationsSection(): string {
       lines.push(`- \`${d.name}\`${label}`);
     }
   }
-  lines.push('');
-  lines.push(
-    'Wrap each delivered message in a `<message to="name">…</message>` block; include several blocks in one response to address several destinations. `<internal>…</internal>` marks thinking you don\'t want sent.',
-  );
-  lines.push('');
-  lines.push(
-    'When replying to an incoming message, default to addressing the destination it came `from` (every inbound `<message>` tag carries a `from="name"` attribute). Pick a different destination when the request asks for it (e.g., "tell Laura that…").',
-  );
-  lines.push('');
-  lines.push(
-    'The `send_message` MCP tool is the same delivery, available mid-turn — handy for a quick acknowledgment ("on it") before a slow tool call. Each `send_message` call and each final-response `<message>` block lands as its own message in the conversation, so they read as a sequence rather than as one combined reply.',
-  );
   return lines.join('\n');
 }
