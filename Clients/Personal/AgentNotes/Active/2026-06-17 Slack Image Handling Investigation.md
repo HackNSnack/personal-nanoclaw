@@ -7,6 +7,10 @@ date: 2026-06-17
 
 # 2026-06-17 Slack Image Handling Investigation
 
+> [!warning] SUPERSEDED 2026-06-30. The conclusion below ("images are not supported — known
+> limitation") is no longer true. Image handling was built and fixed; a Slack image is now read
+> by the model. See [[Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Image Handling — Pipeline, OpenRouter Vision & Debugging]]. Kept for history.
+
 **Request:** Mathias sent image.png via Slack and asked "can you read this image?"
 
 **Result:** Confirmed a known NanoClaw Slack limitation — file attachments are not processed by the agent. The image data never reaches the agent's environment.

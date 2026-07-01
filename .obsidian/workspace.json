@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily Tracker/2026/06-June/2026-06-30-Tuesday.md",
+                "file": "Daily Tracker/2026/07-July/2026-07-01-Wednesday.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-06-30-Tuesday"
+              "title": "2026-07-01-Wednesday"
             }
           }
         ]
@@ -195,9 +195,11 @@
   },
   "active": "e957b2dc8c2c09f6",
   "lastOpenFiles": [
+    "Daily Tracker/2026/06-June/2026-06-30-Tuesday.md",
+    "Daily Tracker/2026/07-July/2026-07-01-Wednesday.md",
+    "Daily Tracker/2026/07-July",
     "Clients/Personal/AgentNotes/Reference/NanoClaw/Mistral Vision Images & System Prompt — OpenCode Provider Fixes.md",
     "Daily Tracker/2026/06-June/2026-06-29-Monday.md",
-    "Daily Tracker/2026/06-June/2026-06-30-Tuesday.md",
     "Clients/Personal/AgentNotes/Reference/NanoClaw/Env Var Loading Architecture — secrets.env vs .env.md",
     "Clients/Personal/AgentNotes/Reference/PiDev/2026-06-30 Dual-Model Vision Routing.md",
     "Daily Tracker/2026/06-June/2026-06-25-Thursday.md",
@@ -220,7 +222,6 @@
     "Clients/Personal/AgentNotes/Active/2026-06-19 NanoClaw Full System Audit & Fixes.md",
     "Clients/Personal/AgentNotes/Reference/NixOS/Debugging nixpkgs Evaluation Warnings & Insecure Packages.md",
     "Clients/Personal/AgentNotes/Reference/SAS Travels/Trumf-EuroBonus-Shop-Analysis.md",
-    "Clients/Personal/AgentNotes/Reference/SAS Travels/Trumf-EuroBonus-Shop-Analysis-with-Amex-Premium.md",
     "Clients/Personal/AgentNotes/Reference/3D Printing",
     "Clients/Personal/AgentNotes/Reference/NixOS",
     "Clients/Personal/AgentNotes/Reference/Nanoclaw",
@@ -231,7 +232,6 @@
     "Clients/Personal/AgentNotes/Reference/Slackbot",
     "Clients/Personal/AgentNotes/Reference/Tailscale",
     "Daily Tracker/2026/06-June",
-    "Untitled.base",
     "Legacy/Old AgentNotes Structure/Ardoq/Hackathon/Agent Setup.canvas",
     "Clients/Ardoq/Hackathon/Agent Setup.canvas",
     "Images/Pasted image 20251113154817.png",

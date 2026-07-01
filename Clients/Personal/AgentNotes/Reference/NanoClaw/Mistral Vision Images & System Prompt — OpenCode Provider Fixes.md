@@ -6,6 +6,14 @@ status: active
 
 # Mistral Vision Images & System Prompt — OpenCode Provider Fixes
 
+> [!update] 2026-06-30 PM — the two fixes below were necessary but NOT sufficient.
+> Two more layers were found and fixed afterwards: (3) the image part was attached as a
+> `file://` URL, which OpenCode treats as a *resource_link* and never inlines → switched to a
+> **base64 `data:` URL**; and (4) DeepInfra fp8 *accepted* the image but didn't apply vision →
+> **pinned the Mistral first-party endpoint**. The claim below that "the pipeline itself was fine
+> end-to-end" is therefore WRONG for the final build. Full current picture & debugging playbook:
+> [[Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Image Handling — Pipeline, OpenRouter Vision & Debugging]].
+
 **Symptom:** After switching `OPENCODE_MODEL` from DeepSeek to a vision-capable Mistral model (`openrouter/mistralai/mistral-small-3.2-24b-instruct`), two things broke at once:
 
 1. Asking the bot to read an image → it calls the `Read` tool on the inbox path, gets raw bytes back, and replies *"I'm sorry, but I can't read or interpret images."*
@@ -44,7 +52,7 @@ Slack image
   → OpenRouter → model
 ```
 
-The pipeline itself was fine end-to-end. The break was at the **opencode serve → model** step: OpenCode decided the model couldn't take images and silently dropped the `file` parts. The text prompt still carried the hint `[image: image.png — saved to /workspace/inbox/…]`, so Mistral did the only thing left — called `Read` on that path, got binary, and gave up.
+**[CORRECTED 2026-06-30 PM]** The pipeline was NOT fine end-to-end — `chat-sdk-bridge → session-manager → poll-loop` were fine, but the **opencode.ts file-part step itself was broken twice over**: it attached the image as a `file://` URL (treated as a resource_link, never inlined) AND, once that was fixed, the routed DeepInfra endpoint dropped the image. With only the modalities fix, OpenCode/the provider stripped or under-delivered the `file` parts, so the model fell back to a Read tool call. The text prompt still carried the hint `[image: image.png — saved to /workspace/inbox/…]`, so Mistral did the only thing left — called `Read` on that path, got binary, and gave up.
 
 ---
 
@@ -142,6 +150,12 @@ docker run --rm -v "$(pwd)/container/agent-runner:/app/agent-runner:ro" \
 ---
 
 ## ⚠️ Caveat — OpenRouter provider routing pin
+
+> [!done] RESOLVED 2026-06-30 PM. This caveat was the real final blocker. The DeepSeek-era pin
+> routed to DeepInfra fp8, which accepts images but doesn't apply vision. Now pinned to
+> `{"only":["mistral"],"data_collection":"deny"}` (first-party, vision-working). Finding the
+> cheapest vision-working provider is tracked in
+> [[Clients/Personal/AgentNotes/Active/2026-06-30 NanoClaw Vision Provider Test Script (TODO)]].
 
 `OPENCODE_OPENROUTER_ROUTING` in `~/.config/nanoclaw/secrets.env` still carries the DeepSeek-era pin:
 ```json

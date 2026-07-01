@@ -4,6 +4,7 @@ Map of Content for Personal development notes.
 
 ## Active Work
 
+- [[Clients/Personal/AgentNotes/Active/2026-06-30 NanoClaw Vision Provider Test Script (TODO)]] — Build a script to test every OpenRouter provider endpoint for working vision and pick the cheapest (status: **todo**)
 - [[Clients/Personal/AgentNotes/Active/2026-06-19 NanoClaw Full System Audit & Fixes]] — Full pi-driven audit: SSE race root-cause fix (400ms drain window), memory sync, Slack formatting skill added, architecture map, all findings documented (status: **done** ✅)
 - [[Clients/Personal/AgentNotes/Active/2026-06-11 NanoClaw OpenCode Provider Setup]] — Full OpenCode+OpenRouter debug session: model ID format, bundled registry bypass, OneCLI bearer sentinel, wirings→destinations bug fix (status: **done** ✅)
 - [[Clients/Personal/AgentNotes/Active/2026-05-29 Pi OpenRouter Config & Model Skill]] — Tasks 1.1 (pi config) + 1.2 (model skill)
@@ -26,7 +27,8 @@ Map of Content for Personal development notes.
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenCode ProviderModelNotFoundError — Stale Session Loop]] — `Error: Model not found` runbook
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/DeepSeek Missing Closing Tag — Silent Response Drop]] — Agent responses silently dropped when DeepSeek omits closing message tag; SSE race root cause; Fix 1 (unclosed tag fallback) + Fix 2 (error notice) applied 2026-06-18; **SSE race root-cause fix** (400ms drain window) applied 2026-06-19
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/OpenRouter 504 Upstream Idle Timeout — Retry Logic]] — Full investigation: wrong hypothesis (accumulated context) → correct root cause (OpenRouter SSE mid-stream stall), session lifecycle discovery, retry loop implementation, 28 tests, timeout docs research (no client-side control)
-- [[Clients/Personal/AgentNotes/Reference/NanoClaw/Mistral Vision Images & System Prompt — OpenCode Provider Fixes]] — DeepSeek→Mistral switch broke image reading (modality metadata dropped by explicit `models:` registration → image parts stripped) and leaked the system prompt (`<system>` XML in user turn echoed by Mistral); both fixed in `opencode.ts` — `modalities` declaration + `promptAsync` `body.system`; 9 new tests
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/Slack Image Handling — Pipeline, OpenRouter Vision & Debugging]] — **★ Source of truth.** Full image-input pipeline, all 4 layered bugs (modalities, system field, file://→data: URL, provider vision), current config, debugging playbook, OpenRouter MCP reference, per-provider vision testing
+- [[Clients/Personal/AgentNotes/Reference/NanoClaw/Mistral Vision Images & System Prompt — OpenCode Provider Fixes]] — Bugs 1 & 2 only (modalities + `body.system`). **Partially superseded** — see the pipeline doc above for the file://→data: URL fix and the DeepInfra vision/provider-routing root cause
 - [[Clients/Personal/AgentNotes/Reference/NanoClaw/Env Var Loading Architecture — secrets.env vs .env]] — Two-file env system: `EnvironmentFile` (secrets.env → process.env → container OPENCODE_* passthrough) vs `readEnvFile()` (.env → specific keys only, never process.env). Full variable-by-variable map with exact file:line locations.
 
 ### Slackbot (superseded — old Python/Ollama bot)
