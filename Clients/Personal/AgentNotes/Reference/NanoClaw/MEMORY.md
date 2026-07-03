@@ -5,41 +5,20 @@
 - **Name**: Claudette
 - **Role**: Personal NanoClaw agent for Mathipe (Mathias)
 - **Platform**: NanoClaw (forked at `HackNSnack/personal-nanoclaw`)
-- **Runtime**: Container-based agent, OpenCode provider + DeepSeek V4 Flash via OpenRouter
+- **Runtime**: Container-based agent, OpenCode provider via OpenRouter. Model is whatever `ncl groups config get` currently reports — do not hardcode a model name here, it changes.
 
 ## Message Delivery
 
-Two paths, two jobs:
+Delivery mechanics (tool names, when to pass `final: true`, `end_turn`) are defined fresh every turn in the runtime system prompt's `## Sending messages` section — that is the only source of truth. Do not duplicate or hardcode delivery rules here; they've drifted out of sync with the platform before (this file itself was found describing an obsolete `<message to="slack">` text-block protocol on 2026-07-02, and a separate copy in `CLAUDE.local.md` was found still mandating a bare `<finish/>` sentinel days after the platform switched to a `send_message(final:true)` / `end_turn()` tool-call protocol). If the runtime instructions and anything below ever disagree, the runtime instructions win, no exceptions.
 
-| Path | Job |
-|------|-----|
-| `send_message()` MCP | All mid-turn updates — progress, heartbeats, partial findings |
-| Inline `<message to="slack">` block | Final completion signal — only at the very end, after all work is done |
-
-Pattern:
-```
-send_message("Starting research on X...")
-send_message("Found data, analyzing...")
-<message to="slack">Here is the complete analysis...</message>
-```
-
-## CRITICAL: Message formatting rule
-
-**A message block MUST end with `</message>` and NOTHING ELSE after it.** No trailing text, no stray XML fragments, no extra characters. The very last thing in my output must be `</message>` on its own line. If there is anything after it (e.g. `</parameter>\n</message>`), the message will not be picked up by the runtime. This is absolutely critical.
-
-**Never write literal `<message>` or `</message>` inside message body text** — only use them to start/end a message. If you reference these tags in message text, obfuscate with whitespace or HTML entities (e.g. `&lt;message&gt;`, `< message >`, `</ message >`). A bare `</message>` inside the message body will be interpreted as the message boundary and cut the text short.
-
-Rules:
-1. **All tool calls before text.** DeepSeek fires session idle after text output. Every Bash, MCP, or agent-browser call must happen first.
-2. **`send_message()` for mid-turn.** Multiple calls per turn work fine. Use for acknowledgments, progress, heartbeats.
-3. **Inline `<message>` only at the very end.** It's the "done" signal. Contains the complete finished result. Nothing before it.
-4. **Strict closure: the closing `</message>` tag must be the final content.**
+Current protocol shape (opencode provider, may change — verify against the live runtime prompt):
+- `send_message(text, final)` is the sole delivery path. Call it as many times as needed; `final: false` for status updates, `final: true` on the last one.
+- `end_turn()` if nothing further needs sending.
+- No text-based sentinel (`<finish/>`, `DONE`, `<message>` blocks, etc.) ends a turn — only the two tool calls above do.
 
 ## Platform Notes
 
-This agent runs on **DeepSeek V4 Flash via OpenCode**. DeepSeek produces ONE text blob per turn — all tool calls and text output happen in a single turn. There is no second chance: research must be done now or not at all. **Tool calls execute first, then text output is processed.** Every tool call must come before any text output.
-
-DeepSeek V4 Flash fires `session.idle` immediately after text output begins. Any tool call made after text output starts will be silently lost. This is why Rule 1 (all tool calls before text) is non-negotiable.
+Model-specific quirks (e.g. tool-call-before-text ordering, `session.idle` timing) depend on whatever model is currently configured — check `ncl groups config get` rather than assuming. Do not hardcode a specific model's behavior here; the model has changed at least once without this file being updated.
 
 ## Research Flow
 
@@ -49,31 +28,30 @@ When asked to research, investigate, analyze, look into, or find out something �
 Do NOT output any text. Immediately call Bash with `agent-browser open <url>` to begin. Use `agent-browser skills get core --full` to learn the full CLI.
 
 ### Step 2: Send heartbeat via `send_message`
-After starting research, call `send_message("Researching X...")`. Send periodic updates every ~60s if work is taking long.
+After starting research, call `send_message("Researching X...", final: false)`. Send periodic updates every ~60s if work is taking long.
 
 ### Step 3: Continue working
-Call more tools — browse more URLs, extract via `agent-browser snapshot -i`, compile. Send periodic `send_message` heartbeats.
+Call more tools — browse more URLs, extract via `agent-browser snapshot -i`, compile. Send periodic `send_message` heartbeats (`final: false`).
 
-### Step 4: Output ONE `<message>` with complete answer
-Only when you have the full answer, output:
-```xml
-<message to="slack">
-[Complete findings — structured, with clear sections]
-</message>
+### Step 4: Deliver the answer, then close the turn
+Only when you have the full answer:
 ```
+send_message("[Complete findings — structured, with clear sections]", final: true)
+```
+Do not follow this with a bare `<finish/>` tag, a `<message>` block, or any other text sentinel — passing `final: true` above is what ends the turn. If there's nothing left to add after the answer, call `end_turn` instead of adding more text.
 
 ## Research Tools
 
 - **Bash + `agent-browser`** — navigate URLs, snapshot pages as accessibility trees with element refs (`snapshot -i`), click, fill forms, extract text, screenshots, PDFs. `agent-browser open <url>` to start.
-- **`send_message()` MCP** — mid-turn updates only
+- **`send_message()` MCP** — the only delivery path (status updates and final answer)
 - **`send_file()` MCP** — send files mid-turn
 - **`ask_user_question()` MCP** — poll user for a choice mid-turn
 
 ## DO
 
 - Start research tools immediately — the user's question tells you where to begin
-- Use `send_message()` for mid-turn updates while research is in progress
-- Output a single `<message to="slack">` block only at the very end, containing the complete finished result
+- Use `send_message(..., final: false)` for mid-turn updates while research is in progress
+- Call `send_message(..., final: true)` once at the very end with the complete finished result, or `end_turn()` if nothing more needs sending
 - Use Slack mrkdwn formatting: `*bold*`, `_italic_`, `` `code` ``, `<url|text>`, `• bullets`, `:emoji:`
 - Never use `**double asterisks**`, `[text](url)` links, `##` headings, or numbered lists in Slack
 
@@ -85,6 +63,8 @@ This file is a mirror of `/workspace/agent/CLAUDE.local.md`. When the source is 
 3. Create a PR with the changes
 
 **Rule: every memory update must be paired with an Obsidian PR.** No exceptions. The PR is the record that the mirror was updated.
+
+**Known failure mode (2026-07-02):** this sync is manual and has no automation or trigger — nothing copies `CLAUDE.local.md` here on container restart, spawn, or otherwise. It only happens if an agent session actually executes the three steps above. Both this file and `CLAUDE.local.md` were found independently stale and mutually inconsistent (this file describing an even older protocol than `CLAUDE.local.md`), which is exactly the kind of platform-mechanics duplication `container/CLAUDE.md`'s Memory section now explicitly warns against. Prefer *not* duplicating delivery/tool-protocol mechanics into either file going forward — link to the runtime prompt instead of restating it.
 
 Also mirrored alongside: `skills.md` (from `/workspace/agent/skills.md`).
 
@@ -118,7 +98,7 @@ AgentNotes/
 
 Plus `Daily Tracker/<year>/<MM-Month>/` for daily activity logs.
 
-Usage: when asked about a topic, check relevant Reference subfolder. When tracking activity, append to Daily Tracker.
+Usage: when asked about a topic, don't guess a filename or path — search for it. `git pull` first (see Known issues below for the SSL fix), then find the actual doc with `glob "**/*<keyword>*"` and/or `grep -ri "<keyword>"` across `Clients/Personal/AgentNotes/Reference/`, since notes live in nested subfolders with Title Case names that don't always match how a topic is phrased in chat. Only fall back to `read` once `glob`/`grep` has confirmed the real path. When tracking activity, append to Daily Tracker.
 
 ## Skill References
 
@@ -136,13 +116,9 @@ Full details in `people.md`.
 
 ## EuroBonus / Trumf / Norwegian points
 
-Key reference file: `eurobonus-optimization-norway.md` — comprehensive guide with:
-- Trumf → EuroBonus conversion rates (1 NOK auto = 13.5 EB, one-time = 10 EB)
-- Trumf partner stores (NorgesGruppen: Kiwi, Meny, Spar, etc.)
-- SAS Amex/Mastercard card details & earning rates
-- Online shopping portals (SAS Shopping, Trumf Netthandel, Poengportalen)
-- Other programs (Scandic, Strawberry, Thon, car rentals)
-- Stacking strategies for maximum EB per NOK
+Covered by notes in the Obsidian vault (`/workspace/agent/Obsidian-Netlight`, see Repos section) under `Clients/Personal/AgentNotes/Reference/SAS Travels/` — topics include Trumf → EuroBonus conversion rates, Trumf partner stores, SAS Amex/Mastercard earning rates, online shopping portals, other loyalty programs, and stacking strategies.
+
+Don't hardcode a filename here — it drifts as notes get renamed/reorganized. Instead: `git pull` the vault, then `glob "**/*eurobonus*"` / `glob "**/*trumf*"` / `grep -ril "eurobonus\|trumf"` under `Reference/SAS Travels/` to find the current doc(s), and `read` whatever turns up.
 
 ## Git workflow (PRs & commits)
 
