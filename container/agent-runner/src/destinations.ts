@@ -125,12 +125,62 @@ function buildDestinationsSection(provider?: string): string {
     // send_message MCP tool; text output is scratchpad only. This is the
     // model's SOLE delivery path — there is no <message> text-block
     // fallback for OpenCode providers.
+    //
+    // End-of-turn rules come FIRST, before the general delivery mechanics.
+    // This is the part models most reliably substitute with their own
+    // invented sentinel — observed live: a model kept emitting a bare
+    // `<finish/>` tag instead of ever calling a tool, turn after turn,
+    // despite the rule being stated (just further down, after the general
+    // mandate). Leading with it, and explaining what `final` actually means
+    // rather than just when to set it, is the fix — see the turn-vs-task
+    // distinction below, which is exactly what a model can get wrong even
+    // when it DOES try to use `final` correctly.
+    lines.push(
+      '⚠️ Every request MUST end with exactly one of these two actions — there is no other way to ' +
+        "signal you're done, and the request will not close without it:",
+    );
+    lines.push('- Call `send_message` with `final: true` on your last message, OR');
+    lines.push(
+      '- Call `end_turn` (no arguments) if you have nothing further to send — e.g. no reply is needed at all, ' +
+        'or you already said everything via `send_message`.',
+    );
+    lines.push('');
+    lines.push(
+      '`final: true` does NOT mean "the user\'s request is now fully and permanently resolved" — it means ' +
+        '"I am about to go quiet and wait for the user; I will not send or call anything else in this turn." ' +
+        'Judge it turn-by-turn, not task-by-task:',
+    );
+    lines.push(
+      '- User says "hi", you reply "Hello!" → `final: true`. Trivially short, but nothing more is coming from ' +
+        'you until they reply — that alone makes it final.',
+    );
+    lines.push(
+      '- You called `schedule_task` to check in again later and told the user so → `final: true`. The task ' +
+        'keeps firing on its own schedule, but YOUR turn — what you are doing right now — is over; the next ' +
+        'update comes from a future turn, not this one.',
+    );
+    lines.push(
+      '- You are about to call another tool or send another update within the next few seconds of this same ' +
+        'turn → `final: false`. You have not gone quiet yet.',
+    );
+    lines.push('');
+    lines.push(
+      'If you genuinely cannot complete the request (missing tool, missing access, etc.), that IS your complete ' +
+        "answer — call `send_message` with `final: true` and state plainly what you can't do and why. A promise " +
+        'to do something later is not the same as doing it, and is not a valid way to end the request.',
+    );
+    lines.push('');
+    lines.push(
+      'Do not invent your own closing signal in text output — a bare `<finish/>` tag, `DONE`, `[END]`, or ' +
+        'anything similar does nothing. The only two ways to close a request are the two tool calls above.',
+    );
+    lines.push('');
     lines.push(
       '⚠️ MANDATORY: Deliver every message — status updates and your final answer — via the `send_message` tool. ' +
         'Call it as many times as you need:',
     );
-    lines.push('- Early: brief status ("On it", "Searching now")');
-    lines.push('- When done: your complete answer');
+    lines.push('- Mid-turn, more coming: brief status ("On it", "Searching now") — pass `final: false`');
+    lines.push('- Going quiet now: your complete answer — pass `final: true`');
     lines.push('');
     lines.push('Wrap any reasoning in `<internal>…</internal>` — it is never sent.');
     lines.push('');
@@ -140,8 +190,19 @@ function buildDestinationsSection(provider?: string): string {
     );
     lines.push('');
     lines.push(
-      'After your last `send_message` call, you will be asked to respond one more time — this is automatic ' +
-        'and outside your control. If you have nothing further to add, reply with exactly `DONE` and nothing else.',
+      '⚠️ Plain text output is not a draft, a preview, or a fallback delivery path — it is discarded outright ' +
+        "and silently, no matter how long, complete, or well-written it is. The user's client renders nothing " +
+        'except the exact string you pass as `text` in a `send_message` call. There is no mechanism that also ' +
+        'sends your response text on the side — if it is not inside a `send_message` (or `send_file`) call, it ' +
+        'does not exist to the user, full stop.',
+    );
+    lines.push('');
+    lines.push(
+      "If you already composed a complete answer as plain text and are told your turn didn't close, the fix is " +
+        'to call `send_message` with that SAME complete answer as `text` — not a shorter stand-in reply written ' +
+        'just to satisfy the tool-call requirement. The `text` argument IS the message; nothing you wrote before ' +
+        'or after the tool call is appended to it. Shrinking your answer to "get past" the rule delivers a worse ' +
+        'response than the one you already had, for no reason — send the real one.',
     );
   } else {
     // Claude / text-block delivery model:

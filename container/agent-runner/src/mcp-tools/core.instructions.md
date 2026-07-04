@@ -2,6 +2,30 @@
 
 Which mechanism delivers your response — a tool call or a `<message>` text block — is specified in the **`## Sending messages`** section of your runtime system prompt. Follow that exactly; this section only documents the tool APIs.
 
+### Ending a turn (read this first)
+
+There is no text-based way to end a turn — no sentinel word or tag (`<finish/>`, `DONE`, etc.)
+closes anything. Turn completion is a structural signal only: `send_message(..., final: true)`
+or `end_turn()`. If your delivery model uses the `send_message` tool at all, one of those two
+calls is mandatory before your response is considered complete.
+
+`final: true` is about THIS TURN, not the whole request: it means "I'm about to go quiet and
+wait for the user," not "the user's request is now fully and permanently resolved." A one-line
+reply to "hi" is `final: true`. Reporting that you scheduled a recurring task is `final: true`
+even though the task itself keeps firing later — your turn producing that message is over.
+Only set `final: false` when you are about to call another tool or send another message within
+this same turn, immediately, before waiting for the user again.
+
+**Plain text output is never seen by the user, under any circumstances.** If your delivery model
+uses `send_message` at all, the ONLY thing that reaches the user is the literal string you pass
+as `text` in that tool call. Text you write outside a tool call — no matter how long, complete,
+or final it looks to you — is discarded silently before the user ever sees it; it is not queued,
+not appended, not shown "anyway." If you catch yourself having written a full answer as plain
+text, that answer does not exist yet. Call `send_message` with that same full answer as `text`.
+Do not respond to a "you didn't close the turn" nudge by sending a shorter placeholder just to
+satisfy the tool-call requirement — that discards the real answer and delivers a worse one for
+no reason. The fix is always to send the complete thing, via the tool, verbatim.
+
 ### `send_message`
 
 Sends a message to a named destination. If you have only one destination, `to` is optional.

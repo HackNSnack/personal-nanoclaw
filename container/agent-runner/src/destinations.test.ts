@@ -63,7 +63,7 @@ describe('buildSystemPromptAddendum — multi-destination routing guidance', () 
 });
 
 describe('buildSystemPromptAddendum — opencode provider (tool-call delivery)', () => {
-  it('mandates send_message as the sole delivery path, with no <message> block or <finish/> tag', () => {
+  it('mandates send_message as the sole delivery path, with no <message> block, and explicitly forbids inventing a closing tag like <finish/>', () => {
     seedDestination('slack', 'Slack', 'slack', 'C-123');
 
     const prompt = buildSystemPromptAddendum('Andy', 'opencode');
@@ -75,7 +75,11 @@ describe('buildSystemPromptAddendum — opencode provider (tool-call delivery)',
     // be absent — OpenCode's only mention of <message> is the "NEVER put
     // your answer" warning, not an instruction to use it.
     expect(prompt).not.toContain('Wrap each delivered message');
-    expect(prompt).not.toContain('<finish/>');
+    // <finish/> is now mentioned deliberately, as a forbidden example — it
+    // must appear only inside the "do not invent your own closing signal"
+    // warning, never as an instruction to actually use it.
+    expect(prompt).toContain('Do not invent your own closing signal');
+    expect(prompt).toContain('<finish/>');
     expect(prompt).toContain('`slack`');
   });
 
@@ -91,12 +95,38 @@ describe('buildSystemPromptAddendum — opencode provider (tool-call delivery)',
     expect(ruleIdx).toBeLessThan(destIdx);
   });
 
-  it('tells the model about the forced follow-up completion and the DONE sentinel', () => {
+  it('places the end-of-turn rules before the general send_message delivery mandate', () => {
     seedDestination('slack', 'Slack', 'slack', 'C-123');
 
     const prompt = buildSystemPromptAddendum('Andy', 'opencode');
 
-    expect(prompt).toContain('automatic');
-    expect(prompt).toContain('reply with exactly `DONE`');
+    const endTurnIdx = prompt.indexOf('Every request MUST end with exactly one of these two actions');
+    const mandateIdx = prompt.indexOf('MANDATORY: Deliver every message');
+    expect(endTurnIdx).toBeGreaterThan(-1);
+    expect(mandateIdx).toBeGreaterThan(-1);
+    expect(endTurnIdx).toBeLessThan(mandateIdx);
+  });
+
+  it('tells the model to close every request with send_message(final:true) or end_turn', () => {
+    seedDestination('slack', 'Slack', 'slack', 'C-123');
+
+    const prompt = buildSystemPromptAddendum('Andy', 'opencode');
+
+    expect(prompt).toContain('final: true');
+    expect(prompt).toContain('end_turn');
+    expect(prompt).not.toContain('reply with exactly `DONE`');
+  });
+
+  it('explains final:true as turn-level (going quiet now), not task-level (fully resolved forever), with examples', () => {
+    seedDestination('slack', 'Slack', 'slack', 'C-123');
+
+    const prompt = buildSystemPromptAddendum('Andy', 'opencode');
+
+    expect(prompt).toContain('does NOT mean');
+    expect(prompt).toContain('turn-by-turn, not task-by-task');
+    // The scheduled-task example is the concrete case where task-level and
+    // turn-level completion diverge — background work continues, but the
+    // turn producing this message is still over.
+    expect(prompt).toContain('schedule_task');
   });
 });

@@ -14,7 +14,7 @@ Creates a new `container/skills/<name>/SKILL.md` — a skill the **nanoclaw agen
 - "Give the agent a maintained wiki / reference doc it should follow"
 - Any capability that should live in the agent's own skill set, mounted read-only into every container
 
-If the ask is instead about changing *your own* (maintainer-side) workflow, use `/learn` — it targets `.claude/skills/`, not `container/skills/`.
+If the ask is instead about changing _your own_ (maintainer-side) workflow, use `/learn` — it targets `.claude/skills/`, not `container/skills/`.
 
 ## Background — read before authoring
 
@@ -24,9 +24,9 @@ This is the authoritative source for how skills work in this repo; don't improvi
 - `docs/skill-guidelines.md` — the checklist: minimal integration surface, additive change shapes, when a `REMOVE.md` is required, anti-patterns (no `VERIFY.md`, no soft-disabled removal, no branch merges).
 - `docs/skills-model.md` — why the model exists and how it survives upstream upgrades.
 
-The short version that applies to *most* container skills: a container skill is prose an agent reads. It adds a file, nothing else. Per `skill-guidelines.md`'s "Content / instruction-only" archetype, that makes it a **pure-add skill: no functional reach-in, no required test, no `REMOVE.md`** (deleting the folder is the whole removal).
+The short version that applies to _most_ container skills: a container skill is prose an agent reads. It adds a file, nothing else. Per `skill-guidelines.md`'s "Content / instruction-only" archetype, that makes it a **pure-add skill: no functional reach-in, no required test, no `REMOVE.md`** (deleting the folder is the whole removal).
 
-That changes if the skill also touches things *outside* `container/skills/<name>/` — e.g. it edits a group's `CLAUDE.md` or seeds files elsewhere in the group folder (see `.claude/skills/add-karpathy-llm-wiki/SKILL.md` for the worked example: it creates a container skill *and* wraps a `CLAUDE.md` section in `<!-- BEGIN ... -->`/`<!-- END ... -->` markers so it's idempotent and locatable). If your skill does that, follow the same marker-comment pattern and ship a `REMOVE.md` that reverses every part of it (skill-guidelines.md anti-pattern #2 and #3: no soft-disable, no incomplete cleanup).
+That changes if the skill also touches things _outside_ `container/skills/<name>/` — e.g. it edits a group's `CLAUDE.md` or seeds files elsewhere in the group folder (see `.claude/skills/add-karpathy-llm-wiki/SKILL.md` for the worked example: it creates a container skill _and_ wraps a `CLAUDE.md` section in `<!-- BEGIN ... -->`/`<!-- END ... -->` markers so it's idempotent and locatable). If your skill does that, follow the same marker-comment pattern and ship a `REMOVE.md` that reverses every part of it (skill-guidelines.md anti-pattern #2 and #3: no soft-disable, no incomplete cleanup).
 
 ## How container skills get loaded (mechanics)
 
@@ -57,15 +57,15 @@ Write `container/skills/<kebab-name>/SKILL.md`. Frontmatter conventions observed
 name: <kebab-case, matches the folder>
 description: <what it does + concrete trigger phrases/conditions — this is what the agent matches on>
 # optional:
-allowed-tools: Bash(some-cli:*)      # scope the skill to specific tools, if relevant
+allowed-tools: Bash(some-cli:*) # scope the skill to specific tools, if relevant
 compatibility: <runtime requirement, e.g. "Requires HTTPS_PROXY set">
 metadata:
   author: <name>
-  version: "<semver>"
+  version: '<semver>'
 ---
 ```
 
-Body: a `# Title`, then whatever structure fits — quick-start commands, a reference table, a "what NOT to do" section, examples. Look at `container/skills/slack-formatting/SKILL.md` (compact reference) and `container/skills/self-customize/SKILL.md` (decision-tree workflow) as shape templates depending on whether this is a *reference* skill or a *procedure* skill.
+Body: a `# Title`, then whatever structure fits — quick-start commands, a reference table, a "what NOT to do" section, examples. Look at `container/skills/slack-formatting/SKILL.md` (compact reference) and `container/skills/self-customize/SKILL.md` (decision-tree workflow) as shape templates depending on whether this is a _reference_ skill or a _procedure_ skill.
 
 Keep it additive and self-contained per `skill-guidelines.md`:
 
@@ -107,13 +107,13 @@ No build step, no image rebuild. Tell the user the skill is live on next contain
 
 ## Reference: existing container skills
 
-| Skill | Shape |
-|---|---|
-| `welcome` | Procedure — onboarding script |
-| `self-customize` | Procedure — decision tree + delegation workflow |
-| `slack-formatting` / `whatsapp-formatting` | Reference — formatting rules table |
-| `agent-browser` | Reference — CLI command reference, uses `allowed-tools` |
-| `onecli-gateway` | Reference — proxy usage, uses `compatibility` + `metadata` |
-| `frontend-engineer`, `vercel-cli` | Reference — tool-specific usage |
+| Skill                                      | Shape                                                      |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| `welcome`                                  | Procedure — onboarding script                              |
+| `self-customize`                           | Procedure — decision tree + delegation workflow            |
+| `slack-formatting` / `whatsapp-formatting` | Reference — formatting rules table                         |
+| `agent-browser`                            | Reference — CLI command reference, uses `allowed-tools`    |
+| `onecli-gateway`                           | Reference — proxy usage, uses `compatibility` + `metadata` |
+| `frontend-engineer`, `vercel-cli`          | Reference — tool-specific usage                            |
 
-`.claude/skills/add-karpathy-llm-wiki/SKILL.md` is the one example of a skill that *generates* a container skill as part of a larger workflow — read it if the request is more involved than a single self-contained skill (e.g. it also needs group-folder scaffolding or a `CLAUDE.md` section).
+`.claude/skills/add-karpathy-llm-wiki/SKILL.md` is the one example of a skill that _generates_ a container skill as part of a larger workflow — read it if the request is more involved than a single self-contained skill (e.g. it also needs group-folder scaffolding or a `CLAUDE.md` section).

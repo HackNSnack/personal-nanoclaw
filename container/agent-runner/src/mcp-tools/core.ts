@@ -1,16 +1,22 @@
 /**
- * Core MCP tools: send_message, send_file, edit_message, add_reaction.
+ * Core MCP tools: send_message, send_file, edit_message, add_reaction, end_turn.
  *
  * All outbound tools resolve destinations via the local destination map
  * (see destinations.ts). Agents reference destinations by name; the map
  * translates name → routing tuple. Permission enforcement happens on
  * the host side in delivery.ts via the agent_destinations table.
+ *
+ * send_message's `final` flag and the standalone `end_turn` tool are the
+ * model's only way to declare a turn actually finished — see
+ * db/final-signal.ts for why this needs a cross-process counter instead of
+ * an in-memory flag, and poll-loop.ts's `result` handler for how it's used.
  */
 import fs from 'fs';
 import path from 'path';
 
 import { getCurrentInReplyTo } from '../current-batch.js';
 import { findByName, getAllDestinations } from '../destinations.js';
+import { bumpFinalSignal } from '../db/final-signal.js';
 import { getMessageIdBySeq, getRoutingBySeq, writeMessageOut } from '../db/messages-out.js';
 import { getSessionRouting } from '../db/session-routing.js';
 import { registerTools } from './server.js';
@@ -95,7 +101,17 @@ function resolveRouting(
 export const sendMessage: McpToolDefinition = {
   tool: {
     name: 'send_message',
-    description: 'Send a message to a named destination. If you have only one destination, you can omit `to`.',
+    description:
+      'Send a message to a named destination. If you have only one destination, you can omit `to`. ' +
+      '`final` answers one question only: are you about to go quiet and wait for the user, or will you ' +
+      "send/call something else in this same turn first? It is NOT asking whether the user's underlying " +
+      'request is fully and permanently resolved. Set `final`: true even for a trivial reply ("hi" → ' +
+      '"Hello!" is final: true) or after kicking off background work you already reported on (e.g. you ' +
+      "just called schedule_task and told the user — that's final: true even though the task fires later). " +
+      "Also set `final`: true if you've hit a wall you can't get past — say so plainly in the message itself; " +
+      'a promise to do something later is not the same as doing it. Set `final`: false only when you are ' +
+      'about to make another tool call or send_message within this same turn, immediately, before waiting ' +
+      'for the user again.',
     inputSchema: {
       type: 'object' as const,
       properties: {
@@ -104,8 +120,14 @@ export const sendMessage: McpToolDefinition = {
           description: 'Destination name (e.g., "family", "worker-1"). Optional if you have only one destination.',
         },
         text: { type: 'string', description: 'Message content' },
+        final: {
+          type: 'boolean',
+          description:
+            'true if you are going quiet after this message and waiting for the user; false if you will ' +
+            'call another tool or send_message within this same turn before waiting for them.',
+        },
       },
-      required: ['text'],
+      required: ['text', 'final'],
     },
   },
   async handler(args) {
@@ -126,8 +148,27 @@ export const sendMessage: McpToolDefinition = {
       content: JSON.stringify({ text }),
     });
 
-    log(`send_message: #${seq} → ${routing.resolvedName}`);
+    if (args.final === true) bumpFinalSignal();
+
+    log(`send_message: #${seq} → ${routing.resolvedName}${args.final === true ? ' (final)' : ''}`);
     return ok(`Message sent to ${routing.resolvedName} (id: ${seq})`);
+  },
+};
+
+export const endTurn: McpToolDefinition = {
+  tool: {
+    name: 'end_turn',
+    description:
+      'Call this when you are completely finished responding to the request and have nothing further ' +
+      'to send — either no reply is needed at all, or you already said everything you needed to via ' +
+      "send_message. Don't call this instead of sending a message you still owe the user — use " +
+      'send_message with final: true for that.',
+    inputSchema: { type: 'object' as const, properties: {} },
+  },
+  async handler() {
+    bumpFinalSignal();
+    log('end_turn: turn marked complete with no further message');
+    return ok('Turn ended.');
   },
 };
 
@@ -260,4 +301,4 @@ export const addReaction: McpToolDefinition = {
   },
 };
 
-registerTools([sendMessage, sendFile, editMessage, addReaction]);
+registerTools([sendMessage, sendFile, editMessage, addReaction, endTurn]);

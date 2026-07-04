@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 
-import { initTestSessionDb, closeSessionDb, getInboundDb, getOutboundDb } from './db/connection.js';
+import { initTestSessionDb, closeSessionDb, getInboundDb } from './db/connection.js';
 import { getPendingMessages, markCompleted } from './db/messages-in.js';
 import { getUndeliveredMessages, writeMessageOut } from './db/messages-out.js';
+import { bumpFinalSignal } from './db/final-signal.js';
 import { formatMessages, extractRouting } from './formatter.js';
 import { isCorruptionError, processQuery } from './poll-loop.js';
 import { MockProvider } from './providers/mock.js';
@@ -455,22 +456,28 @@ describe('error result with no <message> envelope', () => {
   });
 });
 
-describe('opencode post-tool-call echo suppression', () => {
+describe('opencode final-turn signal (send_message final:true / end_turn)', () => {
   /**
-   * Simulates the send_message MCP tool (a separate OS process) writing
-   * directly to outbound.db mid-turn, then OpenCode's forced follow-up
-   * completion producing `echoText` as the turn's result. `writeMessageOut`
-   * is called from inside the generator, between the init and result
-   * yields, so it lands after processQuery's per-turn seq checkpoint —
-   * matching real timing (the tool write happens during the turn, after
-   * processQuery has already captured its baseline).
+   * Simulates the send_message / end_turn MCP tools (a separate OS process)
+   * writing to outbound.db and/or bumping the cross-process final-signal
+   * counter mid-turn (see db/final-signal.ts), then the provider's `result`
+   * event landing as the turn's outcome. Both writes happen from inside the
+   * generator, between the init and result yields, matching real timing —
+   * the tool call happens during the turn, before processQuery observes the
+   * result event.
    */
-  function makeToolThenEchoQuery(toolText: string, echoText: string): { query: AgentQuery; pushes: string[] } {
+  function makeOpenCodeTurnQuery(opts: { toolMessage?: string; signalFinal: boolean; resultText?: string | null }): {
+    query: AgentQuery;
+    pushes: string[];
+  } {
     const pushes: string[] = [];
     async function* events(): AsyncGenerator<ProviderEvent> {
       yield { type: 'init', continuation: 'sess-1' };
-      writeMessageOut({ id: 'tool-1', kind: 'chat', content: JSON.stringify({ text: toolText }) });
-      yield { type: 'result', text: echoText };
+      if (opts.toolMessage !== undefined) {
+        writeMessageOut({ id: 'tool-1', kind: 'chat', content: JSON.stringify({ text: opts.toolMessage }) });
+      }
+      if (opts.signalFinal) bumpFinalSignal();
+      yield { type: 'result', text: opts.resultText ?? null };
     }
     return {
       pushes,
@@ -478,114 +485,74 @@ describe('opencode post-tool-call echo suppression', () => {
     };
   }
 
-  it('suppresses the nudge when trailing text verbatim-matches what send_message already sent', async () => {
-    const { query, pushes } = makeToolThenEchoQuery(
-      'Hi Mathias! How can I assist you today?',
-      'Hi Mathias! How can I assist you today?',
-    );
-
-    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
-
-    // Only the tool's original write should exist — no nudge, no duplicate.
-    expect(getUndeliveredMessages()).toHaveLength(1);
-    expect(pushes).toHaveLength(0);
-  });
-
-  it('suppresses the nudge on whitespace-only differences (normalized match)', async () => {
-    const { query, pushes } = makeToolThenEchoQuery('Hi Mathias!  How can I help?', '  Hi Mathias! How can I help?\n');
-
-    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
-
-    expect(getUndeliveredMessages()).toHaveLength(1);
-    expect(pushes).toHaveLength(0);
-  });
-
-  it('still nudges when trailing text is a genuinely distinct, never-delivered message', async () => {
-    // Status ping via the tool, then a DIFFERENT final answer left as bare
-    // text instead of a second send_message call. Must still nudge — this is
-    // exactly the false-negative a boolean "any send_message this turn" check
-    // would produce (see the reference note / upstream PR #2531 lesson).
-    const { query, pushes } = makeToolThenEchoQuery('Looking it up', 'The answer is 42');
-
-    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
-
-    expect(getUndeliveredMessages()).toHaveLength(1); // only the status ping
-    expect(pushes).toHaveLength(1);
-    expect(pushes[0]).toContain('send_message');
-  });
-
-  it('suppresses the nudge on an explicit DONE sentinel, even with no prior tool write', async () => {
-    const { query, pushes } = makeResultQuery({ type: 'result', text: 'DONE' });
-
-    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
-
-    expect(getUndeliveredMessages()).toHaveLength(0);
-    expect(pushes).toHaveLength(0);
-  });
-
-  it('DONE sentinel is case/whitespace-insensitive', async () => {
-    const { query, pushes } = makeResultQuery({ type: 'result', text: '  done  ' });
-
-    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
-
-    expect(getUndeliveredMessages()).toHaveLength(0);
-    expect(pushes).toHaveLength(0);
-  });
-
-  it('does not apply echo suppression to non-opencode providers', async () => {
-    // Same verbatim-match scenario, but for 'claude' — echo suppression is
-    // opencode-only (Claude's <message>-block protocol has its own, separate
-    // dispatch path and should be untouched by this check).
-    const { query, pushes } = makeToolThenEchoQuery('same text', 'same text');
-
-    await processQuery(query, ERR_ROUTING, ['m1'], 'claude', undefined, 'prompt', undefined);
-
-    expect(pushes).toHaveLength(1);
-    expect(pushes[0]).toContain('was not delivered');
-  });
-
-  // Reproduces the live Mistral failure: even after being told to use DONE,
-  // the model keeps reaching for its own `<finish/>` habit instead — both as
-  // the very first (no tool call yet) response, and as the forced follow-up
-  // after a real send_message call. Neither should nudge or deliver a false
-  // "couldn't be delivered" notice, since there is no real content to lose.
-  it('suppresses the nudge on a bare <finish/> tag with no prior tool call', async () => {
-    const { query, pushes } = makeResultQuery({ type: 'result', text: '<internal>done</internal>\n<finish/>' });
-
-    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
-
-    expect(getUndeliveredMessages()).toHaveLength(0);
-    expect(pushes).toHaveLength(0);
-  });
-
-  it('suppresses the nudge on a bare <finish/> tag as the forced follow-up after a real send_message call', async () => {
-    const { query, pushes } = makeToolThenEchoQuery(
-      "I've successfully sent you three messages in a row. Is there anything else I can help you with?",
-      '<internal>done</internal>\n<finish/>',
-    );
-
-    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
-
-    // The real message from the tool call is delivered; no spurious
-    // "couldn't be delivered due to a formatting error" fallback.
-    expect(getUndeliveredMessages()).toHaveLength(1);
-    expect(pushes).toHaveLength(0);
-  });
-
-  it('does not treat a <finish/>-adjacent but substantive message as a no-op', async () => {
-    // Guard against over-matching: real content alongside a <finish/> tag
-    // must still be recognized as real content (and, since it doesn't match
-    // anything already sent, still nudges).
-    const { query, pushes } = makeResultQuery({
-      type: 'result',
-      text: 'The meeting is at 3pm tomorrow.<finish/>',
+  it('completes without nudging when send_message signaled final: true', async () => {
+    const { query, pushes } = makeOpenCodeTurnQuery({
+      toolMessage: 'All done — here is your answer.',
+      signalFinal: true,
     });
 
     await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
 
-    expect(getUndeliveredMessages()).toHaveLength(0);
-    expect(pushes).toHaveLength(1);
+    expect(getUndeliveredMessages()).toHaveLength(1);
+    expect(pushes).toHaveLength(0);
   });
+
+  it('completes without nudging when end_turn was called with nothing to send', async () => {
+    const { query, pushes } = makeOpenCodeTurnQuery({ signalFinal: true, resultText: null });
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(0);
+    expect(pushes).toHaveLength(0);
+  });
+
+  it('nudges (but still delivers the real message) when the turn ends with no final signal', async () => {
+    // This is exactly the live bug: the model calls send_message to announce
+    // intent ("I will do X") without ever signaling final — that text is
+    // real, user-facing content, so it's still delivered, but the turn must
+    // NOT be treated as closed just because something was sent.
+    const { query, pushes } = makeOpenCodeTurnQuery({
+      toolMessage: 'I will now proceed with the task.',
+      signalFinal: false,
+    });
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(getUndeliveredMessages()).toHaveLength(1);
+    expect(pushes).toHaveLength(1);
+    expect(pushes[0]).toContain('end_turn');
+    expect(pushes[0]).toContain('final');
+  });
+
+  it('force-closes with a fallback message after exhausting the nudge budget', async () => {
+    // The model never signals final across three consecutive turns (the
+    // nudge budget is 2) — the harness must guarantee closure regardless.
+    const pushes: string[] = [];
+    async function* events(): AsyncGenerator<ProviderEvent> {
+      yield { type: 'init', continuation: 'sess-1' };
+      yield { type: 'result', text: 'still working on it' };
+      yield { type: 'result', text: 'almost done' };
+      yield { type: 'result', text: 'just a bit more' };
+    }
+    const query: AgentQuery = {
+      push: (m: string) => pushes.push(m),
+      end: () => {},
+      events: events(),
+      abort: () => {},
+    };
+
+    await processQuery(query, ERR_ROUTING, ['m1'], 'opencode', undefined, 'prompt', undefined);
+
+    expect(pushes).toHaveLength(2); // bounded — never grows unbounded
+    const out = getUndeliveredMessages();
+    expect(out).toHaveLength(1);
+    expect(JSON.parse(out[0].content).text).toContain("wasn't able to reach a clear stopping point");
+  });
+
+  // Non-opencode coverage (the final-signal gate must not affect Claude's
+  // separate <message>-block protocol) is already exercised by 'still nudges
+  // (and does not deliver) a normal unwrapped result' above, which runs the
+  // 'claude' provider through the untouched wrapping-nudge path.
 });
 
 describe('isCorruptionError', () => {

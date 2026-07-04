@@ -1,6 +1,7 @@
 import { findByName, getAllDestinations, type DestinationEntry } from './destinations.js';
 import { getPendingMessages, markProcessing, markCompleted, type MessageInRow } from './db/messages-in.js';
-import { writeMessageOut, getMaxOutboundSeq, hasMatchingOutboundSince } from './db/messages-out.js';
+import { writeMessageOut } from './db/messages-out.js';
+import { getFinalSignalCount } from './db/final-signal.js';
 import { getInboundDb, touchHeartbeat, clearStaleProcessingAcks } from './db/connection.js';
 import { clearContinuation, migrateLegacyContinuation, setContinuation } from './db/session-state.js';
 import { clearCurrentInReplyTo, setCurrentInReplyTo } from './current-batch.js';
@@ -388,12 +389,14 @@ export async function processQuery(
   // the same prompt again. Unused (and unmaintained) when the provider
   // doesn't implement `onExchangeComplete`.
   const archivePrompts: string[] = [initialPrompt];
-  // Per-turn baseline for the OpenCode echo check (see hasMatchingOutboundSince).
-  // Captured fresh before each turn's tool calls can write to outbound.db, then
-  // advanced after each result event so the NEXT turn's window only covers rows
-  // written during that turn — not a wall-clock heuristic, immune to clock skew.
-  // Cheap to call even for non-opencode providers (single indexed MAX query).
-  let outboundSeqCheckpoint = getMaxOutboundSeq();
+  // OpenCode-only completion gate (see db/final-signal.ts): a turn only
+  // counts as done once send_message(final:true) or end_turn fired since
+  // this baseline. Snapshotted fresh before each turn, advanced after each
+  // result event so the NEXT turn's window only covers signals raised
+  // during that turn.
+  let finalSignalBaseline = getFinalSignalCount();
+  let finalSignalNudges = 0;
+  const MAX_FINAL_SIGNAL_NUDGES = 2;
 
   // Concurrent polling: push follow-ups into the active query as they arrive.
   // We do NOT force-end the stream on silence — keeping the query open avoids
@@ -473,6 +476,7 @@ export async function processQuery(
         const followUpAttachments = extractImageAttachments(keep);
         log(`Pushing ${keep.length} follow-up message(s) into active query`);
         unwrappedNudged = false;
+        finalSignalNudges = 0; // fresh turn — give it its own completion-nudge budget
         query.push(followUpPrompt, followUpAttachments.length > 0 ? followUpAttachments : undefined);
         archivePrompts.push(followUpPrompt);
         markCompleted(keptIds);
@@ -536,33 +540,65 @@ export async function processQuery(
         // (send_message) mid-turn, or the message may not need a response
         // at all — either way the turn is finished.
         markCompleted(initialBatchIds);
-        if (event.text) {
-          const { sent, hasUnwrapped: rawHasUnwrapped } = dispatchResultText(event.text, routing);
-          let hasUnwrapped = rawHasUnwrapped;
-          // OpenCode's tool-calling loop forces one more completion after every
-          // send_message call; weaker models often fill it with a near-verbatim
-          // repeat of what the tool just delivered. dispatchResultText() can't
-          // tell that apart from a genuinely undelivered answer — it only knows
-          // the text has no <message> block, which is true for ALL opencode output
-          // (it never uses that protocol). Check the two cross-process signals
-          // available for "was this already sent" before treating it as unwrapped:
-          // an explicit DONE sentinel, or a verbatim match against something the
-          // send_message tool already wrote to outbound.db this turn. Deliberately
-          // NOT a boolean "did send_message fire at all this turn" check — that
-          // would also suppress a genuinely new, never-delivered second message
-          // (e.g. a status ping followed by a distinct final answer left as bare
-          // text). See the reference note for the upstream PR that hit this exact
-          // false-positive with a boolean flag.
-          if (providerName === 'opencode' && hasUnwrapped) {
-            const isNoOp = isNoOpTrailingText(event.text);
-            const isEcho = isNoOp || hasMatchingOutboundSince(event.text, outboundSeqCheckpoint);
-            if (isEcho) {
-              log(
-                `OpenCode trailing text looks like a post-tool-call echo (${isNoOp ? 'no real content after stripping scratchpad/finish/DONE' : 'matches an already-sent message'}) — suppressing nudge`,
-              );
-              hasUnwrapped = false;
-            }
+
+        if (providerName === 'opencode') {
+          // Authoritative, structural completion gate: a turn only counts as
+          // done once send_message(final:true) or end_turn fired since the
+          // baseline (see db/final-signal.ts). This replaces inferring
+          // completion from text shape (trailing scratchpad, DONE sentinels,
+          // echo-matching against outbound.db) — those heuristics let a model
+          // announce "I will now do X" via a plain send_message call and have
+          // the turn counted delivered/complete even though no further work
+          // ever happened. dispatchResultText() still runs (below) purely to
+          // log the scratchpad — opencode never uses the <message> protocol,
+          // so its `sent`/`hasUnwrapped` fields are meaningless here.
+          if (event.text) dispatchResultText(event.text, routing);
+
+          const currentSignal = getFinalSignalCount();
+          const sawFinalSignal = currentSignal > finalSignalBaseline;
+          finalSignalBaseline = currentSignal;
+
+          notifyExchangeComplete(onExchangeComplete, {
+            prompt: archivePrompts[0] ?? initialPrompt,
+            result: event.text,
+            continuation: queryContinuation ?? initialContinuation,
+            status: sawFinalSignal ? 'completed' : 'undelivered',
+          });
+
+          if (sawFinalSignal) {
+            finalSignalNudges = 0;
+            archivePrompts.shift();
+          } else if (finalSignalNudges < MAX_FINAL_SIGNAL_NUDGES) {
+            finalSignalNudges += 1;
+            const destinations = getAllDestinations();
+            const names = destinations.map((d) => d.name).join(', ');
+            query.push(
+              `<system>You did not call a tool to end this turn. This MUST be an actual MCP tool call — ` +
+                `not text output. Writing "final", "done", "<finish/>", or any other word or tag in your ` +
+                `response text does NOT close the turn; only a real tool invocation does, and none was made. ` +
+                `Whatever you just wrote as plain text was never seen by the user and is gone now — it does ` +
+                `not count as sent and cannot be referenced as "already said above". If you have something to ` +
+                `tell the user, call the send_message tool with final: true and pass your FULL intended answer ` +
+                `as the text argument — not a shortened stand-in written just to close this turn. The text you ` +
+                `pass is the only thing that reaches the user. If you have nothing further to send but are ` +
+                `finished, call the end_turn tool (no arguments). If you are not actually done, keep working ` +
+                `with more tool calls first. Your destinations: ${names}.</system>`,
+            );
+            // Keep archivePrompts[0] queued — the retry answers the same prompt.
+          } else {
+            // Hard ceiling: guarantee closure no matter what the model does.
+            // Without this a model that never learns the contract would leave
+            // the user waiting forever instead of getting an honest stop.
+            deliverErrorResult(
+              "_I wasn't able to reach a clear stopping point for this and I'm stopping here. " +
+                'Please resend if you would like me to keep going._',
+              routing,
+            );
+            archivePrompts.shift();
+            finalSignalNudges = 0;
           }
+        } else if (event.text) {
+          const { sent, hasUnwrapped } = dispatchResultText(event.text, routing);
           if (sent === 0 && event.isError === true) {
             // Non-retryable error turn (e.g. a 403 billing_error) with no
             // <message> envelope: deliver the notice instead of dropping it as
@@ -588,20 +624,13 @@ export async function processQuery(
               unwrappedNudged = true;
               const destinations = getAllDestinations();
               const names = destinations.map((d) => d.name).join(', ');
-              // Nudge text is provider-aware: OpenCode's sole delivery path is
-              // the send_message tool (see destinations.ts), so a nudge telling
-              // it to use <message> blocks would just contradict the system
-              // prompt again. Only non-opencode providers get the <message>
-              // wrapping nudge.
               const nudgeText =
-                providerName === 'opencode'
-                  ? `<system>Nothing was delivered — you output text with no send_message call. ` +
-                    `Call send_message with your complete answer. Wrap any reasoning in ` +
-                    `<internal>...</internal>. Your destinations: ${names}.</system>`
-                  : `<system>Your response was not delivered — it was not wrapped in <message to="name">...</message> blocks. ` +
-                    `All output must be wrapped: use <message to="name"> for content to send, or <internal> for scratchpad. ` +
-                    `Your destinations: ${names}. ` +
-                    `Please re-send your response with the correct wrapping.</system>`;
+                `<system>Your response was not delivered — it was not wrapped in <message to="name">...</message> blocks. ` +
+                `All output must be wrapped: use <message to="name"> for content to send, or <internal> for scratchpad. ` +
+                `If you genuinely cannot complete the request (missing tool, missing access, etc.), that IS your ` +
+                `complete answer — wrap a plain statement of what you can't do and why, instead of promising to do it. ` +
+                `Your destinations: ${names}. ` +
+                `Please re-send your response with the correct wrapping.</system>`;
               query.push(nudgeText);
             }
             // The wrapping-retry result answers the SAME user prompt — keep it
@@ -620,10 +649,6 @@ export async function processQuery(
         } else {
           archivePrompts.shift();
         }
-        // Advance the echo-check baseline past everything written during this
-        // turn (including the nudge retry, if one was just pushed) so the NEXT
-        // result event's window only covers rows written after this point.
-        outboundSeqCheckpoint = getMaxOutboundSeq();
       }
     }
   } catch (err) {
@@ -641,29 +666,6 @@ export async function processQuery(
   }
 
   return { continuation: queryContinuation };
-}
-
-/**
- * True when `text`, after stripping scratchpad and known completion-only
- * markers, has no real content left — i.e. the model is signaling "nothing
- * further to add" rather than leaving an answer undelivered. Covers two
- * cases: the taught `DONE` sentinel (see destinations.ts), and the model's
- * own natural completion habit. Mistral (and likely other OpenRouter models)
- * keeps reaching for a bare `<finish/>` tag — a leftover from an earlier
- * version of this app's protocol, or a generic agentic-completion convention
- * baked into the base model — even after being told the sole delivery path
- * is send_message and to reply with DONE when finished. Rather than fight
- * that indefinitely with more prompt wording, recognize it directly: if
- * nothing but scratchpad, a `<finish/>`-style tag, or the DONE sentinel
- * remains, there is no content being silently dropped, so it's always safe
- * to treat as a no-op — unlike hasMatchingOutboundSince(), this needs no
- * outbound.db lookup at all, since there's no content left to match.
- */
-function isNoOpTrailingText(text: string): boolean {
-  const stripped = stripInternalTags(text)
-    .replace(/<\/?finish\s*\/?>/gi, '')
-    .trim();
-  return stripped.length === 0 || /^done\.?$/i.test(stripped);
 }
 
 function notifyExchangeComplete(

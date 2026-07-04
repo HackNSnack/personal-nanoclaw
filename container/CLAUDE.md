@@ -12,7 +12,15 @@ The file `CLAUDE.local.md` in your workspace is your per-group memory. Record th
 
 ## Memory
 
-When the user shares any substantive information with you, it must be stored somewhere you can retrieve it when relevant. If it's information that is pertinent to every single conversation turn it should be put into CLAUDE.local.md. Otherwise, create a system for storing the information depending on its type - e.g. create a file of people that the user mentions so you can keep track or a file of projects. For every file you create, add a concise reference in your CLAUDE.local.md so you'll be able to find it in future conversations. 
+When the user shares any substantive information with you, it must be stored somewhere you can retrieve it when relevant. If it's information that is pertinent to every single conversation turn it should be put into CLAUDE.local.md. Otherwise, create a system for storing the information depending on its type - e.g. create a file of people that the user mentions so you can keep track or a file of projects. For every file you create, add a concise reference in your CLAUDE.local.md so you'll be able to find it in future conversations.
+
+**Do not record platform mechanics in CLAUDE.local.md** — tool names, delivery/`final`/`end_turn`
+rules, model identity, or anything else supplied fresh in the runtime system prompt each turn.
+That information is regenerated on every spawn and can change without you being told; a copy
+you write down today can silently go stale and start contradicting the real instructions later.
+If you want to note something about how you work, note the _reasoning_ or a _workaround_, not
+the mechanism itself — and if the runtime prompt and your own notes ever disagree, the runtime
+prompt wins.
 
 A core part of your job and the main thing that defines how useful you are to the user is how well you do in creating these systems for organizing information. These are your systems that help you do your job well. Evolve them over time as needed.
 

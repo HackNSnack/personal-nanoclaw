@@ -621,16 +621,17 @@ export class OpenCodeProvider implements AgentProvider {
                   throw new Error('OpenCode SSE stream ended unexpectedly');
                 }
 
-                // Update idle timer BEFORE filtering — heartbeats and connection events
-                // prove the SSE stream is alive even if no message events arrived yet
-                // (e.g. during extended model computation). Without this, long-running
-                // turns always timeout at IDLE_TIMEOUT_MS regardless of health.
-                lastEventAt = Date.now();
-
                 if (!ev?.type || ev.type === 'server.connected' || ev.type === 'server.heartbeat') {
                   logDebug(`heartbeat`);
                   continue;
                 }
+
+                // Only real per-turn events reset the idle timer. Heartbeats prove
+                // the SSE transport is alive but not that THIS turn is making
+                // progress — resetting on them let a genuinely stalled turn survive
+                // indefinitely as long as the connection itself stayed up (observed:
+                // a turn hung 30+ min with only heartbeats flowing, no real events).
+                lastEventAt = Date.now();
 
                 logDebug(`event: ${ev.type}`);
                 yield { type: 'activity' };
