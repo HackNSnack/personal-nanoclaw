@@ -245,6 +245,16 @@ Kiwi, Meny, Spar, Joker, Nærbutikken, Jacob's, CC Mat, Lerøy Mat, Gigaboks, Me
 
 > Added 2026-07-11. Source: https://www.saseurobonusshop.com/no/gift-cards-vouchers/shopping
 
+> ⚠️ **Action required from Mathias before this section is useful for any earning-rate calculation.** The "Eff. EB / 100 kr" column below is **inferred from listing-page headlines only** — the per-tier EB earn rate can only be observed in the live checkout dropdown (which is login-gated). The §6 summary table and §6 strategy step #6 both depend on these ratios.
+>
+> **If you want gift cards factored into your real-world EB calculations, you need to:**
+> 1. Log in to https://www.saseurobonusshop.com/no/gift-cards-vouchers/shopping
+> 2. For each brand you actually shop at, open the product page and note the EB earn at each NOK tier
+> 3. Replace the `~X EB / 100 kr` placeholders in the table below with the verified values
+> 4. Until then, treat the figures here as **rough orders of magnitude, not load-bearing numbers** — and double-check at checkout before committing to any large denomination.
+>
+> The list of brands, the "Opptjen opptil X EB" headline maxima, and the don't-double-stack mechanics below *are* verified and stable.
+
 This is a **separate** SAS-owned portal from the SAS Shopping portal above — it sells **digital gift cards (gavekort)** for ~35 Norwegian brands, paid for in either **EuroBonus points** OR **NOK cash**, with a **bonus EB earn** on top.
 
 #### How it works
@@ -354,7 +364,7 @@ Full catalog: <https://www.saseurobonusshop.com/no/gift-cards-vouchers/shopping>
 3. **SAS MC Premium** as backup where Amex isn't accepted (15 EB/100 kr + Fly Premium)
 4. **Auto-transfer** Trumf → EuroBonus (13.5x rate)
 5. **Always use Trumf Netthandel or SAS Shopping** portal before buying online
-6. **SAS EuroBonus Shop gift cards** for stores where Trumf/SAS portal earn is 0% (Dressmann, Jernia, Espresso House, Clas Ohlson, Adidas, Rituals, etc.) — check §5e for which brands actually beat the alternatives; **always pay cash for the gift card**, never EB points
+6. **SAS EuroBonus Shop gift cards** for stores where Trumf/SAS portal earn is 0% (Dressmann, Jernia, Espresso House, Clas Ohlson, Adidas, Rituals, etc.) — check §5e for which brands actually beat the alternatives; **always pay cash for the gift card**, never EB points. ⚠️ **Treat the §5e "Eff. EB / 100 kr" column as headline-max estimates until you've verified per-tier rates at checkout** — see the action-required callout at the top of §5e before relying on this step.
 7. **Stay at Scandic/Thon** for 500 EB points/night
 8. **Add EB number** on all car rentals
 
