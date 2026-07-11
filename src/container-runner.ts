@@ -498,14 +498,24 @@ async function buildContainerArgs(
   // the gateway, we don't spawn. The caller (router or host-sweep) catches
   // the throw, leaves the inbound message pending, and the next sweep tick
   // retries.
-  if (agentIdentifier) {
-    await onecli.ensureAgent({ name: agentGroup.name, identifier: agentIdentifier });
+  //
+  // Skipped entirely when the provider opts out (bypassOnecli) — e.g. local
+  // providers like Ollama that need no vault-injected credentials. Applying
+  // it anyway would inject an HTTPS_PROXY that clobbers the provider's own
+  // NO_PROXY and routes local-only traffic through a gateway that can't
+  // reach it, surfacing as a silent ConnectionRefused from the agent SDK.
+  if (providerContribution.bypassOnecli) {
+    log.info('OneCLI gateway bypassed (provider opted out)', { containerName, provider: _provider });
+  } else {
+    if (agentIdentifier) {
+      await onecli.ensureAgent({ name: agentGroup.name, identifier: agentIdentifier });
+    }
+    const onecliApplied = await onecli.applyContainerConfig(args, { addHostMapping: false, agent: agentIdentifier });
+    if (!onecliApplied) {
+      throw new Error('OneCLI gateway not applied — refusing to spawn container without credentials');
+    }
+    log.info('OneCLI gateway applied', { containerName });
   }
-  const onecliApplied = await onecli.applyContainerConfig(args, { addHostMapping: false, agent: agentIdentifier });
-  if (!onecliApplied) {
-    throw new Error('OneCLI gateway not applied — refusing to spawn container without credentials');
-  }
-  log.info('OneCLI gateway applied', { containerName });
 
   // Override entrypoint: run v2 entry point directly via Bun (no tsc, no stdin).
   args.push('--entrypoint', 'bash');

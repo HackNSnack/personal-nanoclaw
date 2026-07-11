@@ -21,6 +21,16 @@ Given a shopping list, find which store sells each _exact_ item for the lowest *
 
 Process each item in the list independently and report on each separately.
 
+## Loop discipline — read this first
+
+These rules exist because this skill can eat a turn budget if you let it. Follow them strictly:
+
+1. **Heartbeat up front.** Before any browsing, call `send_message("Researching best affiliate for X…")` (or `final: false` mid-turn). Never go silent for more than ~60s without a status update — the user can't see what you're doing and will assume you're stuck.
+2. **Hard budget: 8 store checks per item total** (the 5/portal cap from Step 2 still applies, but 8 is the absolute ceiling). After 8 checks — even if some are unverified — stop and ship what you have.
+3. **Max 2 attempts per store** to verify stock. On the second failure (Cloudflare block, HTTP2 error, timeout, empty 0-result page that clearly loaded, etc.), mark the store `blocked` and move on. Do not retry with different headers, different search engines, or longer waits — that path has no end.
+4. **Bot-wall signature = give up fast.** If you see "Just a moment…" / "Verifying you are human" / `ERR_HTTP2_PROTOCOL_ERROR` / persistent empty response, that's your one signal to mark `blocked` and move on. Don't spend 15s waiting on Cloudflare to clear — it won't from this container's IP.
+5. **Always end with `send_message(..., final: true)`, even on partial results.** A partial answer with `unverified` tags beats an unfinished turn that ships nothing. If after the budget you have zero verified stockists, say so plainly and rank by cashback rate alone as a fallback.
+
 ## Step 1 — Discover candidate stores from both portals' categories
 
 For every item, browse **both** portals' category listings — always check both, never skip one based on a guess about fit, since an item can land in unexpected or multiple categories (e.g. an air fryer sits under "Elektronikk" on one portal and both "Bolig" _and_ "Elektronikk" on the other).
@@ -51,12 +61,44 @@ From each portal's category listing(s), pick the stores plausibly relevant to th
 
 If a store appears on both portals, keep it as one candidate but note both rates — it still only counts toward one portal's cap for shortlisting purposes, but its final comparison should use whichever portal rate is actually usable (see Step 4).
 
+**Domain shortlist.** Trumf/SAS may list brand stores (Dyson, Philips Hue, Harman Kardon) that only sell their own products, and miss the major general retailers. Before finalizing the shortlist, cross-reference these known Norwegian stockists for the item type:
+
+| Category | Likely Norwegian stockists (check whether each is in either portal) |
+|----------|---|
+| AV receivers / hifi / home cinema | Proshop, Komplett, Power, Elkjøp, NetOnNet, HifiKlubben, Soundgarden, Dustin |
+| Headphones / earbuds | Komplett, Power, Elkjøp, Kjell & Company, NetOnNet, Proshop, soundgarden.no |
+| TVs | Power, Elkjøp, Komplett, NetOnNet, Proshop, Extra |
+| White goods / kitchen appliances | Power, Elkjøp, Komplett, Miele, Witt, Elon |
+| Small kitchen (air fryer, kettle, blender) | Power, Elkjøp, Komplett, Proshop, Witt, Bodum, KitchenTime |
+| Photo / video gear | Foto.no, Komplett, Proshop, Scandinavian Photo, Calumet |
+| PC components | Komplett, Proshop, Dustin, NetOnNet, Multicom |
+
+If a likely stockist isn't on either portal, mention that in the final answer as "available outside portals" — Power, Elkjøp, and NetOnNet in particular are common Norwegian stockists but currently sit outside both Trumf Netthandel and SAS Online Shopping. Brand stores (Dyson, JBL, Sonos) can stay in the shortlist but only count toward the 5/portal cap if they actually carry the item type.
+
 ## Step 3 — Visit each shortlisted store and search for the exact item
 
 For each shortlisted store, go to the store's own website and search for the **exact item** — same model/variant/spec as the user described, not a rough category match (e.g. "Dyson V15" the specific model, not "a Dyson vacuum" or "a cordless vacuum").
 
 - If the exact item is found, record its sticker price (and product URL, for reference).
 - If the exact item is not found (out of stock, not carried, different model only), **drop that store from the comparison** — don't substitute a similar product and don't report it as a negative finding unless every shortlisted store came up empty.
+
+### Step 3.5 — When direct verification fails, use Prisjakt or PriceRunner
+
+Major Norwegian electronics retailers (Proshop, Komplett, Power, Elkjøp, NetOnNet, Dustin, Foto.no) all run aggressive Cloudflare/bot-defence that blocks this container's IP. If you hit "Just a moment…", `ERR_HTTP2_PROTOCOL_ERROR`, persistent empty bodies, or "Verifying you are human" pages — **stop trying to bypass**. Move on to the next store in the shortlist (max 2 attempts per store, per Loop discipline), and use a price-comparison aggregator for the price + stock fallback:
+
+```
+https://www.prisjakt.no/search?q=<url-encoded exact item name>
+```
+
+Prisjakt aggregates real-time prices from all major Norwegian stores and shows stock per store. Open it with `agent-browser` (it's a JS-rendered SPA — `agent-browser snapshot -i` after `wait --load networkidle` works, plain `curl` returns an empty SSR shell). Each result card has a price and a list of stores with current stock.
+
+- Use Prisjakt to fill in **sticker price + which Norwegian stores have it in stock** for the exact model. Don't quote a Prisjakt price as the "store price" — quote the price at the specific store from its own listing when available, otherwise quote Prisjakt with the caveat "via Prisjakt".
+- PriceRunner.no works as a fallback if Prisjakt is also blocked.
+- Mark any store whose own site you couldn't reach as `unverified-direct, price via Prisjakt`.
+
+### Step 3.6 — Maximum attempt budget
+
+Hard cap: 2 direct store visits per shortlisted store. After 2 failures (any combination of bot wall, HTTP error, or empty result), mark the store `blocked` and rely on Prisjakt for price/stock context only. Move to the next store — do not retry with different User-Agent, different search query, different locale, or a search engine (Google/DuckDuckGo/Bing all block this container too).
 
 ## Step 4 — Compute effective price per store
 
@@ -103,8 +145,12 @@ Komplett was listed under Trumf's Elektronikk category but doesn't stock this mo
 
 - Always browse both portals' category listings for every item — never skip a portal based on a pre-judgment about category fit.
 - Cap shortlisting at 5 stores per portal per item (10 total) — don't visit more sites than that even if a category has many stores.
+- Hard cap of 8 store checks per item total (Loop discipline). After 8, ship what you have.
+- Max 2 direct attempts per store. After 2 failures, mark `blocked`, rely on Prisjakt/PriceRunner for price+stock context, and move on.
+- Never spend more than ~15s waiting on a Cloudflare/HTTP2/etc. block. It's not clearing from this container's IP — accept it and continue.
+- **Always call `send_message(..., final: true)` at the end**, even with partial results. A partial answer beats a silent turn. If zero stores verified, ship a cashback-rate-only ranking with explicit `unverified` caveats.
 - Match on the _exact_ item — same model/spec. Drop a store rather than compare against a near-substitute.
-- Never invent a price or cashback rate for a store you didn't actually check live.
+- Never invent a price or cashback rate for a store you didn't actually check live (direct visit or Prisjakt). Mark unverified, don't guess.
 - Don't add card-level EB (Amex etc.) into this comparison — it's a flat addition that doesn't change which store wins; the effective-price formula here is cashback-only.
 - If an item's exact match isn't found at any shortlisted store, say so plainly rather than silently returning an empty comparison.
 - Process each item in a multi-item list independently and report on all of them, not just the first.
@@ -113,3 +159,10 @@ Komplett was listed under Trumf's Elektronikk category but doesn't stock this mo
 
 - `find-optimal-affiliate` — use instead when the user already knows which shop they want and just wants the better portal for it.
 - `compare-shopping-carts` — use instead for comparing an existing grocery receipt against Meny, not a wishlist item.
+
+## Fallback resources (when direct store checks are blocked)
+
+- **Prisjakt.no** — Norwegian price/stock aggregator; the cleanest fallback for "which Norwegian stores stock this exact model and at what price." JS-rendered SPA, use `agent-browser`.
+- **PriceRunner.no** — secondary aggregator, similar shape.
+- **Google Shopping** (`https://www.google.com/search?tbm=shop&q=...`) — last resort, often blocked.
+- **The cashback portal itself** — Trumf and SAS occasionally feature items on their category landing pages with a direct "shop now" link; if you find the item on the portal's own featured/promoted listings, that price counts as live (the portal is not bot-defended).
