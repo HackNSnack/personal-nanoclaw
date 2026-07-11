@@ -1,6 +1,6 @@
 # EuroBonus Optimization in Norway — Comprehensive Research
 
-> Compiled 2026-06-15 from Poengportalen.no, Trumf.no, SAS Online Shopping, and other sources.
+> Compiled 2026-06-15 from Poengportalen.no, Trumf.no, SAS Online Shopping, and other sources. Updated 2026-07-11 with SAS EuroBonus Shop gift-card channel (`saseurobonusshop.com`).
 
 ---
 
@@ -241,6 +241,89 @@ Kiwi, Meny, Spar, Joker, Nærbutikken, Jacob's, CC Mat, Lerøy Mat, Gigaboks, Me
 2. Pay with **SAS Amex Elite** (20 EB/100 kr on the purchase)
 3. **Total:** Portal bonus + card bonus = potentially 25–40+ EB points per 100 NOK
 
+### 5e. SAS EuroBonus Shop — Gift Cards (Gavekort)
+
+> Added 2026-07-11. Source: https://www.saseurobonusshop.com/no/gift-cards-vouchers/shopping
+
+This is a **separate** SAS-owned portal from the SAS Shopping portal above — it sells **digital gift cards (gavekort)** for ~35 Norwegian brands, paid for in either **EuroBonus points** OR **NOK cash**, with a **bonus EB earn** on top.
+
+#### How it works
+- Pick a brand → buy a digital gift card for a fixed NOK value (e.g. 50 kr / 100 kr increments)
+- Two payment options:
+  - **Pay with EB points:** Cost is ~32 EB per NOK spent (e.g. 50 kr gift card = 1,600 EB). Redeeming points *here* is generally a bad use of EB (see value section below).
+  - **Pay with NOK cash:** Same gift card, real money out of pocket, **plus** you earn the "Opptjen" EB bonus on top.
+- You earn the bonus points **on the gift card purchase itself**, NOT when the gift card is later spent at the retailer
+- Gift card codes are emailed to you instantly — they are treated as "consumed" on purchase (no angrerett / right of withdrawal)
+- **No further EB / Trumf earning** when you later use the gift card at the retailer — the bonus was already paid on the purchase of the gift card
+
+#### Critical: Don't double-stack
+Because bonus EB is paid on the gift-card *purchase*, spending the gift card at the retailer earns **nothing extra** — no EB from the portal, no Trumf, no Amex card earn. So gift-card EB has to **beat** the EB/Trumf you'd otherwise earn on a normal in-store/online purchase. For most everyday retail this is a wash or a win — for groceries or high-Trumf categories it's usually a loss.
+
+#### Available brands (as of 2026-07-11)
+Full catalog: <https://www.saseurobonusshop.com/no/gift-cards-vouchers/shopping>
+
+| Brand | Min cash tier | "Opptjen" EB | Eff. EB / 100 kr (cash) | Notes |
+|---|---|---|---|---|
+| Espresso House (sandwich + drikke) | 44 kr | 45 EB | ~102 EB | Best pure rate on the list — limited use |
+| Espresso House (valgfritt bakverk) | 33 kr | 33 EB | ~100 EB | — |
+| Espresso House (menu drik + bakverk) | 76 kr | 76 EB | ~100 EB | — |
+| Espresso House (varm drikke) | 45 kr | 46 EB | ~102 EB | — |
+| Zalando | 100 kr | up to 500 EB | up to 500 EB | Clothing — likely beats normal Trumf |
+| Bread & Boxers | 100 kr | up to 500 EB | up to 500 EB | — |
+| Zupergift | 50 kr | up to 2,500 EB | up to 5,000 EB | Universal gift card — **highest listed rate** |
+| Bik Bok | 50 kr | up to 500 EB | up to 1,000 EB | — |
+| Plantasjen | 50 kr | up to 1,000 EB | up to 2,000 EB | — |
+| Cubus | 50 kr | up to 500 EB | up to 1,000 EB | — |
+| Stadium Outlet | 50 kr | up to 2,500 EB | up to 5,000 EB | — |
+| Cervera | 50 kr | up to 2,500 EB | up to 5,000 EB | — |
+| RoyalDesign.no | 50 kr | up to 2,500 EB | up to 5,000 EB | — |
+| Care of Carl | 83 kr | up to 582 EB | up to ~700 EB | — |
+| Tailor Store | 268 kr | up to 627 EB | up to ~234 EB | Lower rate, larger ticket |
+| Nelly | 50 kr | up to 1,500 EB | up to 3,000 EB | — |
+| SmartaSaker | 100 kr | up to 600 EB | up to 600 EB | — |
+| Clas Ohlson | 100 kr | up to 500 EB | up to 500 EB | — |
+| Naturkompaniet | 50 kr | up to 2,500 EB | up to 5,000 EB | — |
+| Coolstuff | 50 kr | up to 1,000 EB | up to 2,000 EB | — |
+| Dressmann | 50 kr | up to 500 EB | up to 1,000 EB | Min cash tier 50 kr; max earn applies to the largest denomination the brand offers |
+| Dinsko | 50 kr | up to 250 EB | up to 500 EB | — |
+| Rituals | 100 kr | up to 300 EB | up to 300 EB | — |
+| Fashioncheque | 50 kr | up to 500 EB | up to 1,000 EB | Universal fashion card |
+| Name It | 50 kr | up to 250 EB | up to 500 EB | — |
+| Vero Moda | 50 kr | up to 250 EB | up to 500 EB | — |
+| Jack & Jones | 100 kr | up to 250 EB | up to 250 EB | — |
+| Selected | 100 kr | up to 500 EB | up to 500 EB | — |
+| Jernia | 100 kr | up to 1,000 EB | up to 1,000 EB | — |
+| Adidas | 50 kr | up to 500 EB | up to 1,000 EB | — |
+| Elefun | 100 kr | up to 350 EB | up to 350 EB | — |
+
+> "Opptjen opptil" = **maximum** tier. Buying the smallest denomination gets the **lowest** effective rate; the headline 500/2,500 EB figure requires buying the largest denomination the brand offers. Always check the actual rate on the product page before committing.
+
+#### Worked example: Dressmann (the case Mathias flagged)
+- Dressmann gift cards start at **50 kr** cash tier (1,600 EB if paying with points)
+- **Max tier** (largest denomination): earn up to **500 EB** → effective rate **up to 1,000 EB / 100 kr**
+- **Compare:** Normal in-store Dressmann = ~0% Trumf + 15 EB/100 kr via Amex Premium = **~15 EB/100 kr**
+- **Verdict:** Gift-card route at max tier is **up to ~66× better** than paying direct at Dressmann — strongly preferred if you shop there and can hit the max denomination
+- **Mathias's original framing** (500 NOK → 250 EB = 50 EB/100 NOK) implies a *different* Dressmann product/tier than what's visible on the current listing page, or possibly an older rate. The principle is the same — gift-card earn is a step-change over in-store purchase — but the exact figures should be re-verified at checkout before committing to a large denomination.
+- **Caveat:** Spending the gift card at Dressmann itself earns nothing extra, so do not also try to register Trumf at the till — that won't apply since the till only sees a gift-card code
+
+#### When the gift-card channel beats alternatives
+- **Stores where Trumf / SAS portal earn is 0%** (Dressmann, Espresso House, Jernia, Clas Ohlson, Adidas, Rituals, Elefun, Name It, Vero Moda, Jack & Jones, Selected) — gift cards usually win by a large margin
+- **Big-ticket items** at universal-card brands (Zupergift, Fashioncheque) where max-denomination tiers give 5,000 EB/100 kr
+- **Gifts**: Buy gift cards as presents — recipient gets the value, you keep the EB earn
+
+#### When to skip the gift-card channel
+- **Any NorgesGruppen grocery purchase** — Trumf + Amex stack gives 28.5–60.5 EB/100 kr vs the gift-card top tier (and gift cards aren't sold for Kiwi/Meny anyway)
+- **Booking.com / Hotels.com / Elkjøp / Power / Zalando online** — SAS Shopping portal or Trumf Netthandel usually beats it without the no-angrerett risk
+- **Small purchases** where you can't hit the max denomination — the effective rate drops sharply at smaller tiers
+- **Any purchase where you'd otherwise earn Trumf + Amex** — Trumf on the underlying purchase is forfeited when you pay with a gift card
+
+#### Paying with EB points vs cash
+**Never pay with EB points for these gift cards.** Example:
+- Dressmann 50 kr card costs 1,600 EB to buy with points
+- At 0.10–0.17 NOK/EB that's ~160–272 NOK worth of points for a 50 kr gift card
+- That's a ~70% loss on point value
+- **Only buy with cash** — keep your EB balance for award flights where the value is 0.20+ NOK/EB
+
 ---
 
 ## 6. Summary — Quick Reference
@@ -254,9 +337,16 @@ Kiwi, Meny, Spar, Joker, Nærbutikken, Jacob's, CC Mat, Lerøy Mat, Gigaboks, Me
 | Trumf Kredittkort at Kiwi/Meny (2% + auto-transfer) | 27 EB |
 | **Trumf medlem + Amex Premium (Kiwi)** | **28.5 EB** 🔥 |
 | **Trumf medlem + Amex Elite (Kiwi)** | **33.5 EB** 💎 |
+| **SAS EuroBonus Shop gift card — Zupergift / Naturkompaniet / RoyalDesign / Cervera / Stadium Outlet (max tier)** | **up to 5,000 EB** 🏆 |
+| **SAS EuroBonus Shop gift card — Plantasjen / Coolstuff / Nelly (mid tier)** | **up to ~2,000–3,000 EB** |
+| **SAS EuroBonus Shop gift card — Dressmann / Adidas / Cubus / Bik Bok (max tier)** | **up to ~1,000 EB** |
+| **SAS EuroBonus Shop gift card — Dressmann (50 kr min tier)** | **lower — verify at checkout** |
+| **SAS EuroBonus Shop gift card — Espresso House (any menu)** | **~100 EB** |
 | Trumf Netthandel 5% bonus + auto-transfer | ~6.75 EB |
 | SAS Shopping portal (varies) | 2–20+ EB |
 | Amex Platinum (Points Plus) → EB | 20 EB |
+
+> ⚠️ Gift-card rates are headline **maximum** rates — actual rate depends on which denomination tier you buy (smaller tier = lower effective EB/100 kr). Also note that paying with the gift card at the store gives **no further EB/Trumf** — the bonus is paid on the gift-card purchase itself. See §5e for full breakdown and the don't-double-stack caveat.
 
 ### Best Overall Strategy
 1. **Trumf medlemskap (gratis) + SAS Amex Premium** for dagligvarer (28.5 EB/100 kr — slår Trumf-kortet!)
@@ -264,8 +354,9 @@ Kiwi, Meny, Spar, Joker, Nærbutikken, Jacob's, CC Mat, Lerøy Mat, Gigaboks, Me
 3. **SAS MC Premium** as backup where Amex isn't accepted (15 EB/100 kr + Fly Premium)
 4. **Auto-transfer** Trumf → EuroBonus (13.5x rate)
 5. **Always use Trumf Netthandel or SAS Shopping** portal before buying online
-6. **Stay at Scandic/Thon** for 500 EB points/night
-7. **Add EB number** on all car rentals
+6. **SAS EuroBonus Shop gift cards** for stores where Trumf/SAS portal earn is 0% (Dressmann, Jernia, Espresso House, Clas Ohlson, Adidas, Rituals, etc.) — check §5e for which brands actually beat the alternatives; **always pay cash for the gift card**, never EB points
+7. **Stay at Scandic/Thon** for 500 EB points/night
+8. **Add EB number** on all car rentals
 
 ### Point Value Estimate
 - 1 EB point ≈ **0.10–0.17 NOK** (economy redemptions)
