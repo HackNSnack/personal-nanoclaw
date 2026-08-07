@@ -71,10 +71,10 @@ describe('per-container resource limits (structural)', () => {
     expect(src).not.toContain('--memory-swap');
   });
 
-  it('defaults both knobs to empty string in config (no flag = unbounded)', () => {
+  it('defaults both knobs to bounded caps in config (host-RAM safety under concurrency)', () => {
     const cfg = fs.readFileSync(path.join(process.cwd(), 'src', 'config.ts'), 'utf-8');
-    expect(cfg).toContain("CONTAINER_CPU_LIMIT = process.env.CONTAINER_CPU_LIMIT || ''");
-    expect(cfg).toContain("CONTAINER_MEMORY_LIMIT = process.env.CONTAINER_MEMORY_LIMIT || ''");
+    expect(cfg).toContain("CONTAINER_CPU_LIMIT = process.env.CONTAINER_CPU_LIMIT || '0.5'");
+    expect(cfg).toContain("CONTAINER_MEMORY_LIMIT = process.env.CONTAINER_MEMORY_LIMIT || '768m'");
   });
 });
 

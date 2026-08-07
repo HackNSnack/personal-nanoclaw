@@ -93,7 +93,7 @@ async function main(): Promise<void> {
 
   // 2. Container runtime
   ensureContainerRuntimeRunning();
-  cleanupOrphans();
+  await cleanupOrphans();
 
   // 3. Channel adapters
   await initChannelAdapters((adapter: ChannelAdapter): ChannelSetup => {
@@ -177,6 +177,13 @@ async function main(): Promise<void> {
 /** Graceful shutdown. */
 async function shutdown(signal: string): Promise<void> {
   log.info('Shutdown signal received', { signal });
+  // Hard ceiling: if any shutdown callback/teardown hangs, exit anyway rather
+  // than waiting for systemd's SIGKILL at the 90s mark. The timer is moot if
+  // shutdown reaches the normal process.exit(0) below; it only fires on a hang.
+  const hardCeiling = setTimeout(() => {
+    log.error('Shutdown exceeded 15s hard ceiling — forcing exit', { signal });
+    process.exit(1);
+  }, 15_000);
   for (const cb of getShutdownCallbacks()) {
     try {
       await cb();
@@ -190,6 +197,7 @@ async function shutdown(signal: string): Promise<void> {
   try {
     await teardownChannelAdapters();
   } finally {
+    clearTimeout(hardCeiling);
     // Always reset on graceful shutdown — even if teardown threw, we got here
     // via SIGTERM/SIGINT, not a crash, so the next start shouldn't be counted
     // as one.

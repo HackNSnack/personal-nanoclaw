@@ -82,8 +82,8 @@ describe('ClaudeProvider.maybeRotateContinuation', () => {
     expect(provider.maybeRotateContinuation('sess-old', CWD)).toContain('d');
   });
 
-  it('returns null for an unknown session id', () => {
+  it("returns 'transcript not found' for an unknown session id (so runPollLoop clears it and starts fresh)", () => {
     const provider = new ClaudeProvider();
-    expect(provider.maybeRotateContinuation('does-not-exist', CWD)).toBeNull();
+    expect(provider.maybeRotateContinuation('does-not-exist', CWD)).toBe('transcript not found');
   });
 });

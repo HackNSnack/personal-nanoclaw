@@ -111,7 +111,11 @@ export function decideStuckAction(args: {
     if (Number.isNaN(claimedAt)) continue;
     const claimAge = now - claimedAt;
     if (claimAge <= tolerance) continue;
-    if (heartbeatMtimeMs > claimedAt) continue;
+    // A container that ticked the heartbeat once post-claim, then froze, used
+    // to get indefinite immunity (any mtime > claimedAt passed). Bound it: the
+    // post-claim tick must also be fresh — otherwise a frozen container that
+    // ticked once is still reaped, matching the intent of the heartbeat check.
+    if (heartbeatMtimeMs > claimedAt && now - heartbeatMtimeMs <= tolerance) continue;
     return { action: 'kill-claim', messageId: claim.message_id, claimAgeMs: claimAge, toleranceMs: tolerance };
   }
 

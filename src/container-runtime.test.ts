@@ -11,10 +11,14 @@ vi.mock('./log.js', () => ({
   },
 }));
 
-// Mock child_process — store the mock fn so tests can configure it
+// Mock child_process — store the mock fns so tests can configure them.
+// `cleanupOrphans` uses promisified `execFile` (callback-style under the hood);
+// the mock must therefore call the trailing callback, not return a Promise.
 const mockExecSync = vi.fn();
+const mockExecFile = vi.fn();
 vi.mock('child_process', () => ({
-  execSync: (...args: unknown[]) => mockExecSync(...args),
+  execSync: (...a: unknown[]) => mockExecSync(...a),
+  execFile: (...a: unknown[]) => mockExecFile(...a),
 }));
 
 import {
@@ -29,7 +33,22 @@ import { log } from './log.js';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Default execFile: no orphans (empty ps output), stop calls succeed.
+  mockExecFile.mockImplementation((_file: string, argv: string[], _opts: unknown, cb: Function) => {
+    if (typeof cb !== 'function') return;
+    if (argv[0] === 'ps') cb(null, { stdout: '', stderr: '' });
+    else cb(null, { stdout: '', stderr: '' });
+  });
 });
+
+// Helper: make the `ps` call return a list of orphan names; stop calls succeed.
+function mockPsOrphans(names: string): void {
+  mockExecFile.mockImplementation((_file: string, argv: string[], _opts: unknown, cb: Function) => {
+    if (typeof cb !== 'function') return;
+    if (argv[0] === 'ps') cb(null, { stdout: names, stderr: '' });
+    else cb(null, { stdout: '', stderr: '' });
+  });
+}
 
 // --- Pure functions ---
 
@@ -85,54 +104,58 @@ describe('ensureContainerRuntimeRunning', () => {
 // --- cleanupOrphans ---
 
 describe('cleanupOrphans', () => {
-  it('filters ps by the install label so peers are not reaped', () => {
-    mockExecSync.mockReturnValueOnce('');
+  it('filters ps by the install label so peers are not reaped', async () => {
+    await cleanupOrphans();
 
-    cleanupOrphans();
-
-    expect(mockExecSync).toHaveBeenCalledWith(
-      `${CONTAINER_RUNTIME_BIN} ps --filter label=${CONTAINER_INSTALL_LABEL} --format '{{.Names}}'`,
+    expect(mockExecFile).toHaveBeenCalledWith(
+      CONTAINER_RUNTIME_BIN,
+      ['ps', '--filter', `label=${CONTAINER_INSTALL_LABEL}`, '--format', '{{.Names}}'],
       expect.any(Object),
+      expect.any(Function),
     );
   });
 
-  it('stops orphaned nanoclaw containers', () => {
-    // docker ps returns container names, one per line
-    mockExecSync.mockReturnValueOnce('nanoclaw-group1-111\nnanoclaw-group2-222\n');
-    // stop calls succeed
-    mockExecSync.mockReturnValue('');
+  it('stops orphaned nanoclaw containers in parallel', async () => {
+    mockPsOrphans('nanoclaw-group1-111\nnanoclaw-group2-222\n');
 
-    cleanupOrphans();
+    await cleanupOrphans();
 
     // ps + 2 stop calls
-    expect(mockExecSync).toHaveBeenCalledTimes(3);
-    expect(mockExecSync).toHaveBeenNthCalledWith(2, `${CONTAINER_RUNTIME_BIN} stop -t 1 nanoclaw-group1-111`, {
-      stdio: 'pipe',
-    });
-    expect(mockExecSync).toHaveBeenNthCalledWith(3, `${CONTAINER_RUNTIME_BIN} stop -t 1 nanoclaw-group2-222`, {
-      stdio: 'pipe',
-    });
+    expect(mockExecFile).toHaveBeenCalledTimes(3);
+    expect(mockExecFile).toHaveBeenNthCalledWith(
+      2,
+      CONTAINER_RUNTIME_BIN,
+      ['stop', '-t', '1', 'nanoclaw-group1-111'],
+      expect.any(Object),
+      expect.any(Function),
+    );
+    expect(mockExecFile).toHaveBeenNthCalledWith(
+      3,
+      CONTAINER_RUNTIME_BIN,
+      ['stop', '-t', '1', 'nanoclaw-group2-222'],
+      expect.any(Object),
+      expect.any(Function),
+    );
     expect(log.info).toHaveBeenCalledWith('Stopped orphaned containers', {
       count: 2,
       names: ['nanoclaw-group1-111', 'nanoclaw-group2-222'],
     });
   });
 
-  it('does nothing when no orphans exist', () => {
-    mockExecSync.mockReturnValueOnce('');
+  it('does nothing when no orphans exist', async () => {
+    await cleanupOrphans();
 
-    cleanupOrphans();
-
-    expect(mockExecSync).toHaveBeenCalledTimes(1);
+    // only the ps call runs
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
     expect(log.info).not.toHaveBeenCalled();
   });
 
-  it('warns and continues when ps fails', () => {
-    mockExecSync.mockImplementationOnce(() => {
-      throw new Error('docker not available');
+  it('warns and continues when ps fails', async () => {
+    mockExecFile.mockImplementation((_f: string, _a: string[], _o: unknown, cb: Function) => {
+      cb(new Error('docker not available'));
     });
 
-    cleanupOrphans(); // should not throw
+    await cleanupOrphans(); // should not throw
 
     expect(log.warn).toHaveBeenCalledWith(
       'Failed to clean up orphaned containers',
@@ -140,18 +163,16 @@ describe('cleanupOrphans', () => {
     );
   });
 
-  it('continues stopping remaining containers when one stop fails', () => {
-    mockExecSync.mockReturnValueOnce('nanoclaw-a-1\nnanoclaw-b-2\n');
-    // First stop fails
-    mockExecSync.mockImplementationOnce(() => {
-      throw new Error('already stopped');
+  it('continues stopping remaining containers when one stop fails', async () => {
+    mockExecFile.mockImplementation((_f: string, argv: string[], _o: unknown, cb: Function) => {
+      if (argv[0] === 'ps') return cb(null, { stdout: 'nanoclaw-a-1\nnanoclaw-b-2\n', stderr: '' });
+      if (argv[2] === 'nanoclaw-a-1') return cb(new Error('already stopped'));
+      cb(null, { stdout: '', stderr: '' });
     });
-    // Second stop succeeds
-    mockExecSync.mockReturnValueOnce('');
 
-    cleanupOrphans(); // should not throw
+    await cleanupOrphans(); // should not throw
 
-    expect(mockExecSync).toHaveBeenCalledTimes(3);
+    expect(mockExecFile).toHaveBeenCalledTimes(3);
     expect(log.info).toHaveBeenCalledWith('Stopped orphaned containers', {
       count: 2,
       names: ['nanoclaw-a-1', 'nanoclaw-b-2'],

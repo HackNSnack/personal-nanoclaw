@@ -354,7 +354,7 @@ const CLAUDE_CODE_AUTO_COMPACT_WINDOW = process.env.CLAUDE_CODE_AUTO_COMPACT_WIN
  * resumed session can't be found — missing transcript .jsonl, unknown
  * session ID, etc.
  */
-const STALE_SESSION_RE = /no conversation found|ENOENT.*\.jsonl|session.*not found/i;
+const STALE_SESSION_RE = /no conversation found|ENOENT.*\.jsonl|session.*not found|budget_exceeded|budget has been exceeded/i;
 
 export class ClaudeProvider implements AgentProvider {
   readonly supportsNativeSlashCommands = true;
@@ -385,7 +385,11 @@ export class ClaudeProvider implements AgentProvider {
 
   maybeRotateContinuation(continuation: string): string | null {
     const transcriptPath = findTranscriptPath(continuation);
-    if (!transcriptPath) return null;
+    // A resume id with no backing .jsonl can't be cold-loaded — return a rotate
+    // reason so runPollLoop clears it and starts fresh, rather than handing the
+    // SDK a vanished session id to crash-loop on. Previously returned null (no
+    // rotation), which left a vanished-session id to be resumed indefinitely.
+    if (!transcriptPath) return 'transcript not found';
 
     let size: number;
     try {
@@ -442,6 +446,12 @@ export class ClaudeProvider implements AgentProvider {
         effort: this.effort as any,
         permissionMode: 'bypassPermissions',
         allowDangerouslySkipPermissions: true,
+        // Emit ~30s `task_progress` summary events during sub-agent runs so the
+        // poll loop has a wall-clock heartbeat even when no tool/text messages
+        // bubble up — prevents the host sweep / exit-76 watchdog from killing
+        // containers stuck on slow MCP calls or long Opus turns inside a Task
+        // tool dispatch.
+        agentProgressSummaries: true,
         settingSources: ['project', 'user', 'local'],
         mcpServers: this.mcpServers,
         hooks: {
@@ -485,6 +495,15 @@ export class ClaudeProvider implements AgentProvider {
         } else if (message.type === 'system' && (message as { subtype?: string }).subtype === 'task_notification') {
           const tn = message as { summary?: string };
           yield { type: 'progress', message: tn.summary || 'Task notification' };
+        } else if (message.type === 'system' && (message as { subtype?: string }).subtype === 'task_progress') {
+          // Sub-agent progress summary (~30s cadence; gated by agentProgressSummaries).
+          // The activity yield above already touches the heartbeat — this branch is
+          // belt-and-braces: surface the summary as a progress event so logs/UI can
+          // see the sub-agent is still working. If a future SDK adds richer metadata
+          // (description, last_tool_name, usage), surface it here.
+          const tp = message as { summary?: string; description?: string };
+          const text = tp.summary || tp.description;
+          if (text) yield { type: 'progress', message: text };
         }
       }
       log(`Query completed after ${messageCount} SDK messages`);

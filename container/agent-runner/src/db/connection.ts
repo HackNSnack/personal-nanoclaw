@@ -30,6 +30,26 @@ let _heartbeatPath: string = DEFAULT_HEARTBEAT_PATH;
 let _testMode = false;
 
 /**
+ * In-process mirror of the in-flight tool. The DB row (container_state) is the
+ * host's view; this is the container's own view, read by the poll loop's
+ * heartbeat ticker and self-watchdog so neither has to round-trip through
+ * SQLite on its hot path. The mirror is updated only AFTER the DB write
+ * succeeds (see set/clear below), so a failed write can never leave the
+ * mirror ahead of the row. `declaredTimeoutMs` is only populated for Bash
+ * calls that passed a `timeout` input.
+ */
+export interface InFlightTool {
+  tool: string;
+  declaredTimeoutMs: number | null;
+}
+let _inFlightTool: InFlightTool | null = null;
+
+/** Current in-flight tool as seen in-process, or null if none. */
+export function getInFlightTool(): InFlightTool | null {
+  return _inFlightTool;
+}
+
+/**
  * Avoid all cached db reads; open inbound.db read-only with mmap and page cache disabled.
  *
  * Use this (not getInboundDb) for readers that need to see host-written rows
@@ -118,6 +138,11 @@ export function getOutboundDb(): Database {
  * omit for tools with no declared timeout.
  */
 export function setContainerToolInFlight(tool: string, declaredTimeoutMs: number | null): void {
+  // DB row first, then the in-process mirror. The callers (pre/post-tool hooks
+  // in providers/claude.ts) swallow a throwing DB write, so mutating memory first
+  // would leave the mirror ahead of the row on a failed write — exactly the
+  // divergence the two views are meant to never have. Writing the DB first means
+  // a throw aborts before the mirror changes: both stay on the prior state.
   const now = new Date().toISOString();
   getOutboundDb()
     .prepare(
@@ -130,10 +155,12 @@ export function setContainerToolInFlight(tool: string, declaredTimeoutMs: number
          updated_at = excluded.updated_at`,
     )
     .run(tool, declaredTimeoutMs, now, now);
+  _inFlightTool = { tool, declaredTimeoutMs };
 }
 
 /** Clear the in-flight tool — called on PostToolUse / PostToolUseFailure. */
 export function clearContainerToolInFlight(): void {
+  // DB row first, then the in-process mirror — see setContainerToolInFlight.
   const now = new Date().toISOString();
   getOutboundDb()
     .prepare(
@@ -146,6 +173,7 @@ export function clearContainerToolInFlight(): void {
          updated_at = excluded.updated_at`,
     )
     .run(now);
+  _inFlightTool = null;
 }
 
 /**
@@ -174,6 +202,58 @@ export function touchHeartbeat(): void {
  */
 export function clearStaleProcessingAcks(): void {
   getOutboundDb().prepare("DELETE FROM processing_ack WHERE status = 'processing'").run();
+}
+
+/** For tests — init only the in-memory outbound DB, leaving `_inbound` untouched.
+ *
+ * Used by watchdog tests that write continuation state but never read inbound
+ * (the poll ticker is cleared before its first tick). Swapping the shared
+ * `_inbound` singleton mid-suite would race a concurrent `runPollLoop` test that
+ * reads inbound (bun runs test files concurrently in one process). Touching
+ * only `_outbound` keeps those tests isolated from the inbound-reading suites.
+ */
+export function initOutboundOnlyTestDb(): void {
+  _testMode = true;
+  _outbound = new Database(':memory:');
+  _outbound.exec('PRAGMA foreign_keys = ON');
+  _outbound.exec(`
+    CREATE TABLE messages_out (
+      id             TEXT PRIMARY KEY,
+      seq            INTEGER UNIQUE,
+      in_reply_to    TEXT,
+      timestamp      TEXT NOT NULL,
+      deliver_after  TEXT,
+      recurrence     TEXT,
+      kind           TEXT NOT NULL,
+      platform_id    TEXT,
+      channel_type   TEXT,
+      thread_id      TEXT,
+      content        TEXT NOT NULL
+    );
+    CREATE TABLE processing_ack (
+      message_id     TEXT PRIMARY KEY,
+      status         TEXT NOT NULL,
+      status_changed TEXT NOT NULL
+    );
+    CREATE TABLE session_state (
+      key        TEXT PRIMARY KEY,
+      value      TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE container_state (
+      id                       INTEGER PRIMARY KEY CHECK (id = 1),
+      current_tool             TEXT,
+      tool_declared_timeout_ms INTEGER,
+      tool_started_at          TEXT,
+      updated_at               TEXT NOT NULL
+    );
+  `);
+}
+
+/** Close only the outbound test DB (companion to initOutboundOnlyTestDb). */
+export function closeOutboundTestDb(): void {
+  _outbound?.close();
+  _outbound = null;
 }
 
 /** For tests — creates in-memory DBs with the session schemas. */
@@ -259,6 +339,7 @@ export function closeSessionDb(): void {
   _testMode = false;
   _outbound?.close();
   _outbound = null;
+  _inFlightTool = null;
 }
 
 /**

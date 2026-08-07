@@ -26,6 +26,8 @@ import { onDeliveryAdapterReady } from '../../delivery.js';
 import { registerResponseHandler, onShutdown } from '../../response-registry.js';
 import { handleApprovalsResponse } from './response-handler.js';
 import { startOneCLIApprovalHandler, stopOneCLIApprovalHandler } from './onecli-approvals.js';
+import { ONECLI_URL } from '../../config.js';
+import { log } from '../../log.js';
 
 // Public API re-exports so consumers import from the module root.
 export { requestApproval, registerApprovalHandler, notifyAgent } from './primitive.js';
@@ -37,6 +39,14 @@ export { sweepAwaitingReasonRejects } from './reason-capture.js';
 registerResponseHandler(handleApprovalsResponse);
 
 onDeliveryAdapterReady((adapter) => {
+  // Without OneCLI configured, startOneCLIApprovalHandler would long-poll
+  // app.onecli.sh and 401 forever. Guard so an unconfigured install doesn't
+  // spin a useless loop; the handler can be started later by configuring
+  // OneCLI and restarting.
+  if (!ONECLI_URL) {
+    log.info('OneCLI approval handler disabled — ONECLI_URL not configured');
+    return;
+  }
   startOneCLIApprovalHandler(adapter);
 });
 

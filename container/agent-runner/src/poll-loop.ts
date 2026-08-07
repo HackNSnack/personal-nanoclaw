@@ -2,8 +2,15 @@ import { findByName, getAllDestinations, type DestinationEntry } from './destina
 import { getPendingMessages, markProcessing, markCompleted, type MessageInRow } from './db/messages-in.js';
 import { writeMessageOut } from './db/messages-out.js';
 import { getFinalSignalCount } from './db/final-signal.js';
-import { getInboundDb, touchHeartbeat, clearStaleProcessingAcks } from './db/connection.js';
-import { clearContinuation, migrateLegacyContinuation, setContinuation } from './db/session-state.js';
+import { getInboundDb, touchHeartbeat, clearStaleProcessingAcks, getInFlightTool, type InFlightTool } from './db/connection.js';
+import {
+  clearContinuation,
+  migrateLegacyContinuation,
+  setContinuation,
+  bumpWedgeStrikes,
+  resetWedgeStrikes,
+  bumpPostInitWedgeStrikes,
+} from './db/session-state.js';
 import { clearCurrentInReplyTo, setCurrentInReplyTo } from './current-batch.js';
 import {
   formatMessages,
@@ -22,6 +29,34 @@ const POLL_INTERVAL_MS = 1000;
 const ACTIVE_POLL_INTERVAL_MS = 500;
 
 /**
+ * Consecutive truly-empty polls (no rows in messages_in at all) before the
+ * container self-exits(0). At the 1000ms poll interval this is ~60s of true
+ * silence. The host's wakeContainer path respawns us on the next inbound.
+ * Without idle-exit, every container holds its slot + memory for the full
+ * 30-min idle ceiling until the sweep force-kills it. Self-exit is the
+ * graceful version. Count only `messages.length === 0` — an accumulate-only
+ * batch (trigger=0) is queued work, not idle, and must not count toward exit.
+ */
+export const IDLE_EXIT_POLL_COUNT = 60;
+
+/**
+ * Pure decision for whether the poll loop should self-exit this iteration.
+ * Inputs are deterministic so the host-sweep wakeContainer cadence can be
+ * verified in isolation. Returns the next emptyPollStreak value (caller stores
+ * it) and whether to exit. A non-empty batch resets the streak to 0.
+ */
+export function decideIdleExit(
+  args: { hadMessages: boolean; previousStreak: number },
+  threshold: number = IDLE_EXIT_POLL_COUNT,
+): { nextStreak: number; shouldExit: boolean } {
+  if (args.hadMessages) {
+    return { nextStreak: 0, shouldExit: false };
+  }
+  const nextStreak = args.previousStreak + 1;
+  return { nextStreak, shouldExit: nextStreak >= threshold };
+}
+
+/**
  * Number of consecutive `database disk image is malformed` errors after which
  * the follow-up poll gives up and exits the process. At ACTIVE_POLL_INTERVAL_MS
  * = 500ms this is roughly 5 seconds — long enough to dodge a transient torn
@@ -29,6 +64,73 @@ const ACTIVE_POLL_INTERVAL_MS = 500;
  * page cache (host-sweep then respawns with a fresh mount).
  */
 const CORRUPTION_STREAK_EXIT = 10;
+
+/**
+ * Heartbeat-silence watchdog: max time an *active* turn may go without emitting
+ * a single SDK event before the container self-exits (76) for a host respawn.
+ * If the child `claude` binary wedges mid-turn — most often blocked on an LLM
+ * upstream socket read we don't own — the query.events loop blocks and the
+ * heartbeat freezes with it. Measured normal active-turn gap is ~4-9s, so 120s
+ * sits well clear of a slow-but-live step while still being a fraction of the
+ * 30-min host ceiling. Env-overridable for tuning without a rebuild.
+ */
+const HEARTBEAT_WATCHDOG_MS = Number(process.env.HEARTBEAT_WATCHDOG_MS) || 120_000;
+
+/**
+ * Consecutive watchdog-76 wedges on the *same* continuation before we clear it
+ * as poisoned. A wedge self-exits(76) before processQuery returns, so the
+ * graceful apiError clear path never runs — without this a resume that wedges
+ * every time crash-loops forever. An unconditional clear on the first wedge
+ * would drop a thread's memory on a single transient network stall; the strike
+ * counter preserves continuity through a one-off wedge while still self-healing
+ * a truly poisoned session on the second respawn. A healthy turn resets it.
+ * Env-overridable for tests.
+ */
+const WEDGE_STRIKE_LIMIT = Number(process.env.WEDGE_STRIKE_LIMIT) || 2;
+
+// Post-init cold-wedge budget: higher than the silent limit because an
+// init-then-hang resume is more likely a transient gateway stall than poison.
+const POST_INIT_WEDGE_STRIKE_LIMIT = Number(process.env.POST_INIT_WEDGE_STRIKE_LIMIT) || 4;
+// A post-init wedge this long after the previous one resets the counter —
+// isolated transients decay to nothing; only clustered respawns accumulate.
+const POST_INIT_WEDGE_DECAY_MS = Number(process.env.POST_INIT_WEDGE_DECAY_MS) || 15 * 60 * 1000;
+
+/**
+ * Grace added to a Bash tool's declared timeout when extending the watchdog
+ * deadline. A `git clone` declared at e.g. 300s legitimately emits no SDK events
+ * for the whole run; the watchdog must allow the full declared window plus
+ * slack for the SDK to surface the PostToolUse result before deciding the turn
+ * is wedged. Mirrors the host's `max(CLAIM_STUCK_MS, declaredBashMs)` tolerance
+ * (host-sweep.ts) but adds a margin since the container side can't see the
+ * host's separate ceiling.
+ */
+const WATCHDOG_BASH_MARGIN_MS = 30_000;
+
+/**
+ * Watchdog ceiling for an in-flight tool that has no declared timeout — every
+ * non-Bash tool, plus a default-timeout Bash. The heartbeat ticker keeps the
+ * host's liveness view fresh for *any* in-flight tool, so the host has fully
+ * delegated "is this tool still healthy" to the container; this self-watchdog
+ * is then the only thing bounding such a tool. Mirror the host's absolute
+ * ceiling (IDLE_TIMEOUT_MS = 30 min) so the two sides reap an in-flight
+ * container at the same bound rather than the container self-killing at the
+ * 120s base while the host still sees it alive. Env-overridable.
+ */
+export const IN_FLIGHT_CEILING_MS = Number(process.env.IN_FLIGHT_CEILING_MS) || 30 * 60 * 1000;
+
+/**
+ * Resume-grace window for the phase *before the first SDK event of a turn that
+ * resumed a stored continuation*. A cold resume must reload a large `.jsonl`
+ * transcript from disk before the SDK emits its first event; on a busy gateway
+ * that read + first-token latency can exceed the 120s base with no tool in
+ * flight to widen the window. Judged against the bare base, a slow-but-healthy
+ * cold resume reads as a wedge — the watchdog exit-76s and two such resumes in
+ * a row wipe the thread's memory. Grant the pre-first-event resume phase a
+ * generous window so a legitimately-slow reload is never counted as a wedge. A
+ * *fresh* (non-resume) turn gets no grace — there is no transcript to reload.
+ * Env-overridable.
+ */
+export const RESUME_GRACE_MS = Number(process.env.RESUME_GRACE_MS) || 5 * 60 * 1000;
 
 /**
  * True for SQLite errors that indicate a corrupt READ view — almost always a
@@ -44,6 +146,25 @@ export function isCorruptionError(msg: string): boolean {
     msg.includes('file is not a database')
   );
 }
+
+/**
+ * True when the SDK subprocess was killed with SIGKILL — either by the kernel
+ * OOM killer (cgroup memory limit exceeded) or by an explicit kill. In either
+ * case Bun remains alive but the executor is gone; the container should exit
+ * immediately so the host respawns a fresh one rather than looping with a dead
+ * claude.exe.
+ */
+export function isOomKill(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as Record<string, unknown>;
+  if (e.signal === 'SIGKILL') return true;
+  if (e.code === 137) return true;
+  const msg = typeof e.message === 'string' ? e.message : '';
+  return msg.includes('SIGKILL') || msg.includes('ERR_CHILD_PROCESS_KILLED');
+}
+
+/** Gateway/SDK errors surfaced as result text (e.g. "API Error: 400 {budget_exceeded}"). */
+const API_ERROR_RE = /^API Error:/;
 
 function log(msg: string): void {
   console.error(`[${new Date().toISOString()}]${`[poll-loop] ${msg}`}`);
@@ -90,6 +211,13 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
   // other providers may reload a thread ID, etc.). Keyed per-provider so
   // a Codex thread id never gets handed to Claude or vice versa.
   let continuation: string | undefined = migrateLegacyContinuation(config.providerName);
+  // The container's first query that resumes a stored continuation is a cold
+  // `.jsonl` reload; every later turn is warm (transcript already in the live
+  // SDK subprocess). Flipped false once a query has run, so the resume-grace
+  // window + resume-wedge strike apply to that first cold turn only. A wedge
+  // exits the process before this flips, so a crash-looping resume stays "cold"
+  // across respawns and keeps striking until it self-heals.
+  let coldResumePending = continuation !== undefined;
 
   // Before resuming, drop a session whose on-disk transcript has grown too
   // large/old to cold-resume within the host's idle ceiling. Without this a
@@ -113,6 +241,7 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
   clearStaleProcessingAcks();
 
   let pollCount = 0;
+  let emptyPollStreak = 0;
   let isFirstPoll = true;
   while (true) {
     if (config.signal?.aborted) return;
@@ -127,8 +256,23 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
     }
 
     if (messages.length === 0) {
+      const { nextStreak, shouldExit } = decideIdleExit({
+        hadMessages: false,
+        previousStreak: emptyPollStreak,
+      });
+      emptyPollStreak = nextStreak;
+      if (shouldExit) {
+        log(`Idle exit — ${emptyPollStreak} consecutive empty polls (~${emptyPollStreak}s). Host respawns on next inbound.`);
+        process.exit(0);
+      }
       await sleep(POLL_INTERVAL_MS);
       continue;
+    }
+    // A non-empty batch resets the idle streak — but an accumulate-only batch
+    // (trigger=0) is queued context, not active work, so it neither counts as
+    // idle (it carries pending rows) nor resets via the hadMessages path below.
+    if (messages.some((m) => m.trigger === 1)) {
+      emptyPollStreak = 0;
     }
 
     // Accumulate gate: if the batch contains only trigger=0 rows
@@ -256,6 +400,10 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
     // can stamp it on outbound rows — needed for a2a return-path routing.
     setCurrentInReplyTo(routing.inReplyTo);
     try {
+      // This query is a cold resume only if it carries a resumed continuation
+      // AND no prior query has run in this container. Capture before the call;
+      // the flag is consumed by the grace window + resume-wedge strike inside.
+      const isColdResume = coldResumePending && continuation !== undefined;
       const result = await processQuery(
         query,
         routing,
@@ -264,14 +412,51 @@ export async function runPollLoop(config: PollLoopConfig): Promise<void> {
         config.provider.onExchangeComplete?.bind(config.provider),
         prompt,
         continuation,
+        // Explicit production defaults so the trailing test-only seams
+        // (isColdResume + resumeGraceMs, driving the resume-grace window and
+        // the resume-wedge strike) land past them.
+        HEARTBEAT_WATCHDOG_MS,
+        (code) => process.exit(code),
+        getInFlightTool,
+        touchHeartbeat,
+        defaultOnWedge,
+        isColdResume,
+        RESUME_GRACE_MS,
       );
+      // A returned query means the cold reload (if any) is done — every later
+      // turn in this container is warm. A wedge exits before reaching here, so
+      // a crash-looping cold resume never clears this and keeps striking.
+      coldResumePending = false;
+      // A turn that returned at all (wedged turns never do — they exit 76 first)
+      // proves the SILENT resume healthy: drop the silent wedge counter so two
+      // unrelated silent wedges far apart don't accumulate toward a false clear.
+      // The post-init counter is left to its own wall-clock decay — a healthy
+      // turn doesn't prove the post-init cluster history stale.
+      resetWedgeStrikes(config.providerName);
       if (result.continuation && result.continuation !== continuation) {
         continuation = result.continuation;
         setContinuation(config.providerName, continuation);
       }
+      // API error in result text: the gateway returned an error (e.g. budget
+      // exceeded) that the SDK surfaced as a result string. Clear the
+      // continuation so the next wakeup doesn't resume the same poisoned
+      // session and hit the wall again.
+      if (result.apiError && continuation) {
+        log(`Clearing session after API error (${continuation}) — ${result.apiError.slice(0, 200)}`);
+        continuation = undefined;
+        clearContinuation(config.providerName);
+      }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       log(`Query error: ${errMsg}`);
+
+      // If the SDK subprocess was SIGKILL'd (OOM or manual kill), Bun is still
+      // alive but claude.exe is gone. The poll loop would keep running with a
+      // dead executor. Exit so the host respawns a fresh container.
+      if (isOomKill(err)) {
+        log(`SDK subprocess SIGKILLed (OOM or kill) — exiting (137) for host respawn`);
+        process.exit(137);
+      }
 
       // Stale/corrupt continuation recovery: ask the provider whether
       // this error means the stored continuation is unusable, and clear
@@ -370,6 +555,87 @@ function formatMessagesWithCommands(messages: MessageInRow[], nativeSlashCommand
 
 interface QueryResult {
   continuation?: string;
+  /** Gateway error text surfaced as a result (e.g. "API Error: …budget_exceeded"). */
+  apiError?: string;
+}
+
+/**
+ * Effective heartbeat-silence tolerance for the current moment. The window
+ * tracks what the heartbeat ticker is doing, so the container self-kills on
+ * the same bound the host would use rather than diverging from it:
+ *
+ *   - No tool in flight -> base window. A silent turn with no tool running is
+ *     genuinely wedged (blocked LLM socket, dead SDK) and should be reaped
+ *     fast; the ticker isn't touching the heartbeat either, so the host agrees.
+ *   - Bash with a declared timeout -> `declaredTimeout + margin`. A long
+ *     blocking `git clone`/`cargo build` emits no SDK events for its whole run.
+ *   - Any other in-flight tool (default-timeout Bash, slow MCP call) -> the
+ *     in-flight ceiling. The ticker keeps the heartbeat fresh for any in-flight
+ *     tool, so the host treats it as alive up to its absolute ceiling; the
+ *     container must match that bound or it self-exits(76) mid-tool at the 120s
+ *     base while the host still believes it healthy.
+ *   - No tool in flight, but the turn resumed a continuation and no SDK event
+ *     has arrived yet (`resumeGraceMs > 0`) -> the resume-grace window. A cold
+ *     reload of a large `.jsonl` on a busy gateway emits no events and runs no
+ *     tool, so the bare base would false-fire; grant the resume-grace allowance
+ *     until the first event lands. In-flight-tool widening takes precedence —
+ *     once a tool is running the reload is demonstrably done.
+ */
+export function effectiveWatchdogMs(
+  baseMs: number,
+  inFlight: InFlightTool | null,
+  resumeGraceMs = 0,
+): number {
+  // resumeGraceMs is always >= 0 (0 = no grace), so Math.max alone covers both.
+  if (!inFlight) return Math.max(baseMs, resumeGraceMs);
+  if (inFlight.tool === 'Bash' && typeof inFlight.declaredTimeoutMs === 'number') {
+    return Math.max(baseMs, inFlight.declaredTimeoutMs + WATCHDOG_BASH_MARGIN_MS);
+  }
+  return Math.max(baseMs, IN_FLIGHT_CEILING_MS);
+}
+
+/**
+ * Strike-count-then-maybe-clear behavior for a watchdog-76 wedge. Bumps a
+ * per-continuation counter; once it hits its path's limit, clears the poisoned
+ * continuation (which also resets both counters) so the host's next respawn
+ * starts a fresh session instead of resuming the same wall.
+ *
+ * Two paths, chosen by `postInit` (whether `init` fired before the hang):
+ *   - SILENT (no init) -> fast heal at WEDGE_STRIKE_LIMIT (2).
+ *   - POST-INIT (init fired, then hung) -> higher, time-decayed budget so an
+ *     isolated transient gateway stall never clears a healthy continuation
+ *     while clustered respawns (real poison) still self-heal.
+ */
+function applyWedgeStrike(
+  provider: string,
+  continuation: string,
+  strikes: number,
+  limit: number,
+  phase: 'silent' | 'post-init',
+): void {
+  if (strikes >= limit) {
+    log(
+      `Watchdog wedge strike ${strikes}/${limit} (${phase}) on ${continuation} — clearing poisoned continuation before respawn`,
+    );
+    clearContinuation(provider); // wipes both counters
+  } else {
+    log(`Watchdog wedge strike ${strikes}/${limit} (${phase}) on ${continuation} — keeping continuation`);
+  }
+}
+
+function defaultOnWedge(provider: string, continuation: string, postInit: boolean): void {
+  const { strikes, limit, phase } = postInit
+    ? {
+        strikes: bumpPostInitWedgeStrikes(provider, POST_INIT_WEDGE_DECAY_MS),
+        limit: POST_INIT_WEDGE_STRIKE_LIMIT,
+        phase: 'post-init' as const,
+      }
+    : {
+        strikes: bumpWedgeStrikes(provider),
+        limit: WEDGE_STRIKE_LIMIT,
+        phase: 'silent' as const,
+      };
+  applyWedgeStrike(provider, continuation, strikes, limit, phase);
 }
 
 export async function processQuery(
@@ -380,10 +646,101 @@ export async function processQuery(
   onExchangeComplete: ((exchange: ProviderExchange) => void) | undefined,
   initialPrompt: string,
   initialContinuation: string | undefined,
+  // Injectable for tests; production uses the module constant + process.exit.
+  watchdogMs: number = HEARTBEAT_WATCHDOG_MS,
+  exitProcess: (code: number) => void = (code) => process.exit(code),
+  // Injectable for tests; production reads the in-process in-flight tool state
+  // maintained by the pre/post-tool hooks (providers/claude.ts).
+  getInFlight: () => InFlightTool | null = getInFlightTool,
+  // Injectable for tests; production touches the real heartbeat file.
+  touch: () => void = touchHeartbeat,
+  // Injectable for tests; production bumps the per-continuation wedge-strike
+  // counter and clears the poisoned continuation once it hits the limit.
+  onWedge: (provider: string, continuation: string, postInit: boolean) => void = defaultOnWedge,
+  // True only on the container's FIRST query that carries a resumed
+  // continuation — a genuine cold `.jsonl` reload after a host respawn /
+  // idle-kill. Every later warm turn passes false: the transcript is already
+  // loaded in the live SDK subprocess, so there is no disk reload to wait on
+  // and a pre-init stall there is a real wedge, not a slow load. Gates BOTH the
+  // resume-grace window (pre-init only) and whether a wedge strikes the
+  // continuation. On a warm turn a wedge never strikes — it's a fresh-turn
+  // transient, not resume poisoning. The resumed id is `initialContinuation`.
+  isColdResume = false,
+  // Injectable for tests; production uses the module constant. The extra window
+  // granted to the pre-first-event phase of a cold resume so a slow reload is
+  // not mistaken for a wedge. Applied only while isColdResume and no event has
+  // landed.
+  resumeGraceMs: number = RESUME_GRACE_MS,
 ): Promise<QueryResult> {
   let queryContinuation: string | undefined;
   let done = false;
   let unwrappedNudged = false;
+  // Whether any SDK event has arrived this turn. Ends the resume-grace window:
+  // once the first event lands the cold `.jsonl` reload is demonstrably done, so
+  // the deadline falls back to the base/in-flight window. (The wedge strike keys
+  // off isColdResume, not this — a cold resume strikes silent OR post-init.)
+  let firstEventSeen = false;
+  // Heartbeat-silence watchdog: armed for the duration of this turn. The
+  // deadline is `lastEventAt + effectiveWatchdogMs`, where the effective window
+  // is the base watchdogMs normally, but widens to a declared Bash timeout (+
+  // margin) while such a tool is in flight — a long blocking shell command
+  // emits no SDK events for its whole run, so without this it looks identical to
+  // a genuinely wedged turn. When the timer fires we re-derive the deadline
+  // against the *current* in-flight state: if it hasn't elapsed yet (a long Bash
+  // is legitimately running) we reschedule for the remainder; otherwise the
+  // turn is wedged — self-exit(76) so the host respawns with messages reset to
+  // pending. Cause-independent: doesn't care whether the stall is in the LLM
+  // socket, the MCP pipe, or the SDK.
+  let lastEventAt = Date.now();
+  // One timer for the whole turn, re-armed via refresh() (zero-alloc) rather
+  // than reallocated per event. The timer always wakes at the base interval;
+  // fireWatchdog re-derives the *real* deadline against lastEventAt and the
+  // current in-flight tool when it trips, so an early wake (e.g. mid long Bash)
+  // simply refreshes and rechecks rather than killing a healthy turn.
+  const watchdog = setTimeout(fireWatchdog, watchdogMs);
+  function fireWatchdog(): void {
+    if (done) return;
+    // Resume-grace applies only in the pre-first-event phase of a COLD resume —
+    // the one turn that reloads a large `.jsonl` from disk. It runs no tool, so
+    // without the grace the bare base would judge a slow-but-healthy reload as a
+    // wedge. A warm turn (transcript already loaded) gets no grace: a pre-init
+    // stall there is a genuine wedge and deserves the bare base.
+    const graceMs = isColdResume && !firstEventSeen ? resumeGraceMs : 0;
+    const effectiveMs = effectiveWatchdogMs(watchdogMs, getInFlight(), graceMs);
+    const silenceMs = Date.now() - lastEventAt;
+    if (silenceMs < effectiveMs) {
+      // Still inside the allowed window (a long-declared Bash / in-flight tool
+      // is legitimately running) — re-arm and recheck rather than killing it.
+      watchdog.refresh();
+      return;
+    }
+    log(
+      `Heartbeat-silence watchdog: no SDK event in ${silenceMs}ms (limit ${effectiveMs}ms) during active turn — exiting (76) for host respawn`,
+    );
+    done = true;
+    clearInterval(pollHandle);
+    clearTimeout(watchdog);
+    // The turn wedged before processQuery could return, so the graceful
+    // apiError clear path never runs. Strike the continuation only when a COLD
+    // resume wedges — silent OR post-init. On the cold path a repeatedly-wedging
+    // resume is exactly resume poison, and `init` firing proves only the resume
+    // *mechanism* (transcript loaded), not the continuation's downstream state,
+    // so a post-init cold wedge is still plausibly poison and must accrue
+    // strikes to self-heal. `firstEventSeen` picks the path in defaultOnWedge:
+    // silent -> fast limit-2 heal; post-init -> higher, time-decayed budget so
+    // an isolated transient gateway stall never clears a healthy continuation
+    // while clustered respawns still self-heal. A WARM turn's wedge never
+    // strikes: it's a fresh-turn transient (hung socket mid-conversation), not
+    // resume poisoning, and clearing there would wipe a good thread's memory.
+    // Cold-resume reload slowness itself never reaches here — the grace above
+    // widens the pre-init window well past a legitimate reload. Non-striking
+    // cases still exit-76; the host respawns with messages reset to pending.
+    if (isColdResume && initialContinuation !== undefined) {
+      onWedge(providerName, initialContinuation, firstEventSeen);
+    }
+    // Defer exit one tick so this log line flushes through Docker's log driver.
+    setTimeout(() => exitProcess(76), 100);
+  }
   // Prompt queue for the exchange hook — each result event consumes the
   // oldest unanswered prompt, except a wrapping-retry result, which answers
   // the same prompt again. Unused (and unmaintained) when the provider
@@ -411,6 +768,18 @@ export async function processQuery(
   let endedForCommand = false;
   let corruptionStreak = 0;
   const pollHandle = setInterval(() => {
+    // Keep the heartbeat fresh while a query is in flight, even when the SDK
+    // emits no events — a single blocking Bash freezes the query.events loop
+    // for its whole duration, and a long top-level thinking/response pass with
+    // no tool in flight is equally event-silent. This decouples the host's
+    // liveness view from SDK-event cadence so neither reads as wedged to the
+    // host's stale-heartbeat kill paths. The ticker feeds only the host's
+    // heartbeat — it never calls watchdog.refresh(), so the exit-76 watchdog
+    // stays the in-container reaper for an *async-stalled* wedged turn (a hung
+    // socket while the event loop is alive). A turn that synchronously blocks
+    // the event loop freezes both this ticker and the watchdog's setTimeout, so
+    // the heartbeat goes stale and the host's reaper catches it instead.
+    if (!done) touch();
     if (done || pollInFlight || endedForCommand) return;
     pollInFlight = true;
 
@@ -521,7 +890,19 @@ export async function processQuery(
   try {
     for await (const event of query.events) {
       handleEvent(event, routing);
-      touchHeartbeat();
+      touch();
+      // The first event of the turn ends the resume-grace phase and proves the
+      // resume MECHANISM healthy (transcript loaded) — from here the base/in-flight
+      // windows govern. It also flips a later cold-resume wedge from the silent
+      // path to the post-init decayed-budget path (a post-init hang still strikes,
+      // just against the higher, time-decaying limit).
+      firstEventSeen = true;
+      // Every SDK event pushes the watchdog deadline out. Stamp the event time
+      // and refresh the existing timer (zero-alloc) for a full base window;
+      // fireWatchdog re-derives the real deadline against the in-flight tool
+      // when it actually trips.
+      lastEventAt = Date.now();
+      watchdog.refresh();
 
       if (event.type === 'init') {
         queryContinuation = event.continuation;
@@ -540,6 +921,26 @@ export async function processQuery(
         // (send_message) mid-turn, or the message may not need a response
         // at all — either way the turn is finished.
         markCompleted(initialBatchIds);
+
+        // Detect gateway/SDK errors surfaced as result text (e.g. budget_exceeded).
+        // These are not agent responses — nudging the SDK just loops until killed,
+        // and (for OpenCode) the final-signal gate would spin forever on a dead
+        // turn. Abort the query, deliver the error text to the user, and signal
+        // the caller to clear the continuation so the next wakeup doesn't resume
+        // the same poisoned session.
+        if (event.text && API_ERROR_RE.test(event.text)) {
+          log(`API error in result text — aborting query: ${event.text.slice(0, 200)}`);
+          writeMessageOut({
+            id: generateId(),
+            kind: 'chat',
+            platform_id: routing.platformId,
+            channel_type: routing.channelType,
+            thread_id: routing.threadId,
+            content: JSON.stringify({ text: `Error: ${event.text}` }),
+          });
+          query.abort();
+          return { continuation: queryContinuation, apiError: event.text };
+        }
 
         if (providerName === 'opencode') {
           // Authoritative, structural completion gate: a turn only counts as
@@ -663,6 +1064,7 @@ export async function processQuery(
   } finally {
     done = true;
     clearInterval(pollHandle);
+    clearTimeout(watchdog);
   }
 
   return { continuation: queryContinuation };
